@@ -1,14 +1,16 @@
 # Entity-Relationship Diagrams
 
-> **Complete data model across PostgreSQL, Neo4j, and MongoDB**
+> **Complete data model for Nivesh - Your AI Financial Strategist**
 
 [![PostgreSQL](https://img.shields.io/badge/relational-PostgreSQL-336791.svg)](https://www.postgresql.org/)
 [![Neo4j](https://img.shields.io/badge/graph-Neo4j-008CC1.svg)](https://neo4j.com/)
 [![MongoDB](https://img.shields.io/badge/document-MongoDB-47A248.svg)](https://www.mongodb.com/)
+[![PRD](https://img.shields.io/badge/docs-PRD-orange.svg)](../PRD.md)
 
 ## Table of Contents
 
 - [Overview](#overview)
+- [Product Context](#product-context)
 - [PostgreSQL ER Diagram](#postgresql-er-diagram)
 - [Neo4j Graph Relationships](#neo4j-graph-relationships)
 - [MongoDB Collections](#mongodb-collections)
@@ -19,13 +21,34 @@
 
 ## Overview
 
-Nivesh uses a **polyglot persistence** model:
+Nivesh uses a **polyglot persistence** model where different databases serve specific purposes:
 
 | Database       | Purpose                                 | Data Type                              |
 | -------------- | --------------------------------------- | -------------------------------------- |
 | **PostgreSQL** | Transactional data (ACID compliance)    | Users, accounts, transactions          |
 | **Neo4j**      | Relationship analysis (graph traversal) | Financial connections, impact analysis |
 | **MongoDB**    | Unstructured data (flexible schema)     | Conversations, logs, documents         |
+
+**Design Philosophy:** Use the right database for the right job, synchronized via event-driven architecture (Kafka).
+
+---
+
+## Product Context
+
+**Nivesh's Core Features (from PRD):**
+
+- **Net worth dashboard:** Aggregate data from multiple sources
+- **Scenario simulations:** Retirement, home loan, SIP projections
+- **Goal planning:** Track progress toward financial milestones
+- **Explainability:** Every recommendation includes reasoning
+- **Alerts:** Detect anomalies and off-track goals
+
+**Data Model Requirements:**
+
+- Support for **multi-source data ingestion** (Fi MCP, banking APIs, manual input)
+- **Relational integrity** for financial transactions (PostgreSQL)
+- **Graph reasoning** for impact analysis (Neo4j)
+- **Flexible schema** for conversations (MongoDB)
 
 ---
 
@@ -440,23 +463,138 @@ CREATE TABLE subscriptions (
     created_at TIMESTAMP DEFAULT NOW()
 );
 
--- Sync to Neo4j via Kafka event
+-- Create index
+CREATE INDEX idx_subscriptions_user ON subscriptions(user_id);
+```
+
+---
+
+## Data Integrity Rules
+
+### ACID Guarantees (PostgreSQL)
+
+1. **Atomicity:** All financial transactions are all-or-nothing
+2. **Consistency:** Foreign key constraints prevent orphaned records
+3. **Isolation:** Concurrent transactions don't interfere
+4. **Durability:** Once committed, data survives crashes
+
+### Eventual Consistency (Neo4j via Kafka)
+
+1. **Event-Driven Sync:** PostgreSQL → Kafka → Neo4j
+2. **Idempotent Consumers:** Replaying events produces same result
+3. **Conflict Resolution:** Last-write-wins for graph updates
+4. **Monitoring:** Track sync lag (target < 5 seconds)
+
+### Data Validation
+
+```sql
+-- Check constraints for data quality
+ALTER TABLE expenses
+ADD CONSTRAINT positive_amount CHECK (amount > 0);
+
+ALTER TABLE investments
+ADD CONSTRAINT valid_return_rate CHECK (expected_return BETWEEN -1.0 AND 2.0);
+
+ALTER TABLE goals
+ADD CONSTRAINT valid_deadline CHECK (deadline_date > created_at);
+```
+
+---
+
+## MVP Phase ER Mapping
+
+Based on PRD MVP features, these entities are critical:
+
+| MVP Feature                 | Key Entities                          | Relationships                            |
+| --------------------------- | ------------------------------------- | ---------------------------------------- |
+| **Net worth dashboard**     | users, accounts, assets, liabilities  | User → owns → Account/Asset/Liability    |
+| **Retirement projection**   | goals, investments, income_sources    | Goal → requires → Investment strategy    |
+| **Home loan affordability** | income_sources, expenses, liabilities | Income - Expenses - EMIs = Affordability |
+| **SIP increase simulation** | investments, goals                    | Investment → contributes_to → Goal       |
+| **Explainability**          | audit_logs, decision_traces           | Every query → logs → audit trail         |
+| **Export reports**          | All entities                          | User → owns → all financial data         |
+
+---
+
+## Database Migration Strategy
+
+### Phase 1: MVP (Current)
+
+- PostgreSQL with essential tables
+- Neo4j with basic graph schema
+- MongoDB for conversations
+
+### Phase 2: V1 (Goal Planning)
+
+- Add `life_events` table
+- Expand goal types (education, wedding, etc.)
+- Add `investment_recommendations` table
+
+### Phase 3: V2 (Advanced Features)
+
+- Multi-currency support
+- Tax optimization tables
+- Insurance policy tracking
+- Real estate portfolio
+
+---
+
+## Performance Considerations
+
+### Indexing Strategy
+
+**PostgreSQL:**
+
+```sql
+-- High-cardinality columns
+CREATE INDEX idx_users_email ON users(email);
+CREATE INDEX idx_transactions_user_date ON transactions(user_id, transaction_date);
+
+-- Composite indexes for common queries
+CREATE INDEX idx_expenses_user_category_date ON expenses(user_id, category, date);
+```
+
+**Neo4j:**
+
+```cypher
+-- Node property indexes
+CREATE INDEX user_id_index FOR (u:User) ON (u.userId);
+CREATE INDEX goal_user_index FOR (g:Goal) ON (g.userId);
+
+-- Full-text search
+CREATE FULLTEXT INDEX expense_description FOR (e:Expense) ON EACH [e.description];
+```
+
+### Query Optimization
+
+1. **Use EXPLAIN ANALYZE** in PostgreSQL to identify slow queries
+2. **Limit graph traversal depth** in Neo4j (use `LIMIT` clause)
+3. **Cache frequently accessed data** in Redis
+4. **Denormalize for read performance** where appropriate
+
+---
+
+**Last Updated:** January 13, 2026  
+**Version:** 2.0 (Aligned with PRD v1.0)  
+**Maintained By:** Nivesh Engineering Team-- Sync to Neo4j via Kafka event
 INSERT INTO subscriptions (...) VALUES (...);
 -- Triggers Kafka event → Neo4j consumer creates nodes
+
 ```
 
 ---
 
 ## Best Practices
 
-✅ **PostgreSQL** - Use for all financial transactions (money is serious)  
-✅ **Neo4j** - Use for "how does X affect Y?" queries  
-✅ **MongoDB** - Use for unstructured data (logs, conversations)  
-✅ **Sync via Kafka** - Keep databases eventually consistent  
+✅ **PostgreSQL** - Use for all financial transactions (money is serious)
+✅ **Neo4j** - Use for "how does X affect Y?" queries
+✅ **MongoDB** - Use for unstructured data (logs, conversations)
+✅ **Sync via Kafka** - Keep databases eventually consistent
 ✅ **PostgreSQL = source of truth** - Other DBs are projections
 
 ---
 
-**Last Updated:** January 2026  
-**Maintained By:** Nivesh Data Team  
+**Last Updated:** January 2026
+**Maintained By:** Nivesh Data Team
 **Related Docs:** [DATABASE_STRATERGY.md](DATABASE_STRATERGY.md), [CYPHER_EVENT.md](CYPHER_EVENT.md)
+```

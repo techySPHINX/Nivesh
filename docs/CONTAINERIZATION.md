@@ -1,13 +1,15 @@
 # Docker Containerization Guide
 
-> **Complete containerization strategy for Nivesh AI Financial Platform**
+> **Complete containerization strategy for Nivesh - Your AI Financial Strategist**
 
 [![Docker](https://img.shields.io/badge/container-Docker-2496ED.svg)](https://www.docker.com/)
 [![Docker Compose](https://img.shields.io/badge/orchestration-Docker%20Compose-2496ED.svg)](https://docs.docker.com/compose/)
+[![PRD](https://img.shields.io/badge/docs-PRD-orange.svg)](../PRD.md)
 
 ## Table of Contents
 
 - [Overview](#overview)
+- [Product Context](#product-context)
 - [Architecture](#architecture)
 - [Docker Compose Configuration](#docker-compose-configuration)
 - [Service Definitions](#service-definitions)
@@ -24,12 +26,30 @@
 
 Nivesh runs as a **fully containerized stack** using Docker and Docker Compose. Every service runs in isolation, ensuring:
 
-- ✅ **Reproducible builds** - Same environment everywhere
+- ✅ **Reproducible builds** - Same environment everywhere (dev, staging, prod)
 - ✅ **Easy deployment** - One command to start everything
 - ✅ **Isolation** - Services cannot interfere with each other
-- ✅ **Scalability** - Easy to add replicas
-- ✅ **Security** - Network-level isolation
-- ✅ **Regulatory compliance** - Auditable infrastructure
+- ✅ **Scalability** - Easy to add replicas for load balancing
+- ✅ **Security** - Network-level isolation and least-privilege access
+- ✅ **Regulatory compliance** - Auditable infrastructure for RBI/SEBI
+
+---
+
+## Product Context
+
+**Nivesh's Architecture Goals (from PRD):**
+
+- Support **MVP phase** with minimal infrastructure (single VM deployment)
+- Enable **V1 phase** scalability (Kubernetes migration path)
+- Ensure **data privacy** with isolated service containers
+- Provide **developer experience** with hot-reload and easy setup
+
+**Containerization Benefits for Nivesh:**
+
+- **Data Isolation:** Each database runs in its own container
+- **Microservices:** Backend (NestJS), AI Engine (FastAPI), Frontend separately deployable
+- **Event-Driven:** Kafka container enables real-time event streaming
+- **Monitoring:** Prometheus + Grafana containers for observability
 
 ---
 
@@ -493,12 +513,42 @@ deploy:
 
 ## Advantages for Regulators
 
-✅ **Immutable Infrastructure** - Every version is frozen  
-✅ **Audit Trail** - All changes tracked in Git  
-✅ **Quick Rollback** - Revert to previous image instantly  
-✅ **Network Policies** - AI services can't access external internet  
-✅ **Secret Management** - Encrypted environment variables  
-✅ **Compliance** - RBI/GDPR requirements met
+✅ **Immutable Infrastructure** - Every version is frozen in container images  
+✅ **Audit Trail** - All changes tracked in Git and container registries  
+✅ **Quick Rollback** - Revert to previous image instantly if issues arise  
+✅ **Network Policies** - AI services can't access external internet without explicit rules  
+✅ **Secret Management** - Encrypted environment variables and secrets rotation  
+✅ **Compliance** - RBI/SEBI/GDPR requirements met with auditable logs
+
+---
+
+## MVP to Production Evolution
+
+### MVP Phase (Local Development)
+
+```bash
+# Single VM deployment with Docker Compose
+docker-compose up -d
+# All services on one machine
+# Suitable for: 50-100 beta users
+```
+
+### V1 Phase (Scalable Deployment)
+
+```bash
+# Kubernetes deployment with replicas
+kubectl apply -f infra/kubernetes/
+# Services scaled independently
+# Suitable for: 2,000-5,000 users
+```
+
+### V2 Phase (Multi-Region)
+
+```bash
+# Multi-cluster with global load balancer
+# Regional deployments for data sovereignty
+# Suitable for: 50,000+ users
+```
 
 ---
 
@@ -525,8 +575,97 @@ docker-compose up -d
 **Out of memory:**
 
 ```bash
+# Increase Docker Desktop memory allocation
+# Settings → Resources → Memory: 8GB recommended
+```
+
+**Container won't start:**
+
+```bash
+# Check logs
+docker logs nivesh-backend
+
+# Inspect container
+docker inspect nivesh-backend
+
+# Restart specific service
+docker-compose restart backend
+```
+
+---
+
+## Performance Optimization
+
+### Resource Allocation
+
+| Service        | CPU (cores) | Memory (GB) | Storage (GB) |
+| -------------- | ----------- | ----------- | ------------ |
+| **PostgreSQL** | 2           | 4           | 50           |
+| **Neo4j**      | 2           | 4           | 50           |
+| **MongoDB**    | 1           | 2           | 20           |
+| **Redis**      | 0.5         | 1           | 5            |
+| **Kafka**      | 1           | 2           | 20           |
+| **Backend**    | 1           | 2           | N/A          |
+| **AI Engine**  | 2           | 4           | N/A          |
+| **Frontend**   | 0.5         | 1           | N/A          |
+
+### Health Checks
+
+All services include health checks for automatic recovery:
+
+```yaml
+healthcheck:
+  test: ["CMD", "pg_isready", "-U", "nivesh"]
+  interval: 30s
+  timeout: 10s
+  retries: 3
+  start_period: 40s
+```
+
+---
+
+## Backup & Recovery
+
+### Automated Backups
+
+```yaml
+# Add backup service to docker-compose.yml
+backup:
+  image: postgres:15
+  command: >
+    bash -c "while true; do
+      pg_dump -h postgres -U nivesh nivesh > /backup/nivesh_$(date +%Y%m%d).sql
+      sleep 86400
+    done"
+  volumes:
+    - ./backups:/backup
+  depends_on:
+    - postgres
+```
+
+### Manual Backup
+
+```bash
+# Backup PostgreSQL
+docker exec nivesh-postgres pg_dump -U nivesh nivesh > backup.sql
+
+# Backup Neo4j
+docker exec nivesh-neo4j neo4j-admin backup --to=/backups
+
+# Backup MongoDB
+docker exec nivesh-mongo mongodump --out=/backup
+```
+
+---
+
+**Last Updated:** January 13, 2026  
+**Version:** 2.0 (Aligned with PRD v1.0)  
+**Maintained By:** Nivesh Engineering Team
+
 # Increase Docker memory limit in Docker Desktop settings
+
 # Or add resource limits to docker-compose.yml
+
 ```
 
 ---
@@ -539,6 +678,7 @@ docker-compose up -d
 
 ---
 
-**Last Updated:** January 2026  
-**Maintained By:** Nivesh DevOps Team  
+**Last Updated:** January 2026
+**Maintained By:** Nivesh DevOps Team
 **Related Docs:** [KUBERNETES.md](KUBERNETES.md), [TECH_STACK.md](TECH_STACK.md)
+```

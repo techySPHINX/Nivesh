@@ -1,13 +1,15 @@
 # AI Decision Trace & Explainability
 
-> **Complete audit trail for every AI recommendation**
+> **Complete audit trail for every AI recommendation in Nivesh - Your AI Financial Strategist**
 
 [![Transparency](https://img.shields.io/badge/transparency-100%25-brightgreen.svg)](https://transparency.google/)
 [![RBI Compliant](https://img.shields.io/badge/audit-RBI%20compliant-blue.svg)](https://www.rbi.org.in/)
+[![PRD](https://img.shields.io/badge/docs-PRD-orange.svg)](../PRD.md)
 
 ## Table of Contents
 
 - [Overview](#overview)
+- [Product Context](#product-context)
 - [High-Level Decision Flow](#high-level-decision-flow)
 - [Decision Trace ID Structure](#decision-trace-id-structure)
 - [Step-by-Step Trace](#step-by-step-trace)
@@ -28,7 +30,38 @@ Every AI decision in Nivesh is **fully traceable** from user query to final reco
 - ✅ **Trust** - Users see the reasoning, not just the answer
 
 **Core Principle:**  
-*"If the AI can't explain it, it shouldn't recommend it."*
+_"If the AI can't explain it, it shouldn't recommend it."_
+
+---
+
+## Product Context
+
+**Nivesh's Explainability Requirements (from PRD):**
+
+**Output Structure for Every Recommendation:**
+
+1. **Direct answer** - Clear, actionable response
+2. **Explanation + assumptions** - How we arrived at this answer
+3. **Visual chart** - Projection or breakdown
+4. **Recommendations** - Next best actions
+5. **Alternatives** - Other options considered
+6. **Risks** - What could go wrong
+
+**Example User Journey:**
+User: "Can I afford ₹50L loan?"
+AI must provide:
+
+- EMI calculation with assumptions (interest rate, tenure)
+- Impact on savings rate
+- Alternative plans (higher down payment, longer tenure)
+- Risks (income loss, rate increase)
+- Confidence score
+
+**Regulatory Requirements:**
+
+- 7-year audit trail retention
+- Ability to reproduce any past decision
+- Clear labeling of assumptions vs facts
 
 ---
 
@@ -118,6 +151,7 @@ Components:
 ```
 
 This ID appears in:
+
 - User's chat interface ("Trace ID: 20260115-103000-abc123")
 - Audit logs
 - Database records
@@ -176,8 +210,8 @@ This ID appears in:
     "detected_intent": "investment_advice",
     "confidence": 0.94,
     "alternative_intents": [
-      {"intent": "general_query", "confidence": 0.04},
-      {"intent": "goal_planning", "confidence": 0.02}
+      { "intent": "general_query", "confidence": 0.04 },
+      { "intent": "goal_planning", "confidence": 0.02 }
     ]
   }
 }
@@ -199,8 +233,16 @@ This ID appears in:
     "results": {
       "risk_level": "moderate",
       "goals": [
-        {"name": "Retirement", "deadline": "2041-01-01", "target_amount": 20000000},
-        {"name": "Emergency Fund", "deadline": "2027-01-01", "target_amount": 500000}
+        {
+          "name": "Retirement",
+          "deadline": "2041-01-01",
+          "target_amount": 20000000
+        },
+        {
+          "name": "Emergency Fund",
+          "deadline": "2027-01-01",
+          "target_amount": 500000
+        }
       ],
       "current_investments": {
         "mutual_funds": 150000,
@@ -228,15 +270,15 @@ This ID appears in:
         "rule_id": "rule_47",
         "rule_name": "age_based_allocation",
         "description": "Equity allocation = 100 - age",
-        "inputs": {"user_age": 30},
-        "output": {"recommended_equity_percentage": 70}
+        "inputs": { "user_age": 30 },
+        "output": { "recommended_equity_percentage": 70 }
       },
       {
         "rule_id": "rule_12",
         "rule_name": "emergency_fund_check",
         "description": "Ensure 6 months of expenses in liquid assets",
-        "inputs": {"monthly_expenses": 40000, "liquid_assets": 200000},
-        "output": {"emergency_fund_adequate": false, "gap": 40000}
+        "inputs": { "monthly_expenses": 40000, "liquid_assets": 200000 },
+        "output": { "emergency_fund_adequate": false, "gap": 40000 }
       }
     ],
     "deterministic_recommendation": "Allocate ₹5,000/month to emergency fund, ₹5,000/month to equity mutual funds"
@@ -287,8 +329,16 @@ This ID appears in:
     "fact_verification": {
       "status": "passed",
       "facts_checked": [
-        {"claim": "₹40,000 short", "verified": true, "source": "graph_retrieval.results.monthly_surplus"},
-        {"claim": "6-month expenses", "verified": true, "source": "rule_12.inputs.monthly_expenses"}
+        {
+          "claim": "₹40,000 short",
+          "verified": true,
+          "source": "graph_retrieval.results.monthly_surplus"
+        },
+        {
+          "claim": "6-month expenses",
+          "verified": true,
+          "source": "rule_12.inputs.monthly_expenses"
+        }
       ]
     },
     "toxicity_check": {
@@ -375,29 +425,29 @@ CREATE TABLE decision_traces (
     trace_id VARCHAR(50) PRIMARY KEY,
     user_id VARCHAR(100) NOT NULL,
     created_at TIMESTAMP NOT NULL,
-    
+
     -- User input
     user_query TEXT NOT NULL,
     detected_intent VARCHAR(100),
-    
+
     -- Data retrieval
     graph_query TEXT,
     graph_results JSONB,
-    
+
     -- Processing
     rules_applied JSONB,
     model_used VARCHAR(100),
     model_parameters JSONB,
-    
+
     -- Output
     final_response TEXT,
     confidence FLOAT,
-    
+
     -- Audit
     consent_verified BOOLEAN,
     data_sources TEXT[],
     safety_checks_passed BOOLEAN,
-    
+
     -- Retention
     expires_at TIMESTAMP DEFAULT (NOW() + INTERVAL '7 years')
 );
@@ -416,7 +466,7 @@ CREATE INDEX idx_expires_at ON decision_traces(expires_at);
 **"Show me why you recommended this"**
 
 ```sql
-SELECT 
+SELECT
     trace_id,
     user_query,
     final_response,
@@ -431,7 +481,7 @@ ORDER BY created_at DESC;
 **"What data did you use?"**
 
 ```sql
-SELECT 
+SELECT
     trace_id,
     data_sources,
     graph_query,
@@ -447,7 +497,7 @@ WHERE trace_id = '20260115-103000-abc123';
 **"Show all AI investment recommendations in December 2025"**
 
 ```sql
-SELECT 
+SELECT
     trace_id,
     user_id,
     user_query,
@@ -464,7 +514,7 @@ ORDER BY created_at DESC;
 **"Find decisions with low confidence (<70%)"**
 
 ```sql
-SELECT 
+SELECT
     trace_id,
     user_query,
     confidence,
@@ -522,14 +572,14 @@ ORDER BY confidence ASC;
 
 ### RBI/SEBI Requirements
 
-| Requirement | Implementation | Evidence |
-|-------------|----------------|----------|
-| **Explainability** | Every decision has a trace ID | `decision_traces` table |
-| **Data provenance** | All data sources logged | `data_sources` column |
-| **Auditability** | 7-year retention | `expires_at` column |
-| **User transparency** | "Explain this" button in UI | Explainability UI |
-| **Consent tracking** | Consent verified at each step | `consent_verified` column |
-| **Model versioning** | Model ID logged | `model_used` column |
+| Requirement           | Implementation                | Evidence                  |
+| --------------------- | ----------------------------- | ------------------------- |
+| **Explainability**    | Every decision has a trace ID | `decision_traces` table   |
+| **Data provenance**   | All data sources logged       | `data_sources` column     |
+| **Auditability**      | 7-year retention              | `expires_at` column       |
+| **User transparency** | "Explain this" button in UI   | Explainability UI         |
+| **Consent tracking**  | Consent verified at each step | `consent_verified` column |
+| **Model versioning**  | Model ID logged               | `model_used` column       |
 
 ### Audit Export
 
@@ -537,11 +587,11 @@ ORDER BY confidence ASC;
 def export_audit_report(start_date: str, end_date: str) -> pd.DataFrame:
     """
     Generate regulator-friendly audit report.
-    
+
     Format: CSV with all decision traces
     """
     query = """
-        SELECT 
+        SELECT
             trace_id,
             user_id,
             created_at,
@@ -556,10 +606,10 @@ def export_audit_report(start_date: str, end_date: str) -> pd.DataFrame:
         WHERE created_at BETWEEN %s AND %s
         ORDER BY created_at ASC
     """
-    
+
     df = pd.read_sql(query, conn, params=[start_date, end_date])
     df.to_csv(f"audit_report_{start_date}_{end_date}.csv", index=False)
-    
+
     return df
 ```
 
@@ -582,7 +632,7 @@ def export_audit_report(start_date: str, end_date: str) -> pd.DataFrame:
 
 ```sql
 -- Find all decisions where rule_47 was applied but confidence was low
-SELECT 
+SELECT
     trace_id,
     user_query,
     confidence,
@@ -604,7 +654,7 @@ LIMIT 10;
 ✅ **Include alternative options** - Show what was considered  
 ✅ **Track confidence scores** - Refuse if too low  
 ✅ **Preserve for 7 years** - RBI requirement  
-✅ **Export for audits** - CSV format for regulators  
+✅ **Export for audits** - CSV format for regulators
 
 ---
 
