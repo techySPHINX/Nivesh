@@ -1,13 +1,15 @@
 ﻿# Tech Stack
 
-> **Open-source, cloud-agnostic, and production-ready technology stack for Nivesh AI Financial Platform**
+> **Open-source, cloud-agnostic, and production-ready technology stack for Nivesh - Your AI Financial Strategist**
 
 [![License](https://img.shields.io/badge/license-Open%20Source-blue.svg)](LICENSE)
 [![Tech Stack](https://img.shields.io/badge/stack-polyglot-green.svg)]()
+[![PRD](https://img.shields.io/badge/docs-PRD-orange.svg)](../PRD.md)
 
 ## Table of Contents
 
 - [Overview](#overview)
+- [Product Context](#product-context)
 - [AI & ML Stack](#ai--ml-stack)
 - [Data & Storage](#data--storage)
 - [Event-Driven Architecture](#event-driven-architecture)
@@ -19,6 +21,7 @@
 - [LLM Infrastructure](#llm-infrastructure)
 - [Data Connectors](#data-connectors)
 - [Minimum Deployable Stack](#minimum-deployable-stack)
+- [Technology Philosophy](#technology-philosophy)
 
 ---
 
@@ -26,47 +29,84 @@
 
 Nivesh uses a **polyglot persistence model** with open-source technologies to ensure:
 
-- **Zero vendor lock-in**
-- **Cloud-agnostic deployment**
-- **Production-grade scalability**
-- **Regulatory compliance ready**
+- **Zero vendor lock-in** - Deploy anywhere, migrate freely
+- **Cloud-agnostic deployment** - AWS, Azure, GCP, or on-premise
+- **Production-grade scalability** - Handle millions of users
+- **Regulatory compliance ready** - RBI, SEBI, GDPR compliant architecture
+
+---
+
+## Product Context
+
+**Nivesh's Vision:** Build the world's most trusted AI financial strategist that understands the user's financial life, simulates the future, and guides them with transparent, explainable, goal-linked decisions.
+
+**Core Promise:** _"Your money finally makes sense — decisions, not dashboards."_
+
+This tech stack is designed to support:
+
+- **Real financial data ingestion** via Fi MCP and banking APIs
+- **AI financial reasoning** layer (not just analytics)
+- **Scenario simulation** engine for what-if analysis
+- **Explainability-first** output with assumptions, alternatives, and risks
+- **Privacy & portability** as user-owned insights
 
 ---
 
 ## AI & ML Stack
 
-| Layer                  | Technology                                                   | Purpose                                            |
-| ---------------------- | ------------------------------------------------------------ | -------------------------------------------------- |
-| **LLM**                | [Gemini Pro](https://ai.google.dev/)                         | Free tier, strong financial reasoning capabilities |
-| **Embeddings**         | [Sentence-Transformers](https://www.sbert.net/)              | Open-source semantic search                        |
-| **Intent Classifier**  | [DistilBERT](https://huggingface.co/distilbert-base-uncased) | Lightweight, fast intent detection                 |
-| **Sentiment Analysis** | [XLM-RoBERTa](https://huggingface.co/xlm-roberta-base)       | Multilingual sentiment detection                   |
-| **Forecasting**        | [Prophet](https://facebook.github.io/prophet/)               | Time-series financial projections                  |
-| **Anomaly Detection**  | LSTM Autoencoder                                             | Spending pattern anomaly detection                 |
-| **Simulation**         | Monte Carlo (NumPy)                                          | Deterministic financial simulations                |
-| **Risk Scoring**       | [XGBoost](https://xgboost.readthedocs.io/)                   | Explainable risk profiling                         |
+**Purpose:** Enable conversational AI that provides goal-oriented financial decisions with explainability.
+
+| Layer                  | Technology                                                   | Purpose                                           | Use Case in Nivesh                                      |
+| ---------------------- | ------------------------------------------------------------ | ------------------------------------------------- | ------------------------------------------------------- |
+| **LLM**                | [Gemini Pro 1.5](https://ai.google.dev/)                     | Primary reasoning engine, financial conversations | Natural language Q&A, explanation generation            |
+| **LLM (Backup)**       | [Vertex AI](https://cloud.google.com/vertex-ai)              | Evaluation pipelines, anomaly detection models    | Model training, batch inference                         |
+| **Embeddings**         | [Sentence-Transformers](https://www.sbert.net/)              | Open-source semantic search for conversations     | Chat history search, similar scenario matching          |
+| **Intent Classifier**  | [DistilBERT](https://huggingface.co/distilbert-base-uncased) | Lightweight, fast intent detection                | Classify: affordability, retirement, investment queries |
+| **Sentiment Analysis** | [XLM-RoBERTa](https://huggingface.co/xlm-roberta-base)       | Multilingual sentiment detection                  | Detect financial anxiety, emotional distress            |
+| **Forecasting**        | [Prophet](https://facebook.github.io/prophet/)               | Time-series financial projections                 | Income growth, expense trends, inflation modeling       |
+| **Anomaly Detection**  | LSTM Autoencoder                                             | Spending pattern anomaly detection                | Unusual transaction alerts, fraud detection             |
+| **Simulation**         | Monte Carlo (NumPy)                                          | Deterministic financial simulations               | Retirement corpus, home loan affordability              |
+| **Risk Scoring**       | [XGBoost](https://xgboost.readthedocs.io/)                   | Explainable risk profiling                        | User risk tolerance matching                            |
+
+**Key Differentiators:**
+
+- **Hybrid AI:** Combines LLM reasoning with deterministic calculations
+- **Explainability:** Every output includes assumptions and confidence scores
+- **Regulatory Safe:** All calculations are auditable and reproducible
 
 ---
 
 ## Data & Storage
 
+**Purpose:** Polyglot persistence supporting real-time data ingestion, graph reasoning, and long-term analytics.
+
 ### Database Technologies
 
-| Data Type          | Technology                                                          | Use Case                                   |
-| ------------------ | ------------------------------------------------------------------- | ------------------------------------------ |
-| **Relational DB**  | [PostgreSQL 15+](https://www.postgresql.org/)                       | Transactions, user data, financial records |
-| **Graph DB**       | [Neo4j Community](https://neo4j.com/download/)                      | Financial relationships, reasoning graphs  |
-| **Time-Series**    | [ClickHouse](https://clickhouse.com/)                               | Analytics, historical trends               |
-| **Document Store** | [MongoDB Community](https://www.mongodb.com/try/download/community) | Conversations, unstructured data           |
-| **Cache**          | [Redis 7+](https://redis.io/)                                       | Session management, real-time data         |
-| **Object Storage** | [MinIO](https://min.io/)                                            | S3-compatible document storage             |
+| Data Type          | Technology                                                          | Use Case                                   | Why This Choice                            |
+| ------------------ | ------------------------------------------------------------------- | ------------------------------------------ | ------------------------------------------ |
+| **Relational DB**  | [PostgreSQL 15+](https://www.postgresql.org/)                       | Transactions, user data, financial records | ACID compliance, proven at scale           |
+| **Graph DB**       | [Neo4j Community](https://neo4j.com/download/)                      | Financial relationships, reasoning graphs  | Complex relationship queries, AI reasoning |
+| **Time-Series**    | [ClickHouse](https://clickhouse.com/)                               | Analytics, historical trends               | Fast aggregations, data warehouse          |
+| **Document Store** | [MongoDB Community](https://www.mongodb.com/try/download/community) | Conversations, unstructured data           | Flexible schema, chat history              |
+| **Cache**          | [Redis 7+](https://redis.io/)                                       | Session management, real-time data         | Sub-millisecond latency                    |
+| **Object Storage** | [MinIO](https://min.io/)                                            | S3-compatible document storage             | PDF exports, user reports                  |
 
-**Key Benefits:**
+**Data Ingestion Sources:**
 
-- All open-source
-- Cloud-agnostic deployment
-- Horizontal scalability
-- Industry-proven reliability
+- **Fi MCP Server:** Structured financial data via secure MCP protocol
+- **Banking APIs:** Transaction sync, account balances
+- **Investment APIs:** Mutual funds, stocks portfolio
+- **Manual Input:** User goals, life events, preferences
+
+**Data Flow:**
+
+```
+Fi MCP → PostgreSQL (Source of Truth) → Neo4j (Relationships)
+                ↓
+         Kafka Events → MongoDB (Conversations)
+                ↓
+         ClickHouse (Analytics)
+```
 
 ---
 
@@ -251,11 +291,65 @@ Paid robo-advisor APIs
 
 **Design Principles:**
 
-1. **Open Source First** - All core technologies are OSS
+1. **Open Source First** - All core technologies are OSS with active communities
 2. **Cloud Agnostic** - Deploy anywhere (AWS, Azure, GCP, on-premise)
-3. **Regulatory Ready** - Built for RBI, GDPR, and financial compliance
-4. **Explainable AI** - No black-box decision-making
-5. **Scalable Architecture** - Designed for millions of users
+3. **Regulatory Ready** - Built for RBI, SEBI, GDPR, and financial compliance
+4. **Explainable AI** - No black-box decision-making, every recommendation traceable
+5. **Privacy by Design** - User data ownership, consent-driven access
+6. **Scalability** - Handle millions of users with horizontal scaling
+
+**Why These Choices Support Nivesh's Mission:**
+
+- **Gemini Pro:** Free tier supports MVP phase; strong reasoning for financial advice
+- **Neo4j:** Essential for graph reasoning (e.g., "How does this expense affect my retirement goal?")
+- **Kafka:** Event-driven architecture enables real-time alerts and updates
+- **PostgreSQL:** ACID compliance ensures financial transaction integrity
+- **FastAPI:** High-performance Python for ML/AI workloads
+- **NestJS:** Enterprise-grade TypeScript framework for maintainability
+
+---
+
+## Deployment Strategy (Aligned with PRD)
+
+### MVP Phase (8-10 weeks)
+
+- **Stack:** PostgreSQL + Neo4j + Gemini Pro + NestJS + FastAPI
+- **Deployment:** Docker Compose on single VM
+- **Users:** Internal testing + 50-100 beta users
+- **Focus:** Core conversations, simulations, explainability
+
+### V1 Phase (12-16 weeks)
+
+- **Added:** Kafka, Redis, ClickHouse for analytics
+- **Deployment:** Kubernetes (k3s) on cloud provider
+- **Users:** 2,000-5,000 early adopters
+- **Focus:** Goal planning, investment advisor, voice support
+
+### V2 Phase (6+ months)
+
+- **Added:** Multi-region deployment, advanced ML models
+- **Deployment:** Multi-cloud with disaster recovery
+- **Users:** 50,000+ users
+- **Focus:** Global expansion, B2B licensing, financial digital twin
+
+---
+
+## License Compliance
+
+All technologies used are either:
+
+- **MIT License** - Commercial use allowed
+- **Apache 2.0** - Patent grant included
+- **AGPL** (Neo4j Community) - OK for hosted services
+- **BSL** (Business Source License) - OK for internal use
+
+**No GPL violations** - Clear licensing boundaries maintained
+
+---
+
+**Last Updated:** January 13, 2026  
+**Version:** 2.0 (Aligned with PRD v1.0)  
+**Maintained By:** Nivesh Engineering Team 5. **Scalable Architecture** - Designed for millions of users
 
 ---
 

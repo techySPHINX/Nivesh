@@ -1,10 +1,11 @@
-# Nivesh
+# Nivesh — Your AI Financial Strategist
 
 > **AI-Native Financial Reasoning Platform** - Democratizing intelligent financial planning through explainable AI
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![Tech Stack](https://img.shields.io/badge/stack-open%20source-green.svg)](TECH_STACK.md)
-[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)]()
+[![Tech Stack](https://img.shields.io/badge/stack-open%20source-green.svg)](docs/TECH_STACK.md)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](docs/CONTRIBUTING.md)
+[![Documentation](https://img.shields.io/badge/docs-complete-brightgreen.svg)](docs/)
 
 ## 🎯 Vision
 
@@ -21,6 +22,15 @@ Reasoning → Simulations + Explanations
      ↓
 Output → Conversational, Visual, Voice-First Insights
 ```
+
+**Mission:** Enable users to confidently answer:
+
+- _"Can I afford this?"_
+- _"What should I do next?"_
+- _"What happens if I choose option A vs B?"_
+- _"Am I on track for my life goals?"_
+
+**Positioning:** From dashboards to decision-making. Nivesh is financial reasoning + strategic planning on real user data.
 
 ---
 
@@ -43,30 +53,38 @@ Output → Conversational, Visual, Voice-First Insights
 ### 🤖 AI-Powered Financial Intelligence
 
 - **Natural Language Understanding** - Ask questions in plain English/Hindi
-- **Context-Aware Reasoning** - Understands your complete financial situation
-- **Explainable AI** - Every recommendation comes with transparent reasoning
+- **Context-Aware Reasoning** - Understands your complete financial situation via graph database
+- **Explainability-First** - Every recommendation includes assumptions, alternatives, and risks
 - **Multi-Modal Interface** - Text, voice, and visual interactions
 
 ### 📊 Comprehensive Financial Analysis
 
-- **Income & Expense Tracking** - Automated categorization with anomaly detection
+- **Income & Expense Tracking** - Automated categorization with anomaly detection (LSTM)
 - **Investment Portfolio Management** - Multi-asset class tracking and optimization
-- **Goal-Based Planning** - Retirement, education, home purchase, etc.
-- **Life Event Modeling** - Marriage, children, relocation financial impact
+- **Goal-Based Planning** - Retirement, education, home purchase with milestone tracking
+- **Life Event Modeling** - Marriage, children, relocation financial impact analysis
 
 ### 🧠 Advanced Capabilities
 
 - **Graph-Based Reasoning** - Neo4j powered financial relationship mapping
-- **Monte Carlo Simulations** - 10,000+ scenario probability analysis
-- **Risk Profiling** - ML-based risk assessment and tolerance matching
-- **Real-Time Insights** - Event-driven architecture for instant updates
+- **Monte Carlo Simulations** - 10,000+ scenario probability analysis for projections
+- **Risk Profiling** - XGBoost-based risk assessment and tolerance matching
+- **Real-Time Insights** - Kafka event-driven architecture for instant updates
 
 ### 🔒 Privacy & Compliance
 
-- **GDPR Compliant** - User data ownership and export
-- **RBI Ready** - Designed for financial regulatory requirements
-- **Explainable Decisions** - Full audit trail for every AI recommendation
+- **GDPR Compliant** - User data ownership and export capabilities
+- **RBI/SEBI Ready** - Designed for Indian financial regulatory requirements
+- **Explainable Decisions** - Full audit trail (7-year retention) for every AI recommendation
 - **Consent Management** - Granular data access controls
+
+### 🎯 Key Differentiators
+
+✅ **Real financial data ingestion** via Fi MCP  
+✅ **AI financial reasoning layer** (not just analytics)  
+✅ **Scenario simulation engine** for what-if analysis  
+✅ **Privacy & portability** as user-owned insights  
+✅ **Optional future:** Financial Digital Twin
 
 ---
 
@@ -228,55 +246,77 @@ KEYCLOAK_URL=http://localhost:8080
 
 ## 📖 Documentation
 
-Comprehensive documentation is available in the `/docs` directory:
+Comprehensive documentation is available in the [/docs](docs/) directory:
 
-| Document                                             | Description                             |
-| ---------------------------------------------------- | --------------------------------------- |
-| [TECH_STACK.md](TECH_STACK.md)                       | Complete technology stack and AI models |
-| [DATABASE_STRATEGY.md](DATABASE_STRATERGY.md)        | Polyglot persistence architecture       |
-| [CYPHER_EVENT.md](CYPHER_EVENT.md)                   | Neo4j graph schema and event system     |
-| [CONTAINERIZATION.md](CONTAINERIZATION.md)           | Docker and container strategy           |
-| [KUBERNETES.md](KUBERNETES.md)                       | K8s deployment guide                    |
-| [LLM_GUIDE.md](LLM_GUIDE.md)                         | LLM prompts and reasoning patterns      |
-| [GUARDRAILS_SAFEGUARDS.md](GUARDRAILS_SAFEGUARDS.md) | AI safety and compliance                |
-| [DECISION_TRACE.md](DECISION_TRACE.md)               | Explainability and audit trails         |
-| [PROMPT_ROLLBACK.md](PROMPT_ROLLBACK.md)             | AI model versioning system              |
+| Document                                                      | Description                                       |
+| ------------------------------------------------------------- | ------------------------------------------------- |
+| **[PRD.md](PRD.md)**                                          | Product Requirements Document - Vision & Strategy |
+| **[REQUIREMENTS.md](REQUIREMENTS.md)**                        | Lean Canvas - Business Model                      |
+| **[TECH_STACK.md](docs/TECH_STACK.md)**                       | Complete technology stack and AI models           |
+| **[STRUCTURE.md](docs/STRUCTURE.md)**                         | Monorepo structure and module organization        |
+| **[DATABASE_STRATERGY.md](docs/DATABASE_STRATERGY.md)**       | Polyglot persistence architecture                 |
+| **[CYPHER_EVENT.md](docs/CYPHER_EVENT.md)**                   | Neo4j graph schema and event system               |
+| **[ER_DIAGRAM.md](docs/ER_DIAGRAM.md)**                       | Entity-relationship diagrams                      |
+| **[CONTAINERIZATION.md](docs/CONTAINERIZATION.md)**           | Docker and container strategy                     |
+| **[KUBERNETES.md](docs/KUBERNETES.md)**                       | K8s deployment guide                              |
+| **[LLM_GUIDE.md](docs/LLM_GUIDE.md)**                         | LLM prompts and reasoning patterns                |
+| **[GUARDRAILS_SAFEGUARDS.md](docs/GUARDRAILS_SAFEGUARDS.md)** | AI safety and compliance                          |
+| **[DECISION_TRACE.md](docs/DECISION_TRACE.md)**               | Explainability and audit trails                   |
+| **[PROMPT_ROLLBACK.md](docs/PROMPT_ROLLBACK.md)**             | AI model versioning system                        |
+
+**All documentation is PRD-aligned and production-ready.**
 
 ---
 
 ## 🗺️ Roadmap
 
-### Phase 1: MVP (Q1 2026) ✅
+### Phase 1: MVP (8-10 weeks) — Q1 2026 ✅
 
-- [x] Core backend infrastructure
+**Focus:** Core conversations + simulations + explainability
+
+- [x] Core backend infrastructure (NestJS + FastAPI)
 - [x] PostgreSQL + Neo4j integration
-- [x] Basic AI reasoning engine
+- [x] Basic AI reasoning engine (Gemini Pro)
 - [x] Financial graph schema
 - [x] Docker containerization
+- [ ] Net worth dashboard
+- [ ] Simulations: Retirement, Home Loan, SIP
+- [ ] Explainability module
+- [ ] Export: CSV/PDF reports
+- [ ] Basic anomaly alerts
 
-### Phase 2: AI Enhancement (Q2 2026)
+**Target:** 50-100 beta users, internal testing
 
-- [ ] Advanced intent detection
-- [ ] Multi-lingual support (Hindi, regional languages)
-- [ ] Voice interface integration
-- [ ] Real-time anomaly detection
-- [ ] Advanced Monte Carlo simulations
+---
 
-### Phase 3: Production Ready (Q3 2026)
+### Phase 2: V1 (12-16 weeks) — Q2 2026
 
+**Focus:** Retention + depth via goal engine + investment advisor
+
+- [ ] Goal planning engine (home, retirement, education)
+- [ ] Investment strategy advisor + rebalancing
+- [ ] Advanced anomaly detection (LSTM models)
+- [ ] Voice support (English + Hindi)
+- [ ] Premium tier monetization
 - [ ] Kubernetes deployment
-- [ ] Bank API integrations
 - [ ] Mobile app (iOS/Android)
-- [ ] Advanced security audit
-- [ ] RBI compliance certification
 
-### Phase 4: Scale (Q4 2026)
+**Target:** 2,000-5,000 early adopters
 
-- [ ] Multi-tenant architecture
+---
+
+### Phase 3: V2 (6+ months) — Q3-Q4 2026
+
+**Focus:** Global expansion + Digital Twin + Life Events
+
+- [ ] Life Events mode (job switch, marriage, kids, relocation)
+- [ ] Multi-country personalization (tax/inflation/currency)
+- [ ] Financial digital twin (behavioral modeling)
+- [ ] B2B version for banks/neo-banks
+- [ ] Multi-region deployment
 - [ ] Advanced ML models
-- [ ] Real-time market data integration
-- [ ] Partnership ecosystem
-- [ ] International expansion
+
+**Target:** 50,000+ users, international expansion
 
 ---
 

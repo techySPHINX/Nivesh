@@ -1,14 +1,16 @@
 # Project Structure & File Organization
 
-> **Complete monorepo structure for Nivesh AI Financial Platform**
+> **Complete monorepo structure for Nivesh - Your AI Financial Strategist**
 
 [![Monorepo](https://img.shields.io/badge/architecture-monorepo-purple.svg)](https://monorepo.tools/)
 [![TypeScript](https://img.shields.io/badge/backend-TypeScript-3178C6.svg)](https://www.typescriptlang.org/)
 [![Python](https://img.shields.io/badge/AI-Python-3776AB.svg)](https://www.python.org/)
+[![PRD](https://img.shields.io/badge/docs-PRD-orange.svg)](../PRD.md)
 
 ## Table of Contents
 
 - [Overview](#overview)
+- [Product Context](#product-context)
 - [Monorepo Structure](#monorepo-structure)
 - [Backend (NestJS) Structure](#backend-nestjs-structure)
 - [AI Engine (FastAPI) Structure](#ai-engine-fastapi-structure)
@@ -16,6 +18,7 @@
 - [Shared Libraries](#shared-libraries)
 - [Infrastructure](#infrastructure)
 - [Environment Configuration](#environment-configuration)
+- [Development Workflow](#development-workflow)
 
 ---
 
@@ -24,10 +27,31 @@
 Nivesh follows a **monorepo** architecture managed with **npm workspaces** (for TypeScript) and **Poetry** (for Python).
 
 **Key Benefits:**
+
 - ✅ **Shared code** - Reuse libraries across apps
 - ✅ **Atomic commits** - Change multiple services in one PR
 - ✅ **Unified versioning** - All services on same version
 - ✅ **Easier refactoring** - Update interfaces across the codebase
+- ✅ **Consistent tooling** - One CI/CD pipeline for all services
+
+---
+
+## Product Context
+
+**Nivesh's Mission:** Enable users to confidently answer:
+
+- "Can I afford this?"
+- "What should I do next?"
+- "What happens if I choose option A vs B?"
+- "Am I on track for my life goals?"
+
+This structure supports:
+
+- **Conversational AI** interfaces (text + voice)
+- **Simulation engine** for scenario planning
+- **Goal-based planning** with milestone tracking
+- **Explainability** for every recommendation
+- **Privacy & control** with user-owned data exports
 
 ---
 
@@ -194,16 +218,16 @@ apps/backend-nest/
 
 ### Key Modules
 
-| Module | Purpose | Dependencies |
-|--------|---------|--------------|
-| **auth** | JWT + Keycloak authentication | @nestjs/passport, keycloak-connect |
-| **users** | User CRUD operations | @nestjs/typeorm, pg |
-| **transactions** | Expense/income/investment tracking | TypeORM, PostgreSQL |
-| **graph** | Neo4j graph queries | neo4j-driver |
-| **ai** | Call FastAPI ML service | @nestjs/axios |
-| **kafka** | Event-driven architecture | kafkajs |
-| **consent** | GDPR consent management | TypeORM |
-| **audit** | Decision trace logging | TypeORM, Kafka |
+| Module           | Purpose                            | Dependencies                       |
+| ---------------- | ---------------------------------- | ---------------------------------- |
+| **auth**         | JWT + Keycloak authentication      | @nestjs/passport, keycloak-connect |
+| **users**        | User CRUD operations               | @nestjs/typeorm, pg                |
+| **transactions** | Expense/income/investment tracking | TypeORM, PostgreSQL                |
+| **graph**        | Neo4j graph queries                | neo4j-driver                       |
+| **ai**           | Call FastAPI ML service            | @nestjs/axios                      |
+| **kafka**        | Event-driven architecture          | kafkajs                            |
+| **consent**      | GDPR consent management            | TypeORM                            |
+| **audit**        | Decision trace logging             | TypeORM, Kafka                     |
 
 ---
 
@@ -282,15 +306,15 @@ apps/ai-engine/
 
 ### Key Services
 
-| Service | Purpose | Technology |
-|---------|---------|------------|
-| **intent_classifier** | Detect user intent (investment advice, spending analysis, etc.) | DistilBERT |
-| **graph_reasoner** | Convert user query → Cypher query | LLM + prompt engineering |
-| **llm_service** | Generate natural language responses | Gemini Pro 1.5 |
-| **safety_filters** | Block harmful queries, detect hallucinations | Rule-based + Detoxify |
-| **risk_model** | Score investment risk | XGBoost |
-| **cash_flow_forecast** | Predict future income/expenses | Prophet |
-| **anomaly_detector** | Detect unusual spending | LSTM autoencoder |
+| Service                | Purpose                                                         | Technology               |
+| ---------------------- | --------------------------------------------------------------- | ------------------------ |
+| **intent_classifier**  | Detect user intent (investment advice, spending analysis, etc.) | DistilBERT               |
+| **graph_reasoner**     | Convert user query → Cypher query                               | LLM + prompt engineering |
+| **llm_service**        | Generate natural language responses                             | Gemini Pro 1.5           |
+| **safety_filters**     | Block harmful queries, detect hallucinations                    | Rule-based + Detoxify    |
+| **risk_model**         | Score investment risk                                           | XGBoost                  |
+| **cash_flow_forecast** | Predict future income/expenses                                  | Prophet                  |
+| **anomaly_detector**   | Detect unusual spending                                         | LSTM autoencoder         |
 
 ---
 
@@ -630,25 +654,123 @@ npm run test:e2e
 # Build all services
 ./scripts/build.sh
 
+# Deploy using Docker Compose
+docker-compose -f docker-compose.prod.yml up -d
+
+# Or deploy to Kubernetes
+kubectl apply -f infra/kubernetes/
+```
+
+---
+
+## Module Organization by MVP Features
+
+Based on PRD requirements, here's how modules map to features:
+
+### MVP Phase Features → Modules
+
+| MVP Feature                 | Backend Module            | AI Module                | Frontend Component           |
+| --------------------------- | ------------------------- | ------------------------ | ---------------------------- |
+| **Net worth dashboard**     | `transactions/`, `goals/` | `simulations/`           | `Dashboard`, `NetWorthChart` |
+| **Retirement projection**   | `goals/`, `investments/`  | `simulations/retirement` | `RetirementSimulator`        |
+| **Home loan affordability** | `goals/`, `transactions/` | `simulations/loan`       | `LoanCalculator`             |
+| **SIP increase effect**     | `investments/`            | `simulations/sip`        | `SIPProjection`              |
+| **Explainability module**   | `audit/`, `consent/`      | `reasoning/explain`      | `ExplanationPanel`           |
+| **Export reports**          | `exports/`                | N/A                      | `ExportButton`               |
+| **Unusual spend alerts**    | `alerts/`, `kafka/`       | `anomaly_detection/`     | `AlertCenter`                |
+
+### V1 Phase Features → Modules
+
+| V1 Feature                     | Implementation                               |
+| ------------------------------ | -------------------------------------------- |
+| **Goal planning**              | `goals/` + `simulations/multi_goal`          |
+| **Investment advisor**         | `investments/` + `portfolio_optimizer/`      |
+| **Advanced anomaly detection** | Enhanced LSTM models in `anomaly_detection/` |
+| **Voice support**              | `voice/` module + Web Speech API integration |
+| **Premium tier**               | `subscriptions/` module + payment gateway    |
+
+---
+
+## Key Design Patterns
+
+### 1. Domain-Driven Design (DDD)
+
+- Each module represents a bounded context
+- Clear separation of concerns
+- Domain entities with rich business logic
+
+### 2. CQRS (Command Query Responsibility Segregation)
+
+- Write operations go through NestJS
+- Read operations can query Neo4j directly
+- Event sourcing via Kafka
+
+### 3. Event-Driven Architecture
+
+```
+Transaction Created → Kafka Topic → Neo4j Sync Consumer
+                    → Anomaly Detection Consumer
+                    → Alert Generation Consumer
+```
+
+### 4. Microservices Communication
+
+```
+Frontend → API Gateway → NestJS Backend ⇄ FastAPI AI Engine
+                              ↓
+                         PostgreSQL (ACID)
+                              ↓
+                         Kafka Events → Neo4j (Graph Sync)
+```
+
+---
+
+## Folder Naming Conventions
+
+- **Lowercase with hyphens:** `user-profile/`, `financial-goals/`
+- **Feature-based:** `auth/`, `transactions/`, `goals/`
+- **Layer-based:** `entities/`, `dto/`, `services/`, `controllers/`
+- **Test files:** `*.spec.ts`, `*.test.py`
+- **Config files:** `*.config.ts`, `.env.*`
+
+---
+
+## Code Organization Principles
+
+1. **Single Responsibility:** Each module does one thing well
+2. **Dependency Injection:** NestJS DI container for loose coupling
+3. **Interface Segregation:** Small, focused interfaces
+4. **DRY (Don't Repeat Yourself):** Shared utilities in `libs/`
+5. **SOLID Principles:** Throughout the codebase
+
+---
+
+**Last Updated:** January 13, 2026  
+**Version:** 2.0 (Aligned with PRD v1.0)  
+**Maintained By:** Nivesh Engineering Team
+
 # Or individually
+
 docker build -t nivesh/backend:latest apps/backend-nest
 docker build -t nivesh/ai-engine:latest apps/ai-engine
 docker build -t nivesh/frontend:latest apps/frontend
+
 ```
 
 ---
 
 ## Best Practices
 
-✅ **Monorepo** - Keep all services in one repo  
-✅ **Shared libraries** - Avoid code duplication  
-✅ **Environment parity** - Dev environment matches production  
-✅ **Infrastructure as Code** - All infra in Git  
-✅ **Secrets management** - Never commit secrets (.env in .gitignore)  
-✅ **Atomic commits** - Change multiple services in one PR  
+✅ **Monorepo** - Keep all services in one repo
+✅ **Shared libraries** - Avoid code duplication
+✅ **Environment parity** - Dev environment matches production
+✅ **Infrastructure as Code** - All infra in Git
+✅ **Secrets management** - Never commit secrets (.env in .gitignore)
+✅ **Atomic commits** - Change multiple services in one PR
 
 ---
 
-**Last Updated:** January 2026  
-**Maintained By:** Nivesh DevOps Team  
+**Last Updated:** January 2026
+**Maintained By:** Nivesh DevOps Team
 **Related Docs:** [CONTAINERIZATION.md](CONTAINERIZATION.md), [TECH_STACK.md](TECH_STACK.md)
+```

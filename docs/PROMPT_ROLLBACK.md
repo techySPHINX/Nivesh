@@ -1,13 +1,15 @@
 # Prompt & Model Versioning System
 
-> **Comprehensive versioning, rollback, and A/B testing for AI prompts and models**
+> **Comprehensive versioning, rollback, and A/B testing for AI prompts and models in Nivesh**
 
 [![Versioning](https://img.shields.io/badge/versioning-semantic-blue.svg)](https://semver.org/)
 [![Rollback](https://img.shields.io/badge/rollback-instant-green.svg)](https://rollback.dev/)
+[![PRD](https://img.shields.io/badge/docs-PRD-orange.svg)](../PRD.md)
 
 ## Table of Contents
 
 - [Overview](#overview)
+- [Product Context](#product-context)
 - [Prompt Registry](#prompt-registry)
 - [Versioning Strategy](#versioning-strategy)
 - [Deployment Flow](#deployment-flow)
@@ -28,6 +30,32 @@ Nivesh treats **prompts as code** with full versioning, testing, and rollback ca
 - ✅ **A/B testing** - Compare prompt versions in production
 - ✅ **Audit trail** - RBI can inspect exact prompts used
 - ✅ **Gradual rollout** - Test with 5% of users before full deployment
+
+---
+
+## Product Context
+
+**Nivesh's Experimentation Plan (from PRD):**
+
+**MVP Experiments:**
+
+- Ask-first vs dashboard-first onboarding
+- "Show assumptions" default ON vs optional
+- Push alerts frequency optimization
+- Simulation UI: slider-based vs preset scenarios
+
+**Success Metrics:**
+
+- D7 retention improvement
+- Simulations per WAU (Weekly Active User)
+- Trust score (user feedback: "helpful", "accurate", "transparent")
+
+**Prompt Versioning Requirements:**
+
+- Track performance metrics per prompt version
+- Enable instant rollback if trust score drops
+- Support canary deployments (5% → 25% → 100%)
+- Maintain audit trail for compliance
 
 ---
 
