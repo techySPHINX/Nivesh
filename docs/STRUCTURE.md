@@ -2,6 +2,10 @@
 
 > **Complete monorepo structure for Nivesh - Your AI Financial Strategist**
 
+⚠️ **PROPRIETARY DOCUMENTATION** - Copyright © 2026 Prateek (techySPHINX). All Rights Reserved.  
+This document is part of proprietary software. See [LICENSE](../LICENSE) for terms.
+
+[![License](https://img.shields.io/badge/license-Proprietary-red.svg)](../LICENSE)
 [![Monorepo](https://img.shields.io/badge/architecture-monorepo-purple.svg)](https://monorepo.tools/)
 [![TypeScript](https://img.shields.io/badge/backend-TypeScript-3178C6.svg)](https://www.typescriptlang.org/)
 [![Python](https://img.shields.io/badge/AI-Python-3776AB.svg)](https://www.python.org/)
@@ -11,7 +15,7 @@
 
 - [Overview](#overview)
 - [Product Context](#product-context)
-- [Monorepo Structure](#monorepo-structure)   # modular monolith
+- [Monorepo Structure](#monorepo-structure) # modular monolith
 - [Backend (NestJS) Structure](#backend-nestjs-structure)
 - [AI Engine (FastAPI) Structure](#ai-engine-fastapi-structure)
 - [Frontend Structure](#frontend-structure)
@@ -57,51 +61,150 @@ This structure supports:
 
 ## Monorepo Structure
 
+**Architecture Alignment:** This structure implements the approved Mermaid architecture diagrams.
+
 ```
 nivesh/
 │
-├── apps/                          # Application services
+├── apps/                          # Application services (Diagram 1)
 │   ├── backend-nest/              # NestJS API server (TypeScript)
+│   │   └── src/
+│   │       ├── modules/
+│   │       │   ├── auth/          # Firebase Auth integration
+│   │       │   ├── transactions/  # Fi MCP data ingestion
+│   │       │   ├── graph/         # Neo4j Feature Store sync
+│   │       │   ├── kafka/         # Event streaming
+│   │       │   └── audit/         # Explainability logs
+│   │
 │   ├── ai-engine/                 # FastAPI ML service (Python)
+│   │   └── src/
+│   │       ├── orchestrator/      # AI Orchestrator (Diagram 2)
+│   │       ├── tools/             # Tool Router
+│   │       │   ├── simulation/    # Deterministic Finance Engine
+│   │       │   ├── categorization/# Transaction Categorization Model
+│   │       │   ├── anomaly/       # Anomaly Detection (IsolationForest/Prophet)
+│   │       │   ├── risk/          # Risk Profiling Model
+│   │       │   └── personalization/# Recommendation Engine
+│   │       ├── llm/               # Gemini LLM integration
+│   │       ├── enrichment/        # Data Enrichment Layer (Diagram 3)
+│   │       └── response_builder/  # Response Builder (charts + actions)
+│   │
 │   └── frontend/                  # Next.js web app (TypeScript)
+│       └── src/
+│           ├── pages/             # Next.js pages
+│           ├── components/        # Chat UI, Dashboard, Simulations
+│           └── lib/               # API client, Firebase Auth
 │
 ├── libs/                          # Shared libraries
 │   ├── proto/                     # Protocol buffers (gRPC contracts)
+│   │   ├── transaction.proto      # Transaction events (Kafka Avro)
+│   │   ├── simulation.proto       # Simulation requests/responses
+│   │   └── audit.proto            # Explainability event schema
+│   │
 │   ├── compliance/                # RBI/GDPR compliance utilities
+│   │   ├── consent-manager.ts     # GDPR consent tracking
+│   │   ├── retention-policy.ts    # 7-year RBI audit retention
+│   │   └── pii-masking.ts         # PII data anonymization
+│   │
 │   └── prompts/                   # LLM prompt templates
+│       ├── system-prompt.txt      # Base financial advisor prompt
+│       ├── intent-detection.txt   # Intent classification prompt
+│       └── explanation.txt        # Explainability generation
 │
 ├── infra/                         # Infrastructure as Code
 │   ├── docker/                    # Docker compose files
-│   ├── kubernetes/                # K8s manifests
-│   └── terraform/                 # Cloud provisioning
+│   │   ├── docker-compose.yml     # Local dev stack
+│   │   ├── docker-compose.prod.yml# Production config
+│   │   └── Dockerfile.*           # Service-specific Dockerfiles
+│   │
+│   ├── kubernetes/                # K8s manifests (V1 phase)
+│   │   ├── backend-deployment.yaml
+│   │   ├── ai-engine-deployment.yaml
+│   │   ├── neo4j-statefulset.yaml
+│   │   ├── kafka-statefulset.yaml
+│   │   └── ingress.yaml
+│   │
+│   └── terraform/                 # Cloud provisioning (optional)
+│       ├── aws/                   # AWS EKS + RDS
+│       ├── gcp/                   # GCP GKE + Cloud SQL
+│       └── azure/                 # Azure AKS + Cosmos DB
 │
 ├── data/                          # Data assets
-│   ├── models/                    # ML model files (.pkl, .h5)
+│   ├── models/                    # ML model files
+│   │   ├── xgboost_risk.pkl       # Risk Profiling Model
+│   │   ├── xgboost_category.pkl   # Transaction Categorization
+│   │   ├── isolation_forest.pkl   # Anomaly Detection
+│   │   └── prophet_forecast.pkl   # Forecasting Model
+│   │
 │   ├── embeddings/                # Vector embeddings
+│   │   └── sentence_transformers/ # Conversation search
+│   │
 │   └── migrations/                # Database migrations
+│       ├── postgres/              # PostgreSQL schema versions
+│       ├── neo4j/                 # Cypher scripts for graph setup
+│       └── clickhouse/            # ClickHouse table definitions
 │
 ├── docs/                          # Documentation
 │   ├── api/                       # API reference
+│   │   ├── backend-api.md         # NestJS REST API
+│   │   └── ai-api.md              # FastAPI ML endpoints
+│   │
 │   ├── architecture/              # Architecture diagrams
+│   │   ├── mermaid-diagrams.md    # Approved Mermaid architecture
+│   │   ├── data-flow.md           # Data pipeline flow
+│   │   └── deployment.md          # Infrastructure diagrams
+│   │
 │   └── guides/                    # User guides
+│       ├── developer-setup.md     # Local dev environment
+│       ├── deployment-guide.md    # Production deployment
+│       └── contributing.md        # Contribution guidelines
 │
 ├── scripts/                       # Build & deployment scripts
 │   ├── build.sh                   # Build all services
 │   ├── test.sh                    # Run all tests
-│   └── deploy.sh                  # Deploy to production
+│   ├── deploy.sh                  # Deploy to production
+│   ├── seed-data.sh               # Seed test data (dev)
+│   └── migrate-db.sh              # Run database migrations
 │
 ├── .github/                       # GitHub workflows (CI/CD)
 │   └── workflows/
 │       ├── ci.yml                 # Continuous integration
-│       └── deploy.yml             # Deployment pipeline
+│       ├── deploy-staging.yml     # Staging deployment
+│       └── deploy-prod.yml        # Production deployment
 │
 ├── .env.example                   # Environment variables template
 ├── docker-compose.yml             # Local development stack
-├── package.json                   # Root package.json (workspaces)
+├── package.json                   # Root package.json (npm workspaces)
 ├── tsconfig.base.json             # Shared TypeScript config
 ├── pyproject.toml                 # Python dependencies (Poetry)
 ├── README.md                      # Project README
 └── LICENSE                        # MIT License
+```
+
+### Architecture Mapping
+
+| Mermaid Component         | Codebase Location                           |
+| ------------------------- | ------------------------------------------- |
+| **Fi MCP Server**         | `apps/backend-nest/src/modules/mcp/`        |
+| **Data Normalization**    | `apps/ai-engine/src/enrichment/`            |
+| **Feature Store (Neo4j)** | `apps/backend-nest/src/modules/graph/`      |
+| **AI Orchestrator**       | `apps/ai-engine/src/orchestrator/`          |
+| **Gemini LLM**            | `apps/ai-engine/src/llm/`                   |
+| **Tool Router**           | `apps/ai-engine/src/tools/router.py`        |
+| **Finance Engine**        | `apps/ai-engine/src/tools/simulation/`      |
+| **Txn Categorization**    | `apps/ai-engine/src/tools/categorization/`  |
+| **Anomaly Detection**     | `apps/ai-engine/src/tools/anomaly/`         |
+| **Risk Profiling**        | `apps/ai-engine/src/tools/risk/`            |
+| **Personalization**       | `apps/ai-engine/src/tools/personalization/` |
+| **Response Builder**      | `apps/ai-engine/src/response_builder/`      |
+
+---
+
+├── tsconfig.base.json # Shared TypeScript config
+├── pyproject.toml # Python dependencies (Poetry)
+├── README.md # Project README
+└── LICENSE # MIT License
+
 ```
 
 ---
@@ -111,109 +214,111 @@ nivesh/
 ### Full File Tree
 
 ```
+
 apps/backend-nest/
 │
 ├── src/
-│   ├── main.ts                    # Application entry point
-│   ├── app.module.ts              # Root module
-│   │
-│   ├── auth/                      # Authentication module
-│   │   ├── auth.module.ts
-│   │   ├── auth.controller.ts
-│   │   ├── auth.service.ts
-│   │   ├── guards/
-│   │   │   ├── jwt-auth.guard.ts
-│   │   │   └── roles.guard.ts
-│   │   └── strategies/
-│   │       ├── jwt.strategy.ts
-│   │       └── keycloak.strategy.ts
-│   │
-│   ├── users/                     # User management
-│   │   ├── users.module.ts
-│   │   ├── users.controller.ts
-│   │   ├── users.service.ts
-│   │   ├── entities/
-│   │   │   └── user.entity.ts
-│   │   └── dto/
-│   │       ├── create-user.dto.ts
-│   │       └── update-user.dto.ts
-│   │
-│   ├── transactions/              # Financial transactions
-│   │   ├── transactions.module.ts
-│   │   ├── transactions.controller.ts
-│   │   ├── transactions.service.ts
-│   │   ├── entities/
-│   │   │   ├── expense.entity.ts
-│   │   │   ├── income.entity.ts
-│   │   │   └── investment.entity.ts
-│   │   └── dto/
-│   │       └── create-transaction.dto.ts
-│   │
-│   ├── goals/                     # Financial goals
-│   │   ├── goals.module.ts
-│   │   ├── goals.controller.ts
-│   │   ├── goals.service.ts
-│   │   └── entities/
-│   │       └── goal.entity.ts
-│   │
-│   ├── graph/                     # Neo4j graph operations
-│   │   ├── graph.module.ts
-│   │   ├── graph.service.ts
-│   │   └── queries/
-│   │       ├── user-graph.cypher
-│   │       └── impact-analysis.cypher
-│   │
-│   ├── ai/                        # AI integration (calls FastAPI)
-│   │   ├── ai.module.ts
-│   │   ├── ai.service.ts
-│   │   └── dto/
-│   │       └── ai-query.dto.ts
-│   │
-│   ├── consent/                   # GDPR consent management
-│   │   ├── consent.module.ts
-│   │   ├── consent.controller.ts
-│   │   ├── consent.service.ts
-│   │   └── entities/
-│   │       └── consent.entity.ts
-│   │
-│   ├── audit/                     # Audit logging
-│   │   ├── audit.module.ts
-│   │   ├── audit.service.ts
-│   │   └── entities/
-│   │       └── audit-log.entity.ts
-│   │
-│   ├── kafka/                     # Kafka event producers/consumers
-│   │   ├── kafka.module.ts
-│   │   ├── producers/
-│   │   │   ├── transaction-producer.ts
-│   │   │   └── consent-producer.ts
-│   │   └── consumers/
-│   │       └── graph-sync-consumer.ts
-│   │
-│   ├── common/                    # Shared utilities
-│   │   ├── decorators/
-│   │   │   ├── roles.decorator.ts
-│   │   │   └── current-user.decorator.ts
-│   │   ├── filters/
-│   │   │   └── http-exception.filter.ts
-│   │   ├── interceptors/
-│   │   │   └── logging.interceptor.ts
-│   │   └── pipes/
-│   │       └── validation.pipe.ts
-│   │
-│   └── config/                    # Configuration
-│       ├── database.config.ts
-│       ├── kafka.config.ts
-│       └── redis.config.ts
+│ ├── main.ts # Application entry point
+│ ├── app.module.ts # Root module
+│ │
+│ ├── auth/ # Authentication module
+│ │ ├── auth.module.ts
+│ │ ├── auth.controller.ts
+│ │ ├── auth.service.ts
+│ │ ├── guards/
+│ │ │ ├── jwt-auth.guard.ts
+│ │ │ └── roles.guard.ts
+│ │ └── strategies/
+│ │ ├── jwt.strategy.ts
+│ │ └── keycloak.strategy.ts
+│ │
+│ ├── users/ # User management
+│ │ ├── users.module.ts
+│ │ ├── users.controller.ts
+│ │ ├── users.service.ts
+│ │ ├── entities/
+│ │ │ └── user.entity.ts
+│ │ └── dto/
+│ │ ├── create-user.dto.ts
+│ │ └── update-user.dto.ts
+│ │
+│ ├── transactions/ # Financial transactions
+│ │ ├── transactions.module.ts
+│ │ ├── transactions.controller.ts
+│ │ ├── transactions.service.ts
+│ │ ├── entities/
+│ │ │ ├── expense.entity.ts
+│ │ │ ├── income.entity.ts
+│ │ │ └── investment.entity.ts
+│ │ └── dto/
+│ │ └── create-transaction.dto.ts
+│ │
+│ ├── goals/ # Financial goals
+│ │ ├── goals.module.ts
+│ │ ├── goals.controller.ts
+│ │ ├── goals.service.ts
+│ │ └── entities/
+│ │ └── goal.entity.ts
+│ │
+│ ├── graph/ # Neo4j graph operations
+│ │ ├── graph.module.ts
+│ │ ├── graph.service.ts
+│ │ └── queries/
+│ │ ├── user-graph.cypher
+│ │ └── impact-analysis.cypher
+│ │
+│ ├── ai/ # AI integration (calls FastAPI)
+│ │ ├── ai.module.ts
+│ │ ├── ai.service.ts
+│ │ └── dto/
+│ │ └── ai-query.dto.ts
+│ │
+│ ├── consent/ # GDPR consent management
+│ │ ├── consent.module.ts
+│ │ ├── consent.controller.ts
+│ │ ├── consent.service.ts
+│ │ └── entities/
+│ │ └── consent.entity.ts
+│ │
+│ ├── audit/ # Audit logging
+│ │ ├── audit.module.ts
+│ │ ├── audit.service.ts
+│ │ └── entities/
+│ │ └── audit-log.entity.ts
+│ │
+│ ├── kafka/ # Kafka event producers/consumers
+│ │ ├── kafka.module.ts
+│ │ ├── producers/
+│ │ │ ├── transaction-producer.ts
+│ │ │ └── consent-producer.ts
+│ │ └── consumers/
+│ │ └── graph-sync-consumer.ts
+│ │
+│ ├── common/ # Shared utilities
+│ │ ├── decorators/
+│ │ │ ├── roles.decorator.ts
+│ │ │ └── current-user.decorator.ts
+│ │ ├── filters/
+│ │ │ └── http-exception.filter.ts
+│ │ ├── interceptors/
+│ │ │ └── logging.interceptor.ts
+│ │ └── pipes/
+│ │ └── validation.pipe.ts
+│ │
+│ └── config/ # Configuration
+│ ├── database.config.ts
+│ ├── kafka.config.ts
+│ └── redis.config.ts
 │
-├── test/                          # E2E tests
-│   ├── app.e2e-spec.ts
-│   └── jest-e2e.json
+├── test/ # E2E tests
+│ ├── app.e2e-spec.ts
+│ └── jest-e2e.json
 │
-├── Dockerfile                     # Docker image definition
-├── package.json                   # Dependencies
-├── tsconfig.json                  # TypeScript config
-└── nest-cli.json                  # NestJS CLI config
+├── Dockerfile # Docker image definition
+├── package.json # Dependencies
+├── tsconfig.json # TypeScript config
+└── nest-cli.json # NestJS CLI config
+
 ```
 
 ### Key Modules
@@ -236,72 +341,74 @@ apps/backend-nest/
 ### Full File Tree
 
 ```
+
 apps/ai-engine/
 │
 ├── app/
-│   ├── main.py                    # FastAPI app entry point
-│   ├── config.py                  # Environment config
-│   │
-│   ├── api/                       # API endpoints
-│   │   ├── __init__.py
-│   │   ├── query.py               # POST /api/v1/query
-│   │   ├── explain.py             # POST /api/v1/explain
-│   │   └── health.py              # GET /health
-│   │
-│   ├── services/                  # Business logic
-│   │   ├── intent_classifier.py   # Detect user intent
-│   │   ├── graph_reasoner.py      # Convert intent → Cypher
-│   │   ├── llm_service.py         # Gemini Pro integration
-│   │   ├── safety_filters.py      # Pre/post-LLM filters
-│   │   └── audit_logger.py        # Log to Kafka
-│   │
-│   ├── models/                    # ML models
-│   │   ├── __init__.py
-│   │   ├── intent_classifier.pkl  # DistilBERT model
-│   │   ├── risk_model.pkl         # XGBoost risk scoring
-│   │   ├── cash_flow_forecast.pkl # Prophet time series
-│   │   └── anomaly_detector.pkl   # LSTM autoencoder
-│   │
-│   ├── prompts/                   # LLM prompt templates
-│   │   ├── system_prompt.txt
-│   │   ├── intent_to_graph.txt
-│   │   ├── graph_to_nl.txt
-│   │   └── explain_decision.txt
-│   │
-│   ├── schemas/                   # Pydantic models
-│   │   ├── request.py             # API request schemas
-│   │   ├── response.py            # API response schemas
-│   │   └── events.py              # Kafka event schemas
-│   │
-│   ├── database/                  # Database clients
-│   │   ├── postgres.py            # PostgreSQL connection
-│   │   ├── neo4j.py               # Neo4j driver
-│   │   ├── mongo.py               # MongoDB connection
-│   │   └── redis.py               # Redis cache
-│   │
-│   ├── kafka/                     # Kafka integration
-│   │   ├── producer.py            # Emit events
-│   │   └── consumer.py            # Consume events
-│   │
-│   ├── utils/                     # Utilities
-│   │   ├── logging.py             # Structured logging
-│   │   ├── metrics.py             # Prometheus metrics
-│   │   └── helpers.py             # Common functions
-│   │
-│   └── tests/                     # Unit tests
-│       ├── test_intent.py
-│       ├── test_graph.py
-│       └── test_safety.py
+│ ├── main.py # FastAPI app entry point
+│ ├── config.py # Environment config
+│ │
+│ ├── api/ # API endpoints
+│ │ ├── **init**.py
+│ │ ├── query.py # POST /api/v1/query
+│ │ ├── explain.py # POST /api/v1/explain
+│ │ └── health.py # GET /health
+│ │
+│ ├── services/ # Business logic
+│ │ ├── intent_classifier.py # Detect user intent
+│ │ ├── graph_reasoner.py # Convert intent → Cypher
+│ │ ├── llm_service.py # Gemini Pro integration
+│ │ ├── safety_filters.py # Pre/post-LLM filters
+│ │ └── audit_logger.py # Log to Kafka
+│ │
+│ ├── models/ # ML models
+│ │ ├── **init**.py
+│ │ ├── intent_classifier.pkl # DistilBERT model
+│ │ ├── risk_model.pkl # XGBoost risk scoring
+│ │ ├── cash_flow_forecast.pkl # Prophet time series
+│ │ └── anomaly_detector.pkl # LSTM autoencoder
+│ │
+│ ├── prompts/ # LLM prompt templates
+│ │ ├── system_prompt.txt
+│ │ ├── intent_to_graph.txt
+│ │ ├── graph_to_nl.txt
+│ │ └── explain_decision.txt
+│ │
+│ ├── schemas/ # Pydantic models
+│ │ ├── request.py # API request schemas
+│ │ ├── response.py # API response schemas
+│ │ └── events.py # Kafka event schemas
+│ │
+│ ├── database/ # Database clients
+│ │ ├── postgres.py # PostgreSQL connection
+│ │ ├── neo4j.py # Neo4j driver
+│ │ ├── mongo.py # MongoDB connection
+│ │ └── redis.py # Redis cache
+│ │
+│ ├── kafka/ # Kafka integration
+│ │ ├── producer.py # Emit events
+│ │ └── consumer.py # Consume events
+│ │
+│ ├── utils/ # Utilities
+│ │ ├── logging.py # Structured logging
+│ │ ├── metrics.py # Prometheus metrics
+│ │ └── helpers.py # Common functions
+│ │
+│ └── tests/ # Unit tests
+│ ├── test_intent.py
+│ ├── test_graph.py
+│ └── test_safety.py
 │
-├── models/                        # Model artifacts (gitignored)
-│   ├── intent_classifier/
-│   ├── risk_model/
-│   └── cash_flow_forecast/
+├── models/ # Model artifacts (gitignored)
+│ ├── intent_classifier/
+│ ├── risk_model/
+│ └── cash_flow_forecast/
 │
-├── Dockerfile                     # Docker image
-├── requirements.txt               # Python dependencies
-├── pyproject.toml                 # Poetry config
-└── pytest.ini                     # Pytest config
+├── Dockerfile # Docker image
+├── requirements.txt # Python dependencies
+├── pyproject.toml # Poetry config
+└── pytest.ini # Pytest config
+
 ```
 
 ### Key Services
@@ -321,55 +428,57 @@ apps/ai-engine/
 ## Frontend Structure
 
 ```
+
 apps/frontend/
 │
-├── app/                           # Next.js 14 (App Router)
-│   ├── layout.tsx                 # Root layout
-│   ├── page.tsx                   # Home page
-│   ├── dashboard/
-│   │   ├── page.tsx               # Dashboard overview
-│   │   ├── spending/
-│   │   │   └── page.tsx           # Spending analysis
-│   │   ├── goals/
-│   │   │   └── page.tsx           # Financial goals
-│   │   └── investments/
-│   │       └── page.tsx           # Investment portfolio
-│   └── api/                       # API routes (Next.js middleware)
-│       └── auth/
-│           └── [...nextauth].ts
+├── app/ # Next.js 14 (App Router)
+│ ├── layout.tsx # Root layout
+│ ├── page.tsx # Home page
+│ ├── dashboard/
+│ │ ├── page.tsx # Dashboard overview
+│ │ ├── spending/
+│ │ │ └── page.tsx # Spending analysis
+│ │ ├── goals/
+│ │ │ └── page.tsx # Financial goals
+│ │ └── investments/
+│ │ └── page.tsx # Investment portfolio
+│ └── api/ # API routes (Next.js middleware)
+│ └── auth/
+│ └── [...nextauth].ts
 │
-├── components/                    # React components
-│   ├── ui/                        # shadcn/ui components
-│   │   ├── button.tsx
-│   │   ├── card.tsx
-│   │   └── dialog.tsx
-│   ├── charts/                    # Data visualization
-│   │   ├── spending-chart.tsx
-│   │   └── goal-progress.tsx
-│   └── chat/                      # AI chatbot
-│       ├── chat-interface.tsx
-│       └── message-bubble.tsx
+├── components/ # React components
+│ ├── ui/ # shadcn/ui components
+│ │ ├── button.tsx
+│ │ ├── card.tsx
+│ │ └── dialog.tsx
+│ ├── charts/ # Data visualization
+│ │ ├── spending-chart.tsx
+│ │ └── goal-progress.tsx
+│ └── chat/ # AI chatbot
+│ ├── chat-interface.tsx
+│ └── message-bubble.tsx
 │
-├── lib/                           # Utilities
-│   ├── api-client.ts              # Axios wrapper
-│   ├── auth.ts                    # Authentication helpers
-│   └── utils.ts                   # Common functions
+├── lib/ # Utilities
+│ ├── api-client.ts # Axios wrapper
+│ ├── auth.ts # Authentication helpers
+│ └── utils.ts # Common functions
 │
-├── hooks/                         # Custom React hooks
-│   ├── use-user.ts
-│   └── use-transactions.ts
+├── hooks/ # Custom React hooks
+│ ├── use-user.ts
+│ └── use-transactions.ts
 │
 ├── styles/
-│   └── globals.css                # Global styles
+│ └── globals.css # Global styles
 │
-├── public/                        # Static assets
-│   ├── logo.svg
-│   └── favicon.ico
+├── public/ # Static assets
+│ ├── logo.svg
+│ └── favicon.ico
 │
 ├── Dockerfile
 ├── package.json
 ├── tsconfig.json
 └── next.config.js
+
 ```
 
 ---
@@ -379,47 +488,53 @@ apps/frontend/
 ### libs/proto/ (gRPC Contracts)
 
 ```
+
 libs/proto/
 │
-├── user.proto                     # User service contract
-├── transaction.proto              # Transaction service contract
-├── ai.proto                       # AI service contract
+├── user.proto # User service contract
+├── transaction.proto # Transaction service contract
+├── ai.proto # AI service contract
 │
-└── generated/                     # Auto-generated code
-    ├── typescript/
-    │   ├── user_pb.ts
-    │   └── transaction_pb.ts
-    └── python/
-        ├── user_pb2.py
-        └── transaction_pb2.py
+└── generated/ # Auto-generated code
+├── typescript/
+│ ├── user_pb.ts
+│ └── transaction_pb.ts
+└── python/
+├── user_pb2.py
+└── transaction_pb2.py
+
 ```
 
 ### libs/compliance/
 
 ```
+
 libs/compliance/
 │
-├── rbi/                           # RBI compliance rules
-│   ├── data-residency.ts
-│   └── audit-trail.ts
+├── rbi/ # RBI compliance rules
+│ ├── data-residency.ts
+│ └── audit-trail.ts
 │
-├── gdpr/                          # GDPR utilities
-│   ├── consent-manager.ts
-│   └── data-deletion.ts
+├── gdpr/ # GDPR utilities
+│ ├── consent-manager.ts
+│ └── data-deletion.ts
 │
-└── sebi/                          # SEBI investment rules
-    └── investment-limits.ts
+└── sebi/ # SEBI investment rules
+└── investment-limits.ts
+
 ```
 
 ### libs/prompts/
 
 ```
+
 libs/prompts/
 │
 ├── investment-advice.txt
 ├── spending-analysis.txt
 ├── goal-planning.txt
 └── risk-assessment.txt
+
 ```
 
 ---
@@ -429,65 +544,71 @@ libs/prompts/
 ### infra/docker/
 
 ```
+
 infra/docker/
 │
-├── docker-compose.yml             # Local development
-├── docker-compose.prod.yml        # Production
+├── docker-compose.yml # Local development
+├── docker-compose.prod.yml # Production
 └── .dockerignore
+
 ```
 
 ### infra/kubernetes/
 
 ```
+
 infra/kubernetes/
 │
 ├── namespaces/
-│   ├── nivesh-prod.yaml
-│   └── nivesh-observability.yaml
+│ ├── nivesh-prod.yaml
+│ └── nivesh-observability.yaml
 │
 ├── deployments/
-│   ├── backend.yaml
-│   ├── ai-engine.yaml
-│   └── frontend.yaml
+│ ├── backend.yaml
+│ ├── ai-engine.yaml
+│ └── frontend.yaml
 │
 ├── services/
-│   ├── backend-service.yaml
-│   └── ai-engine-service.yaml
+│ ├── backend-service.yaml
+│ └── ai-engine-service.yaml
 │
 ├── statefulsets/
-│   ├── postgres.yaml
-│   ├── neo4j.yaml
-│   └── mongodb.yaml
+│ ├── postgres.yaml
+│ ├── neo4j.yaml
+│ └── mongodb.yaml
 │
 ├── configmaps/
-│   └── app-config.yaml
+│ └── app-config.yaml
 │
 ├── secrets/
-│   └── app-secrets.yaml
+│ └── app-secrets.yaml
 │
 └── ingress/
-    └── nivesh-ingress.yaml
+└── nivesh-ingress.yaml
+
 ```
 
 ### infra/terraform/
 
 ```
+
 infra/terraform/
 │
-├── main.tf                        # Main Terraform config
-├── variables.tf                   # Input variables
-├── outputs.tf                     # Output values
+├── main.tf # Main Terraform config
+├── variables.tf # Input variables
+├── outputs.tf # Output values
 │
 ├── modules/
-│   ├── eks/                       # AWS EKS cluster
-│   ├── rds/                       # PostgreSQL RDS
-│   └── s3/                        # S3 buckets (MinIO alternative)
+│ ├── eks/ # AWS EKS cluster
+│ ├── rds/ # PostgreSQL RDS
+│ └── s3/ # S3 buckets (MinIO alternative)
 │
 └── environments/
-    ├── dev.tfvars
-    ├── staging.tfvars
-    └── prod.tfvars
-```
+├── dev.tfvars
+├── staging.tfvars
+└── prod.tfvars
+
+````
 
 ---
 
@@ -604,7 +725,7 @@ PLAID_SECRET=<secret>
 
 # Market data
 ALPHA_VANTAGE_API_KEY=<secret>
-```
+````
 
 ---
 

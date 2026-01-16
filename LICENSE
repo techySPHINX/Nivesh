@@ -1,47 +1,220 @@
-PROPRIETARY SOFTWARE LICENSE AGREEMENT
+NIVESH - PROPRIETARY SOFTWARE LICENSE AGREEMENT
 
-IMPORTANT-READ CAREFULLY: This Proprietary Software License Agreement ("Agreement") is a legal agreement between You (either an individual or a single entity) and Nivesh ("Licensor") for the proprietary software product(s) identified above, which includes computer software and may include associated media, printed materials, and "online" or electronic documentation ("Software").
+Copyright © 2026 (techySPHINX). All Rights Reserved.
 
-BY INSTALLING, COPYING, OR OTHERWISE USING THE SOFTWARE, YOU AGREE TO BE BOUND BY THE TERMS OF THIS AGREEMENT. IF YOU DO NOT AGREE TO THE TERMS OF THIS AGREEMENT, DO NOT INSTALL OR USE THE SOFTWARE.
+IMPORTANT - READ CAREFULLY: This is a legally binding Proprietary Software License Agreement ("Agreement") between You (either an individual or a legal entity) and the copyright holder identified above ("Licensor") for the Nivesh AI Financial Strategist software platform ("Software").
 
-1. GRANT OF LICENSE
-   Licensor grants You a limited, non-exclusive, non-transferable, revocable license to use the Software solely for Your internal business operations, subject to the terms and conditions of this Agreement. This license is strictly personal to You and may not be assigned, sublicensed, or transferred to any third party without the prior written consent of Licensor.
+BY ACCESSING, VIEWING, DOWNLOADING, CLONING, FORKING, INSTALLING, COPYING, OR OTHERWISE USING THE SOFTWARE IN ANY MANNER, YOU AGREE TO BE BOUND BY THE TERMS OF THIS AGREEMENT. IF YOU DO NOT AGREE TO THE TERMS OF THIS AGREEMENT, YOU MUST IMMEDIATELY CEASE ALL ACCESS AND USE OF THE SOFTWARE AND DELETE ALL COPIES IN YOUR POSSESSION.
 
-2. OWNERSHIP AND INTELLECTUAL PROPERTY RIGHTS
-   The Software is licensed, not sold. You acknowledge that the Software and all copies thereof are the proprietary and confidential property of Licensor and its suppliers. Title, ownership rights, and intellectual property rights in and to the Software (including but not limited to any images, photographs, animations, video, audio, music, text, and "applets" incorporated into the Software) shall remain exclusively with Licensor. The Software is protected by copyright laws and international treaty provisions.
+SOFTWARE OWNERSHIP AND COPYRIGHT NOTICE:
+This Software and all associated intellectual property, including but not limited to source code, documentation, architecture designs, algorithms, database schemas, AI models, prompts, and trade secrets, are the exclusive proprietary property of the Licensor and are protected by international copyright laws, trade secret laws, patent laws, and international treaties.
 
-3. RESTRICTIONS ON USE
-   You agree to strict adherence to the following restrictions. You shall NOT:
-   (a) Copy the Software, except for one (1) backup copy solely for archival purposes.
-   (b) Modify, translate, adapt, or create derivative works based upon the Software or any part thereof.
-   (c) Decompile, disassemble, reverse engineer, or attempt to derive the source code of the Software, in whole or in part, except to the extent that such activity is expressly permitted by applicable law notwithstanding this limitation.
-   (d) Remove, alter, or obscure any proprietary notices, labels, or marks on the Software.
-   (e) Rent, lease, lend, sell, redistribute, or sublicense the Software.
-   (f) Use the Software for any commercial timesharing, rental, or service bureau use.
-   (g) Use the Software in any manner that competes with Licensor or facilitates the creation of a competing product.
-   (h) Publish or disclose the results of any benchmark tests run on the Software without Licensor's prior written consent.
-   (i) Use the Software for any illegal or unauthorized purpose, or in any manner that violates any applicable laws or regulations.
+1.  GRANT OF LICENSE
 
-4. MARKET INTEGRITY AND VIOLATION MONITORING
-   You acknowledge that the integrity of the market depends on the proper use of financial software. You agree not to use the Software to engage in any activity that constitutes a violation of market regulations, securities laws, or ethical trading practices ("Market Violations"). Licensor reserves the right to monitor usage patterns and report any suspected Market Violations to appropriate regulatory authorities.
+    NO LICENSE IS GRANTED UNDER THIS AGREEMENT FOR ANY USE WITHOUT EXPLICIT WRITTEN PERMISSION.
 
-5. CULPRIT SEGREGATION AND LIABILITY
-   In the event of a breach of this Agreement or detected Market Violations:
-   (a) CULPRIT SEGREGATION: You agree that Licensor has the specific right to identify, isolate, and segregate the specific individual(s) or entity(ies) responsible for the breach ("Culprit") from authorized users.
-   (b) BLOCKING AND SUSPENSION: Licensor may immediately suspend or block the Culprit's access to the Software without prior notice.
-   (c) INDEMNIFICATION: You agree to indemnify, defend, and hold harmless Licensor, its officers, directors, employees, and agents from and against any and all claims, liabilities, damages, losses, or expenses (including reasonable attorneys' fees) arising out of or in any way connected with Your access to or use of the Software, Your violation of this Agreement, or any Market Violation committed by You or through Your account.
+    1.1 VIEWING ONLY: You may view the Software source code on GitHub for educational and reference purposes ONLY.
 
-6. TERMINATION
-   This Agreement is effective until terminated. Your rights under this Agreement will terminate automatically without notice from Licensor if You fail to comply with any term(s) of this Agreement. Upon termination, You shall cease all use of the Software and destroy all copies, full or partial, of the Software.
+    1.2 PROHIBITED USES: Unless You have obtained a separate written Commercial License Agreement from the Licensor, You are STRICTLY PROHIBITED from:
+    (a) Using the Software for any commercial purpose, including but not limited to: - Operating a business or generating revenue - Providing consulting or professional services - Creating competing products or services - Any for-profit activities whatsoever
+    (b) Using the Software for personal projects or applications
+    (c) Forking, cloning, copying, or downloading the Software
+    (d) Modifying, adapting, translating, or creating derivative works
+    (e) Distributing, sublicensing, selling, renting, or leasing the Software
+    (f) Hosting, deploying, or running the Software on any infrastructure
+    (g) Reverse engineering, decompiling, or disassembling the Software
+    (h) Using the Software in any production environment
+    (i) Integrating the Software into any other software or system
 
-7. DISCLAIMER OF WARRANTIES
-   THE SOFTWARE IS PROVIDED "AS IS," WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND NON-INFRINGEMENT. LICENSOR DOES NOT WARRANT THAT THE FUNCTIONS CONTAINED IN THE SOFTWARE WILL MEET YOUR REQUIREMENTS OR THAT THE OPERATION OF THE SOFTWARE WILL BE UNINTERRUPTED OR ERROR-FREE.
+    1.3 MANDATORY COMMERCIAL LICENSE: To use the Software for ANY purpose beyond viewing the source code, You MUST: - Contact: jaganhotta357@outlook.com - Obtain a written Commercial License Agreement - Pay the applicable licensing fees as determined by the Licensor - Comply with all terms specified in the Commercial License Agreement
 
-8. LIMITATION OF LIABILITY
-   TO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE LAW, IN NO EVENT SHALL LICENSOR BE LIABLE FOR ANY SPECIAL, INCIDENTAL, INDIRECT, OR CONSEQUENTIAL DAMAGES WHATSOEVER (INCLUDING, WITHOUT LIMITATION, DAMAGES FOR LOSS OF BUSINESS PROFITS, BUSINESS INTERRUPTION, LOSS OF BUSINESS INFORMATION, OR ANY OTHER PECUNIARY LOSS) ARISING OUT OF THE USE OF OR INABILITY TO USE THE SOFTWARE, EVEN IF LICENSOR HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.
+2.  OWNERSHIP AND INTELLECTUAL PROPERTY RIGHTS
 
-9. GOVERNING LAW AND JURISDICTION
-   This Agreement shall be governed by and construed in accordance with the laws of the jurisdiction in which Licensor is located, without regard to its conflict of law principles.
+    The Software is LICENSED, NOT SOLD. The Licensor retains ALL rights, title, and interest in and to the Software, including:
 
-10. ENTIRE AGREEMENT
-    This Agreement constitutes the entire agreement between You and Licensor concerning the Software and supersedes all prior or contemporaneous oral or written communications, proposals, and representations with respect to the Software or any other subject matter covered by this Agreement.
+    2.1 All source code, object code, and executable files
+    2.2 All documentation, comments, and technical specifications
+    2.3 All architectural designs and system blueprints (including Mermaid diagrams)
+    2.4 All database schemas, data models, and ER diagrams
+    2.5 All AI models, machine learning algorithms, and training data
+    2.6 All LLM prompts, system prompts, and prompt templates
+    2.7 All API designs, interfaces, and integration patterns
+    2.8 All business logic, financial calculations, and simulation algorithms
+    2.9 All trade secrets, know-how, and proprietary methodologies
+    2.10 All trademarks, service marks, logos, and brand identities ("Nivesh", "Nivesh AI Financial Strategist")
+
+    Any use of the Software beyond what is expressly permitted herein constitutes copyright infringement and theft of intellectual property.
+
+3.  STRICT RESTRICTIONS AND PROHIBITIONS
+4.  STRICT RESTRICTIONS AND PROHIBITIONS
+
+    You acknowledge and agree that You are STRICTLY PROHIBITED from:
+
+    3.1 COMMERCIAL USE PROHIBITION - Using the Software to generate revenue or profits - Operating any business using the Software - Providing services to third parties using the Software - Selling access to or functionality of the Software - Using the Software in any commercial product or service
+
+    3.2 DISTRIBUTION PROHIBITION - Copying the Software to any other computer, server, or location - Distributing copies of the Software in any form - Making the Software available for download by others - Publishing the Software on any platform or repository - Sublicensing or assigning Your rights (if any) to others
+
+    3.3 MODIFICATION PROHIBITION - Modifying, altering, or adapting the Software - Creating derivative works based on the Software - Translating the Software into other languages or frameworks - Extracting components or modules for use in other projects - Reusing any algorithms, code patterns, or methodologies
+
+    3.4 COMPETITIVE USE PROHIBITION - Creating competing products or services - Using the Software to benchmark against competing products - Studying the Software to replicate its functionality - Sharing competitive intelligence derived from the Software
+
+    3.5 DEPLOYMENT PROHIBITION - Installing the Software on any computer or server - Running or executing the Software in any environment - Deploying the Software to cloud infrastructure - Containerizing or virtualizing the Software - Hosting the Software for any purpose
+
+5.  ENFORCEMENT AND LEGAL CONSEQUENCES
+
+    4.1 MONITORING AND DETECTION
+    The Licensor reserves the right to monitor usage patterns, track deployments, and investigate any suspected unauthorized use of the Software through technical, legal, or investigative means.
+
+    4.2 IMMEDIATE TERMINATION
+    Any violation of this Agreement will result in immediate and automatic termination of any rights You may have, and You must immediately: - Cease all use of the Software - Delete all copies of the Software from all systems - Destroy all derivative works created from the Software - Provide written certification of compliance to the Licensor
+
+    4.3 LEGAL ACTION AND LIABILITY
+    Upon discovery of any violation, the Licensor may, at its sole discretion:
+
+        (a) CIVIL LIABILITY: Pursue civil legal action seeking:
+            - Actual damages proven to have been incurred
+            - Statutory damages up to $150,000 per work under copyright law
+            - Disgorgement of all profits derived from unauthorized use
+            - Injunctive relief to prevent continued violation
+            - Costs and reasonable attorneys' fees
+
+        (b) CRIMINAL PROSECUTION: Report violations to law enforcement for potential criminal prosecution under applicable copyright and computer fraud laws, including but not limited to:
+            - Copyright infringement (criminal penalties)
+            - Trade secret misappropriation
+            - Computer fraud and abuse
+            - Wire fraud (if interstate or international)
+
+        (c) REGULATORY REPORTING: Report violations to:
+            - GitHub for DMCA takedown and account suspension
+            - Relevant financial regulatory authorities (if financial data misused)
+            - Professional licensing boards (if used by licensed professionals)
+            - Immigration authorities (if visa fraud suspected)
+
+    4.4 CULPRIT IDENTIFICATION AND BLACKLISTING
+    The Licensor maintains a permanent blacklist of individuals and entities who have violated this Agreement. Violators will be: - Permanently banned from obtaining any future licenses - Reported to industry associations and professional networks - Subject to public disclosure of their violation (if legally permissible) - Blocked from accessing any Licensor products or services
+
+    4.5 INDEMNIFICATION
+    You agree to indemnify, defend, and hold harmless the Licensor, its affiliates, officers, directors, employees, agents, and licensors from and against any and all claims, liabilities, damages, losses, costs, expenses (including reasonable attorneys' fees), arising out of or in any way connected with: - Your violation of this Agreement - Your unauthorized use of the Software - Any third-party claims arising from Your use of the Software - Your infringement of any intellectual property or other rights
+
+6.  COMMERCIAL LICENSE REQUIREMENTS
+
+    5.1 TO OBTAIN A COMMERCIAL LICENSE: - Email: jaganhotta357@outlook.com - Subject: "Nivesh Commercial License Request" - Include:
+    _ Your full legal name or company name
+    _ Intended use case and scope
+    _ Expected deployment scale
+    _ Contact information \* Legal jurisdiction
+
+    5.2 LICENSING FEES
+    Commercial licensing fees will be determined based on: - Type of use (personal, startup, enterprise) - Number of users or transactions - Geographic scope - Duration of license term - Support and maintenance requirements
+
+    5.3 LICENSE TYPES AVAILABLE - Personal Project License: For non-commercial personal projects - Startup License: For early-stage companies (<$1M revenue) - Enterprise License: For established businesses - Academic License: For educational institutions (discounted) - OEM License: For integration into other products (custom terms)
+
+7.  NO WARRANTIES
+
+    THE SOFTWARE IS PROVIDED "AS IS" WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO:
+
+    - Warranties of merchantability
+    - Fitness for a particular purpose
+    - Non-infringement
+    - Accuracy of financial calculations or projections
+    - Security or privacy of data
+    - Availability or uptime
+    - Compliance with any laws or regulations
+
+    THE LICENSOR DOES NOT WARRANT THAT:
+
+    - The Software will meet Your requirements
+    - The Software will be error-free or bug-free
+    - The Software will operate without interruption
+    - Any defects will be corrected
+    - The Software is suitable for financial decision-making
+
+8.  LIMITATION OF LIABILITY
+
+    TO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE LAW:
+
+    7.1 IN NO EVENT SHALL THE LICENSOR BE LIABLE FOR ANY: - Direct, indirect, incidental, special, consequential, or exemplary damages - Loss of profits, revenue, data, or business opportunities - Financial losses or investment losses - Damages arising from reliance on the Software - Damages exceeding the amount paid for the license (if any)
+
+    7.2 THIS LIMITATION APPLIES EVEN IF: - The Licensor has been advised of the possibility of such damages - The remedy fails of its essential purpose - Damages arise from breach of contract, tort, or any other legal theory
+
+9.  FINANCIAL DISCLAIMER
+
+    8.1 NOT FINANCIAL ADVICE
+    The Software is a technology platform ONLY. It does NOT provide: - Financial advice or recommendations - Investment advice - Tax advice - Legal advice - Any professional services requiring licensure
+
+    8.2 USER RESPONSIBILITY
+    You are solely responsible for: - Your financial decisions - Verifying all calculations and projections - Consulting with licensed professionals (CPAs, CFPs, attorneys) - Compliance with all applicable financial regulations - Risk management and due diligence
+
+    8.3 REGULATORY COMPLIANCE
+    The Licensor makes no representations that the Software complies with financial regulations in any jurisdiction, including but not limited to: - RBI (Reserve Bank of India) regulations - SEBI (Securities and Exchange Board of India) regulations - GDPR (General Data Protection Regulation) - SEC (U.S. Securities and Exchange Commission) regulations - Any other financial or data protection regulations
+
+10. TERMINATION
+
+    9.1 AUTOMATIC TERMINATION
+    Your rights (if any) terminate automatically and immediately upon any violation of this Agreement.
+
+    9.2 OBLIGATIONS UPON TERMINATION
+    Upon termination, You must: - Cease all use of the Software - Delete all copies of the Software - Destroy all derivative works - Certify compliance in writing within 5 business days
+
+    9.3 SURVIVAL
+    The following sections survive termination: - Ownership and Intellectual Property Rights - Restrictions and Prohibitions - Enforcement and Legal Consequences - Indemnification - Limitation of Liability - Governing Law
+
+11. GOVERNING LAW AND JURISDICTION
+
+    10.1 GOVERNING LAW
+    This Agreement shall be governed by and construed in accordance with the laws of India, without regard to its conflict of law principles.
+
+    10.2 JURISDICTION
+    Any legal action arising out of or relating to this Agreement must be brought exclusively in the courts located in [Your City/State], India, and You consent to the personal jurisdiction of such courts.
+
+    10.3 INTERNATIONAL COMPLIANCE
+    If You access the Software from outside India, You are responsible for compliance with local laws, and You agree that Indian law governs regardless of Your location.
+
+12. ENTIRE AGREEMENT AND MODIFICATIONS
+
+    11.1 ENTIRE AGREEMENT
+    This Agreement constitutes the entire agreement between You and the Licensor concerning the Software and supersedes all prior agreements, understandings, negotiations, and discussions, whether oral or written.
+
+    11.2 MODIFICATIONS
+    The Licensor reserves the right to modify this Agreement at any time by updating this LICENSE file. Continued access to or use of the Software after modifications constitutes acceptance of the modified terms.
+
+    11.3 SEVERABILITY
+    If any provision of this Agreement is found to be unenforceable or invalid, that provision shall be limited or eliminated to the minimum extent necessary, and the remaining provisions shall remain in full force and effect.
+
+    11.4 NO WAIVER
+    The failure of the Licensor to enforce any right or provision of this Agreement shall not constitute a waiver of such right or provision.
+
+13. CONTACT INFORMATION
+
+    For licensing inquiries, permissions, or legal notices:
+
+    Email: jaganhotta357@outlook.com
+    Subject Line: [NIVESH LICENSE INQUIRY]
+
+    GitHub Repository: https://github.com/techySPHINX/Nivesh
+    Copyright Holder: Prateek (techySPHINX)
+
+    Response Time: The Licensor will endeavor to respond within 5-7 business days, but makes no guarantee of response time.
+
+14. ACKNOWLEDGMENT
+
+    BY ACCESSING OR USING THE SOFTWARE, YOU ACKNOWLEDGE THAT:
+
+    - You have read and understood this Agreement
+    - You agree to be bound by its terms and conditions
+    - You understand that unauthorized use may result in severe civil and criminal penalties
+    - You understand that no rights are granted except as expressly stated herein
+    - You acknowledge that viewing the source code does NOT grant any license to use, copy, modify, or distribute
+    - You understand that a separate Commercial License is required for ANY use beyond viewing
+    - You agree to contact jaganhotta357@outlook.com for licensing before any use
+
+---
+
+NIVESH - YOUR AI FINANCIAL STRATEGIST
+Copyright © 2026 Prateek (techySPHINX). All Rights Reserved.
+
+This software and all associated intellectual property are protected by international copyright laws and treaties. Unauthorized use, reproduction, or distribution will be prosecuted to the fullest extent of the law.
+
+NO PART OF THIS SOFTWARE MAY BE USED WITHOUT A VALID COMMERCIAL LICENSE.
+
+For Commercial Licensing: jaganhotta357@outlook.com

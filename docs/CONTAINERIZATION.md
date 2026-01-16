@@ -55,39 +55,72 @@ Nivesh runs as a **fully containerized stack** using Docker and Docker Compose. 
 
 ## Architecture
 
+**From Approved Mermaid Diagrams:**
+
+### Service Dependencies (Diagram 1)
+
 ```
-┌────────────────────────────────────────────────┐
-│                Docker Network (nivesh-net)      │
-│                                                │
-│  ┌──────────┐   ┌───────────┐   ┌───────────┐ │
-│  │ Frontend │ → │API Gateway│ → │  NestJS   │ │
-│  │ (Next.js)│   │  (Kong)   │   │  Backend  │ │
-│  └──────────┘   └───────────┘   └─────┬─────┘ │
-│                                        │       │
-│                                        ▼       │
-│  ┌───────────┐         Kafka      ┌──────────┐│
-│  │  FastAPI  │ ◀────────────────▶ │Event Bus ││
-│  │AI Engine  │                    └──────────┘│
-│  └─────┬─────┘                                 │
-│        │                                       │
-│        ▼                                       │
-│  ┌───────────────┐   ┌───────────────┐        │
-│  │ Vector Store  │   │  ML Models    │        │
-│  └───────────────┘   └───────────────┘        │
-│                                                │
-│  ┌────────┐ ┌────────┐ ┌────────┐ ┌──────┐   │
-│  │Postgres│ │ Neo4j  │ │ Mongo  │ │Redis │   │
-│  └────────┘ └────────┘ └────────┘ └──────┘   │
-│                                                │
-│  ┌────────────┐  ┌────────────┐               │
-│  │ MinIO (S3) │  │ Keycloak   │               │
-│  └────────────┘  └────────────┘               │
-│                                                │
-│  ┌────────────┐  ┌────────────┐               │
-│  │ Prometheus │  │  Grafana   │               │
-│  └────────────┘  └────────────┘               │
+Frontend (React Native/Next.js)
+    ↓
+Firebase Auth
+    ↓
+API Gateway (Kong)
+    ↓
+┌───────────┴───────────┐
+↓                       ↓
+NestJS Backend    AI Orchestrator (FastAPI)
+    ↓                       ↓
+PostgreSQL          Neo4j + ML Models
+    ↓                       ↓
+Kafka Event Bus ←───────────┘
+    ↓
+┌───┴────┐
+↓        ↓
+MongoDB  ClickHouse
+```
+
+### Containerized Services
+
+| Service          | Base Image                        | Exposed Port | Purpose                          |
+| ---------------- | --------------------------------- | ------------ | -------------------------------- |
+| **frontend**     | `node:18-alpine`                  | 3000         | Next.js UI + Chat Interface      |
+| **backend-nest** | `node:18-alpine`                  | 3001         | REST API, CRUD, Fi MCP connector |
+| **ai-engine**    | `python:3.11-slim`                | 8000         | AI Orchestrator + Tool Router    |
+| **postgres**     | `postgres:15-alpine`              | 5432         | Relational DB (Source of Truth)  |
+| **neo4j**        | `neo4j:5-community`               | 7474, 7687   | Graph DB (Feature Store)         |
+| **redis**        | `redis:7-alpine`                  | 6379         | Cache + Session Store            |
+| **mongodb**      | `mongo:7`                         | 27017        | Conversations + AI Logs          |
+| **kafka**        | `bitnami/kafka:3.6`               | 9092         | Event Streaming (Data Pipeline)  |
+| **clickhouse**   | `clickhouse/clickhouse-server:23` | 8123, 9000   | Time-Series Analytics            |
+| **kong**         | `kong:3.5-alpine`                 | 8000, 8001   | API Gateway                      |
+| **minio**        | `minio/minio:latest`              | 9000, 9001   | Object Storage (S3-compatible)   |
+
+**Key Benefits:**
+
+- **Isolated Development:** Each service runs independently
+- **Easy Scaling:** Add replicas via `docker-compose scale`
+- **Network Isolation:** Internal network for service-to-service communication
+- **Data Persistence:** Volume mounts for databases
+- **Hot Reload:** Live code updates for frontend/backend
+
+---
+
+│ └───────────────┘ └───────────────┘ │
+│ │
+│ ┌────────┐ ┌────────┐ ┌────────┐ ┌──────┐ │
+│ │Postgres│ │ Neo4j │ │ Mongo │ │Redis │ │
+│ └────────┘ └────────┘ └────────┘ └──────┘ │
+│ │
+│ ┌────────────┐ ┌────────────┐ │
+│ │ MinIO (S3) │ │ Keycloak │ │
+│ └────────────┘ └────────────┘ │
+│ │
+│ ┌────────────┐ ┌────────────┐ │
+│ │ Prometheus │ │ Grafana │ │
+│ └────────────┘ └────────────┘ │
 └────────────────────────────────────────────────┘
-```
+
+````
 
 ---
 
@@ -305,7 +338,7 @@ services:
       - nivesh-net
     ports:
       - "3002:3000"
-```
+````
 
 ---
 
