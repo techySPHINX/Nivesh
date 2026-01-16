@@ -28,12 +28,36 @@ Nivesh uses a **hybrid AI architecture** combining:
 3. **Deterministic logic** - Rule-based safety checks
 4. **Retrieval-augmented generation (RAG)** - Context from user's financial graph
 
-This approach ensures:
+### Conversational Query Flow (Mermaid Diagram 2)
 
-- ✅ **Factual accuracy** - Grounded in user's actual data
-- ✅ **Explainability** - Every recommendation traceable
-- ✅ **Compliance** - RBI/SEBI/GDPR rules enforced
-- ✅ **Safety** - Harmful content filtered
+```
+User Query → Chat UI → Orchestrator
+                            ↓
+                    Fetch Context (Feature Store)
+                            ↓
+                    Gemini LLM (Intent + Tool Plan)
+                            ↓
+                ┌───────────┴──────────┐
+                ↓                      ↓
+        Missing Params?          Tool Execution
+                ↓                      ↓
+        Ask Clarifying Q      Finance Engine
+                ↓              (EMI, Cashflow)
+                ↓                      ↓
+        User Answers → Gemini Explanation
+                                       ↓
+                            Response Builder
+                            (Charts + Actions)
+                                       ↓
+                                   UI Output
+```
+
+### Architecture Guarantees
+
+- ✅ **Factual accuracy** - Grounded in user's actual data from Neo4j graph
+- ✅ **Explainability** - Every recommendation traceable with decision ID
+- ✅ **Compliance** - RBI/SEBI/GDPR rules enforced in pre/post-LLM filters
+- ✅ **Safety** - Multi-layer guardrails prevent harmful content
 
 ---
 

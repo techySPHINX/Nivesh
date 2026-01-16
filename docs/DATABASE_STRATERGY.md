@@ -4,6 +4,10 @@
 
 > **Strategic database architecture for Nivesh - Your AI Financial Strategist**
 
+⚠️ **PROPRIETARY DOCUMENTATION** - Copyright © 2026 Prateek (techySPHINX). All Rights Reserved.  
+This document is part of proprietary software. See [LICENSE](../LICENSE) for terms.
+
+[![License](https://img.shields.io/badge/license-Proprietary-red.svg)](../LICENSE)
 [![PostgreSQL](https://img.shields.io/badge/relational-PostgreSQL-336791.svg)](https://www.postgresql.org/)
 [![Neo4j](https://img.shields.io/badge/graph-Neo4j-008CC1.svg)](https://neo4j.com/)
 [![ClickHouse](https://img.shields.io/badge/analytics-ClickHouse-FFCC01.svg)](https://clickhouse.com/)
@@ -56,12 +60,35 @@ Nivesh uses a **polyglot persistence model** where each data type is stored in t
 
 ## Database Strategy
 
-### Design Principles
+### Design Principles (Graph-First Approach)
 
-1. **Source of Truth** - PostgreSQL for all financial transactions
-2. **Reasoning Engine** - Neo4j for relationship queries
-3. **Analytics** - Time-series DB for historical analysis
-4. **Flexibility** - MongoDB for unstructured data
+**From Mermaid Architecture:**
+
+```
+Fi MCP → Normalization → Feature Store (Neo4j Graph) → AI Orchestrator
+                              ↓
+                    PostgreSQL (Source of Truth)
+                              ↓
+                    Kafka Event Bus
+                              ↓
+                    MongoDB (Conversations) + ClickHouse (Analytics)
+```
+
+1. **Graph-First Reasoning** - Neo4j as primary query layer for AI
+2. **Source of Truth** - PostgreSQL for all raw financial transactions
+3. **Real-Time Features** - Firestore/Redis for ML feature serving
+4. **Analytics** - ClickHouse for time-series and aggregations
+5. **Flexibility** - MongoDB for unstructured AI logs and conversations
+
+### Why This Architecture?
+
+| Decision                        | Rationale                                                                         |
+| ------------------------------- | --------------------------------------------------------------------------------- |
+| **Neo4j as Feature Store**      | AI reasoning requires relationship traversal ("How does X affect Y?")             |
+| **PostgreSQL for Transactions** | ACID compliance for financial data, regulatory audit trail                        |
+| **Kafka for Event Streaming**   | Decouples ingestion from processing, enables replay for ML training               |
+| **ClickHouse for Analytics**    | Columnar storage optimized for time-series aggregations (monthly spending trends) |
+| **MongoDB for Conversations**   | Flexible schema for LLM responses, user intent, and explainability logs           |
 
 ---
 
