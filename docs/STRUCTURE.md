@@ -11,7 +11,7 @@
 
 - [Overview](#overview)
 - [Product Context](#product-context)
-- [Monorepo Structure](#monorepo-structure)
+- [Monorepo Structure](#monorepo-structure)   # modular monolith
 - [Backend (NestJS) Structure](#backend-nestjs-structure)
 - [AI Engine (FastAPI) Structure](#ai-engine-fastapi-structure)
 - [Frontend Structure](#frontend-structure)
