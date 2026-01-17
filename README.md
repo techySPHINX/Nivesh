@@ -38,6 +38,26 @@ Output → Conversational, Visual, Voice-First Insights
 
 ---
 
+## 🚀 Quick Start
+
+**New to Nivesh?** Get started in under 10 minutes:
+
+👉 **[QUICK_START.md](QUICK_START.md)** - Follow this guide to:
+
+- Install prerequisites (Node.js, Docker, GCP SDK)
+- Start all services (Postgres, Neo4j, Kafka, MongoDB, Redis, ClickHouse)
+- Run database migrations
+- Make your first API call
+- Troubleshoot common issues
+
+**After setup, dive deeper:**
+
+- **Architecture & Decisions** → [DOCUMENTATION_INDEX.md](DOCUMENTATION_INDEX.md)
+- **Development Procedures** → [DEVELOPMENT_GUIDE.md](DEVELOPMENT_GUIDE.md)
+- **Module Implementation** → [MODULE_IMPLEMENTATION_GUIDE.md](MODULE_IMPLEMENTATION_GUIDE.md)
+
+---
+
 ## ✨ Features
 
 ### 🤖 AI-Powered Financial Intelligence

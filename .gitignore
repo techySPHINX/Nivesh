@@ -1,0 +1,116 @@
+# Dependencies
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Build outputs
+dist/
+build/
+.next/
+out/
+.turbo/
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Testing
+coverage/
+.nyc_output/
+*.log
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+prisma/migrations/*_migration/
+!prisma/migrations/.gitkeep
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# OS
+Thumbs.db
+.DS_Store
+*.pid
+*.seed
+*.pid.lock
+
+# Docker
+docker-compose.override.yml
+
+# Logs
+logs/
+*.log
+
+# Firebase
+.firebase/
+firebase-debug.log
+.firebaserc
+
+# Terraform
+**/.terraform/
+*.tfstate
+*.tfstate.backup
+.terraform.lock.hcl
+
+# Kubernetes
+**/secrets.yaml
+**/secret.yaml
+
+# Backup files
+*.bak
+*.backup
+
+# GCP
+**/service-account.json
+**/gcp-credentials.json
+
+# Certificates
+*.pem
+*.key
+*.crt
+*.cer
+*.p12
+
+# Mobile (React Native)
+frontend/mobile/.expo/
+frontend/mobile/.expo-shared/
+frontend/mobile/android/app/build/
+frontend/mobile/ios/Pods/
+frontend/mobile/ios/build/
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Linux
+*~
+.directory
+.Trash-*
