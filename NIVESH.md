@@ -1,32 +1,103 @@
-PROJECT NIVESH
+# PROJECT NIVESH — Your AI Financial Strategist
 
-AI-Native Financial Reasoning Platform
+## Complete Development Guide & Technical Blueprint
 
-1️⃣ SYSTEM VISION (TECHNICAL)
+⚠️ **PROPRIETARY DOCUMENTATION** - Copyright © 2026 Prateek (techySPHINX). All Rights Reserved.  
+This document is part of proprietary software. See [LICENSE](LICENSE) for terms.
 
-Nivesh is not a fintech app with AI features
-It is an AI reasoning system with fintech data connectors
+**AI-Native Financial Reasoning Platform**
 
-Core idea:
+**Last Updated:** January 17, 2026  
+**Version:** 3.0 (Complete Development Guide)  
+**Status:** Ready for Development - Step-by-Step Implementation Guide  
+**License:** Proprietary - Contact jaganhotta357@outlook.com for commercial licensing
 
-Financial data → Structured knowledge graph
+[![License](https://img.shields.io/badge/license-Proprietary-red.svg)](LICENSE)
+[![Documentation](https://img.shields.io/badge/docs-complete-brightgreen.svg)](docs/)
+[![Development Guide](https://img.shields.io/badge/guide-step%20by%20step-blue.svg)]()
 
-Knowledge graph → AI reasoning layer
+[![License](https://img.shields.io/badge/license-Proprietary-red.svg)](LICENSE)
+[![Documentation](https://img.shields.io/badge/docs-complete-brightgreen.svg)](docs/)
+[![Development Guide](https://img.shields.io/badge/guide-step%20by%20step-blue.svg)]()
 
-Reasoning → Simulations + explanations
+---
 
-Output → Conversational, visual, voice-first insights
+## 📋 TABLE OF CONTENTS
 
-2️⃣ HIGH LEVEL DESIGN (HLD)
-2.1 Core Architecture Overview
+### Part A: Foundation & Context
+
+1. [System Vision](#1️⃣-system-vision)
+2. [Product Philosophy](#2️⃣-product-philosophy)
+3. [Approved Architecture](#3️⃣-approved-architecture-mermaid-diagrams)
+
+### Part B: Technical Architecture
+
+4. [High-Level Design (HLD)](#4️⃣-high-level-design-hld)
+5. [Low-Level Design (LLD)](#5️⃣-low-level-design-lld)
+6. [AI & ML Architecture](#6️⃣-ai--ml-architecture)
+7. [Database Strategy](#7️⃣-database-strategy-polyglot-persistence)
+
+### Part C: Development Guide (STEP-BY-STEP)
+
+8. [🚀 Development Roadmap Overview](#8️⃣-development-roadmap-overview)
+9. [📦 Phase 0: Pre-Development Setup](#9️⃣-phase-0-pre-development-setup-week-1)
+10. [🏗️ Phase 1: Foundation Setup](#🔟-phase-1-foundation-setup-weeks-2-3)
+11. [💾 Phase 2: Data Layer Implementation](#1️⃣1️⃣-phase-2-data-layer-implementation-weeks-4-5)
+12. [🤖 Phase 3: AI Engine Development](#1️⃣2️⃣-phase-3-ai-engine-development-weeks-6-8)
+13. [🎨 Phase 4: Frontend Development](#1️⃣3️⃣-phase-4-frontend-development-weeks-9-10)
+14. [🔗 Phase 5: Integration & Testing](#1️⃣4️⃣-phase-5-integration--testing-weeks-11-12)
+15. [🚀 Phase 6: MVP Deployment](#1️⃣5️⃣-phase-6-mvp-deployment-week-13)
+16. [📈 Phase 7: V1 Enhancement](#1️⃣6️⃣-phase-7-v1-enhancement-weeks-14-20)
+
+### Part D: Implementation Details
+
+17. [Technology Stack Deep Dive](#1️⃣7️⃣-technology-stack-deep-dive)
+18. [Development Best Practices](#1️⃣8️⃣-development-best-practices)
+19. [Troubleshooting Guide](#1️⃣9️⃣-troubleshooting-guide)
+20. [Production Deployment Checklist](#2️⃣0️⃣-production-deployment-checklist)
+
+---
+
+**Core Concept:**  
+Nivesh is not a fintech app with AI features — it is an **AI reasoning system** with fintech data connectors.
+
+**Value Proposition:**  
+_"Your money finally makes sense — decisions, not dashboards."_
+
+### Product Philosophy
+
+```
+Financial Data → Structured Knowledge Graph
+     ↓
+Knowledge Graph → AI Reasoning Layer
+     ↓
+Reasoning → Simulations + Explanations
+     ↓
+Output → Conversational, Visual, Voice-First Insights
+```
+
+**Target Users:**
+
+- First Salary Planners (22-28): Starting SIPs, reducing expenses
+- Milestone Families (28-40): Home loans, marriage, education planning
+- Portfolio Optimizers (25-45): Investment intelligence, rebalancing
+- Globally Mobile/NRI: Multi-goal planning, net worth clarity
+
+---
+
+## 2️⃣ HIGH LEVEL DESIGN (HLD)
+
+### 2.1 Core Architecture Overview
+
+```
 ┌─────────────┐
-│ Mobile/Web  │
+│ Mobile/Web  │  (React Native, Next.js)
 │ App (UI)    │
 └─────┬───────┘
       │
       ▼
 ┌────────────────────┐
-│ API Gateway        │
+│ API Gateway        │  (Kong OSS)
 │ (Auth, Rate Limit) │
 └─────┬──────────────┘
       │
@@ -36,69 +107,85 @@ Output → Conversational, visual, voice-first insights
 │ ┌───────────────┐   ┌────────────────────────┐ │
 │ │ Financial     │   │ Conversation & Reason  │ │
 │ │ Data Layer    │──▶│ Engine (LLM + Logic)   │ │
+│ │(Fi MCP,APIs)  │   │  (Gemini Pro 1.5)      │ │
 │ └───────────────┘   └────────────┬───────────┘ │
 │                                   │             │
 │ ┌───────────────┐   ┌────────────▼───────────┐ │
 │ │ Financial     │   │ Simulation Engine       │ │
 │ │ Knowledge     │◀──│ (Projections & What-If)│ │
-│ │ Graph         │   └────────────┬───────────┘ │
-│ └───────────────┘                │             │
-│                                   │             │
-│ ┌───────────────┐   ┌────────────▼───────────┐ │
-│ │ ML Models     │◀──│ Decision & Explain      │ │
-│ │ (Risk, Spend) │   │ Layer                  │ │
+│ │ Graph (Neo4j) │   │ (Monte Carlo, Prophet) │ │
 │ └───────────────┘   └────────────┬───────────┘ │
 │                                   │             │
 │ ┌───────────────┐   ┌────────────▼───────────┐ │
+│ │ ML Models     │◀──│ Decision & Explain      │ │
+│ │ (Risk, Spend) │   │ Layer (Audit Trail)    │ │
+│ │ (XGBoost,LSTM)│   └────────────┬───────────┘ │
+│ └───────────────┘                │             │
+│                                   │             │
+│ ┌───────────────┐   ┌────────────▼───────────┐ │
 │ │ Alert Engine  │◀──│ Personalization Engine │ │
+│ │(Kafka Events) │   │ (User Preferences)     │ │
 │ └───────────────┘   └────────────────────────┘ │
 └──────────────────────────────────────────────────┘
+```
 
-2.2 Major Subsystems (HLD)
-Layer	Responsibility
-Data Ingestion Layer	Fi MCP, bank APIs, investment APIs
-Financial Knowledge Graph	Unified semantic view of money
-AI Reasoning Engine	Financial logic + LLM reasoning
-Simulation Engine	Long-term projections
-ML Intelligence Layer	Risk, anomalies, behavior
-Conversation Engine	Chat + voice + emotion
-Explainability Layer	Trust & transparency
-Privacy & Control Layer	Data ownership
-3️⃣ LOW LEVEL DESIGN (LLD)
-3.1 Financial Data Layer (LLD)
-Data Sources
+### 2.2 Major Subsystems (HLD)
 
-Bank transactions
+| Layer                         | Responsibility                     | Technologies                |
+| ----------------------------- | ---------------------------------- | --------------------------- |
+| **Data Ingestion Layer**      | Fi MCP, bank APIs, investment APIs | NestJS, PostgreSQL          |
+| **Financial Knowledge Graph** | Unified semantic view of money     | Neo4j, Cypher               |
+| **AI Reasoning Engine**       | Financial logic + LLM reasoning    | FastAPI, Gemini Pro         |
+| **Simulation Engine**         | Long-term projections              | Prophet, Monte Carlo        |
+| **ML Intelligence Layer**     | Risk, anomalies, behavior          | XGBoost, LSTM               |
+| **Conversation Engine**       | Chat + voice + emotion             | MongoDB, XLM-RoBERTa        |
+| **Explainability Layer**      | Trust & transparency               | Audit logs, decision traces |
+| **Privacy & Control Layer**   | Data ownership                     | Consent management, GDPR    |
 
-Credit cards
+---
 
-Mutual funds / stocks
+## 3️⃣ LOW LEVEL DESIGN (LLD)
 
-Loans
+### 3.1 Financial Data Layer (LLD)
 
-Insurance
+**Data Sources:**
 
-Goals (user input)
+- Bank transactions (via Fi MCP)
+- Credit cards (API integration)
+- Mutual funds / stocks (portfolio APIs)
+- Loans (EMI tracking)
+- Insurance (policy management)
+- Goals (user manual input)
+
+**Data Ingestion Flow:**
+
+```
+Fi MCP → API Gateway → NestJS Backend → PostgreSQL
+                              ↓
+                        Kafka Event Bus
+                              ↓
+                        Neo4j Graph Sync
+```
 
 Normalized Financial Schema
 User
- ├── Profile
- ├── Income[]
- ├── Expenses[]
- ├── Assets[]
- ├── Liabilities[]
- ├── Investments[]
- ├── Goals[]
- └── LifeEvents[]
+├── Profile
+├── Income[]
+├── Expenses[]
+├── Assets[]
+├── Liabilities[]
+├── Investments[]
+├── Goals[]
+└── LifeEvents[]
 
 Example: Expense Model
 {
-  "id": "exp_123",
-  "category": "Dining",
-  "amount": 850,
-  "date": "2026-01-01",
-  "merchant": "Zomato",
-  "recurrence": false
+"id": "exp_123",
+"category": "Dining",
+"amount": 850,
+"date": "2026-01-01",
+"merchant": "Zomato",
+"recurrence": false
 }
 
 3.2 Financial Knowledge Graph (Critical Component)
@@ -143,7 +230,6 @@ Example
 (User) ──HAS_GOAL──▶ (Retirement)
 (Inflation) ──AFFECTS──▶ (Goal)
 
-
 Graph DB:
 
 Neo4j / Amazon Neptune
@@ -164,11 +250,11 @@ Rule engine
 
 Flow
 User Query
- → Intent Detection
- → Financial Context Retrieval
- → Constraint Identification
- → Simulation / Analysis
- → Explanation Generation
+→ Intent Detection
+→ Financial Context Retrieval
+→ Constraint Identification
+→ Simulation / Analysis
+→ Explanation Generation
 
 Why Hybrid?
 
@@ -207,8 +293,8 @@ Scenario simulation
 
 Output
 {
-  "intent": "HOUSE_AFFORDABILITY",
-  "confidence": 0.93
+"intent": "HOUSE_AFFORDABILITY",
+"confidence": 0.93
 }
 
 4.3 Risk Profiling Model
@@ -230,8 +316,8 @@ Past drawdown tolerance
 
 Output
 {
-  "risk_score": 0.62,
-  "risk_category": "Moderate"
+"risk_score": 0.62,
+"risk_category": "Moderate"
 }
 
 4.4 Spending Pattern & Anomaly Detection
@@ -251,9 +337,9 @@ Contextualize anomaly
 
 Output
 {
-  "category": "Dining",
-  "deviation": 35%,
-  "impact": "Savings goal risk"
+"category": "Dining",
+"deviation": 35%,
+"impact": "Savings goal risk"
 }
 
 4.5 Investment Recommendation Engine
@@ -281,10 +367,10 @@ Panic selling history
 
 Output
 {
-  "action": "REBALANCE",
-  "from": "Debt",
-  "to": "Equity",
-  "reason": "Age + long horizon"
+"action": "REBALANCE",
+"from": "Debt",
+"to": "Equity",
+"reason": "Age + long horizon"
 }
 
 4.6 Scenario Simulation Engine
@@ -312,8 +398,8 @@ Goal success probability
 
 Output
 {
-  "median_net_worth": "₹3.2 Cr",
-  "success_probability": 78%
+"median_net_worth": "₹3.2 Cr",
+"success_probability": 78%
 }
 
 4.7 Financial Digital Twin (Advanced)
@@ -403,12 +489,12 @@ Explainable AI logs
 Exportable financial graph
 
 8️⃣ SCALABILITY & PRODUCTION READINESS
-Layer	Tech
-API	NestJS
-AI Services	Python + FastAPI
-Graph	Neo4j
-Cache	Redis
-Streaming	Kafka
-Storage	Encrypted S3
-Infra	Kubernetes
-Observability	Prometheus + OpenTelemetry
+Layer Tech
+API NestJS
+AI Services Python + FastAPI
+Graph Neo4j
+Cache Redis
+Streaming Kafka
+Storage Encrypted S3
+Infra Kubernetes
+Observability Prometheus + OpenTelemetry

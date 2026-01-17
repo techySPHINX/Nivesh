@@ -1,17 +1,29 @@
 ﻿# Database Strategy Documentation
+
 # Nivesh - Polyglot Persistence Model
 
-> **Strategic database architecture for AI-powered financial platform**
+> **Strategic database architecture for Nivesh - Your AI Financial Strategist**
+
+⚠️ **PROPRIETARY DOCUMENTATION** - Copyright © 2026 Prateek (techySPHINX). All Rights Reserved.  
+This document is part of proprietary software. See [LICENSE](../LICENSE) for terms.
+
+[![License](https://img.shields.io/badge/license-Proprietary-red.svg)](../LICENSE)
+[![PostgreSQL](https://img.shields.io/badge/relational-PostgreSQL-336791.svg)](https://www.postgresql.org/)
+[![Neo4j](https://img.shields.io/badge/graph-Neo4j-008CC1.svg)](https://neo4j.com/)
+[![ClickHouse](https://img.shields.io/badge/analytics-ClickHouse-FFCC01.svg)](https://clickhouse.com/)
+[![PRD](https://img.shields.io/badge/docs-PRD-orange.svg)](../PRD.md)
 
 ## Table of Contents
 
 - [Overview](#overview)
+- [Product Context](#product-context)
 - [Database Strategy](#database-strategy)
 - [PostgreSQL - Relational Database](#postgresql---relational-database)
 - [Neo4j - Graph Database](#neo4j---graph-database)
 - [MongoDB - Document Store](#mongodb---document-store)
 - [Time-Series Analytics](#time-series-analytics)
 - [Security & Privacy](#security--privacy)
+- [Data Flow Architecture](#data-flow-architecture)
 
 ---
 
@@ -19,25 +31,64 @@
 
 Nivesh uses a **polyglot persistence model** where each data type is stored in the most appropriate database technology.
 
-| Data Type | Storage | Reason |
-|-----------|---------|--------|
-| **User & Transactions** | PostgreSQL | ACID compliance, relational integrity |
-| **Financial Relationships** | Neo4j | Graph reasoning, cause-effect analysis |
-| **ML Features** | ClickHouse/BigQuery | Time-series analytics, projections |
-| **Conversations** | MongoDB | Flexible schema, document storage |
+| Data Type                   | Storage    | Reason                                 | Use Case                                      |
+| --------------------------- | ---------- | -------------------------------------- | --------------------------------------------- |
+| **User & Transactions**     | PostgreSQL | ACID compliance, relational integrity  | Financial records, source of truth            |
+| **Financial Relationships** | Neo4j      | Graph reasoning, cause-effect analysis | "How does this expense affect my retirement?" |
+| **ML Features**             | ClickHouse | Time-series analytics, projections     | Historical trends, forecasting                |
+| **Conversations**           | MongoDB    | Flexible schema, document storage      | Chat history, voice transcripts               |
+| **Cache**                   | Redis      | Sub-millisecond latency                | Session data, real-time calculations          |
 
 **Key Benefit:** Right tool for the right job - optimized performance and maintainability.
 
 ---
 
+## Product Context
+
+**Nivesh's Vision:** Turn real financial data into decisions through natural language conversations, simulations, and explainable recommendations.
+
+**Database Requirements from PRD:**
+
+- **Data Ingestion:** Real-time sync from Fi MCP, banking APIs, and manual inputs
+- **Conversational Context:** Store chat history with user intent and AI responses
+- **Simulation Engine:** Store goal projections, scenario parameters, and results
+- **Explainability:** Audit trail for every AI decision with assumptions
+- **Privacy:** User-owned data with export and delete capabilities
+- **Compliance:** 7-year retention for RBI audit requirements
+
+---
+
 ## Database Strategy
 
-### Design Principles
+### Design Principles (Graph-First Approach)
 
-1. **Source of Truth** - PostgreSQL for all financial transactions
-2. **Reasoning Engine** - Neo4j for relationship queries
-3. **Analytics** - Time-series DB for historical analysis
-4. **Flexibility** - MongoDB for unstructured data
+**From Mermaid Architecture:**
+
+```
+Fi MCP → Normalization → Feature Store (Neo4j Graph) → AI Orchestrator
+                              ↓
+                    PostgreSQL (Source of Truth)
+                              ↓
+                    Kafka Event Bus
+                              ↓
+                    MongoDB (Conversations) + ClickHouse (Analytics)
+```
+
+1. **Graph-First Reasoning** - Neo4j as primary query layer for AI
+2. **Source of Truth** - PostgreSQL for all raw financial transactions
+3. **Real-Time Features** - Firestore/Redis for ML feature serving
+4. **Analytics** - ClickHouse for time-series and aggregations
+5. **Flexibility** - MongoDB for unstructured AI logs and conversations
+
+### Why This Architecture?
+
+| Decision                        | Rationale                                                                         |
+| ------------------------------- | --------------------------------------------------------------------------------- |
+| **Neo4j as Feature Store**      | AI reasoning requires relationship traversal ("How does X affect Y?")             |
+| **PostgreSQL for Transactions** | ACID compliance for financial data, regulatory audit trail                        |
+| **Kafka for Event Streaming**   | Decouples ingestion from processing, enables replay for ML training               |
+| **ClickHouse for Analytics**    | Columnar storage optimized for time-series aggregations (monthly spending trends) |
+| **MongoDB for Conversations**   | Flexible schema for LLM responses, user intent, and explainability logs           |
 
 ---
 
@@ -365,11 +416,145 @@ CREATE TABLE user_consents (
   id UUID PRIMARY KEY,
   user_id UUID REFERENCES users(id) ON DELETE CASCADE,
   consent_type VARCHAR(50) NOT NULL,
-  granted BOOLEAN DEFAULT false,
-  granted_at TIMESTAMP,
+  scope VARCHAR(100),
+  granted_at TIMESTAMP DEFAULT NOW(),
+  expires_at TIMESTAMP,
   revoked_at TIMESTAMP,
-  expires_at TIMESTAMP
+  UNIQUE(user_id, consent_type)
 );
+
+-- Consent types:
+-- 'spending_analysis', 'investment_recommendations',
+-- 'goal_tracking', 'life_event_impact', 'data_export'
+```
+
+---
+
+## Data Flow Architecture
+
+### Real-Time Data Pipeline
+
+```
+┌──────────────┐
+│ Fi MCP / API │ (Transaction data ingestion)
+└──────┬───────┘
+       │
+       ▼
+┌──────────────┐
+│ PostgreSQL   │ (Source of truth - ACID transactions)
+└──────┬───────┘
+       │
+       ▼
+┌──────────────┐
+│ Kafka Events │ (Event streaming backbone)
+└──┬─────────┬─┘
+   │         │
+   ▼         ▼
+┌────────┐ ┌──────────┐
+│ Neo4j  │ │ MongoDB  │ (Graph sync & conversations)
+└────────┘ └──────────┘
+   │
+   ▼
+┌──────────────┐
+│ AI Engine    │ (Reasoning + Simulations)
+└──────────────┘
+```
+
+### Query Patterns
+
+**Transaction Queries:**
+
+- PostgreSQL for ACID-compliant writes
+- Redis for cached recent transactions
+
+**Relationship Queries:**
+
+- Neo4j for "What impacts what?" questions
+- Examples: "How does this expense affect my goals?"
+
+**Analytics Queries:**
+
+- ClickHouse for historical trend analysis
+- Prophet models for forecasting
+
+**Conversation History:**
+
+- MongoDB for flexible schema chat storage
+- Semantic search with embeddings
+
+---
+
+## Best Practices
+
+### Data Integrity
+
+1. **PostgreSQL as Source of Truth** - All financial transactions start here
+2. **Event-Driven Sync** - Kafka ensures eventual consistency across databases
+3. **Idempotent Operations** - Events can be replayed without duplication
+4. **Transaction Logs** - Comprehensive audit trail for compliance
+
+### Performance Optimization
+
+1. **Strategic Indexing** - Index on user_id, date, category for fast queries
+2. **Caching Layer** - Redis for frequently accessed data (session, recent transactions)
+3. **Query Optimization** - Use EXPLAIN ANALYZE for PostgreSQL queries
+4. **Graph Query Efficiency** - Limit traversal depth in Neo4j to avoid performance issues
+
+### Privacy Compliance
+
+1. **Encryption at Rest** - PostgreSQL transparent data encryption
+2. **Encryption in Transit** - TLS 1.3 for all database connections
+3. **Data Minimization** - Store only necessary information
+4. **User Data Export** - Support GDPR-compliant data export in CSV/JSON
+5. **Right to Deletion** - Cascade deletes + Kafka tombstone events
+6. **Consent-Based Access** - Check `user_consents` table before data operations
+
+### Backup & Recovery
+
+1. **PostgreSQL:** Daily full backups + continuous WAL archiving
+2. **Neo4j:** Daily backups of graph data
+3. **MongoDB:** Replica sets with automatic failover
+4. **Retention:** 7 years for financial data (RBI compliance)
+
+---
+
+## Scaling Strategy
+
+### Horizontal Scaling
+
+- **PostgreSQL:** Read replicas for analytics queries
+- **Neo4j:** Causal clustering for high availability
+- **MongoDB:** Sharding by user_id
+- **Redis:** Redis Cluster for distributed caching
+
+### Vertical Scaling
+
+- Start with single instances for MVP
+- Scale CPU/RAM as user base grows
+- Monitor query performance with Prometheus
+
+---
+
+## Migration Strategy
+
+### Data Migration Workflow
+
+1. **Schema Changes:** Use migration tools (Flyway, Liquibase)
+2. **Zero-Downtime Migrations:** Blue-green deployment strategy
+3. **Data Validation:** Automated tests after migrations
+4. **Rollback Plan:** Keep previous schema version for 30 days
+
+---
+
+**Last Updated:** January 13, 2026  
+**Version:** 2.0 (Aligned with PRD v1.0)  
+**Maintained By:** Nivesh Engineering Team
+granted BOOLEAN DEFAULT false,
+granted_at TIMESTAMP,
+revoked_at TIMESTAMP,
+expires_at TIMESTAMP
+);
+
 ```
 
 ---
@@ -384,5 +569,6 @@ CREATE TABLE user_consents (
 
 ---
 
-**Last Updated:** January 2026  
+**Last Updated:** January 2026
 **Maintained By:** Nivesh Data Team
+```

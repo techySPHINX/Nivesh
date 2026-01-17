@@ -1,13 +1,15 @@
 # LLM Integration Guide
 
-> **Comprehensive guide to LLM prompts, graph reasoning, and compliance event schemas**
+> **Comprehensive guide to LLM prompts, graph reasoning, and compliance for Nivesh - Your AI Financial Strategist**
 
 [![Gemini](https://img.shields.io/badge/LLM-Gemini%20Pro-4285F4.svg)](https://ai.google.dev/)
 [![DistilBERT](https://img.shields.io/badge/NER-DistilBERT-orange.svg)](https://huggingface.co/distilbert-base-uncased)
+[![PRD](https://img.shields.io/badge/docs-PRD-orange.svg)](../PRD.md)
 
 ## Table of Contents
 
 - [Overview](#overview)
+- [Product Context](#product-context)
 - [System Prompt](#system-prompt)
 - [Prompt Templates](#prompt-templates)
 - [Graph Reasoning Patterns](#graph-reasoning-patterns)
@@ -21,16 +23,62 @@
 
 Nivesh uses a **hybrid AI architecture** combining:
 
-1. **LLM (Gemini Pro)** - Natural language understanding and generation
+1. **LLM (Gemini Pro 1.5)** - Natural language understanding and generation
 2. **Graph reasoning (Neo4j)** - Financial relationship analysis
 3. **Deterministic logic** - Rule-based safety checks
 4. **Retrieval-augmented generation (RAG)** - Context from user's financial graph
 
-This approach ensures:
-- ✅ **Factual accuracy** - Grounded in user's actual data
-- ✅ **Explainability** - Every recommendation traceable
-- ✅ **Compliance** - RBI/GDPR rules enforced
-- ✅ **Safety** - Harmful content filtered
+### Conversational Query Flow (Mermaid Diagram 2)
+
+```
+User Query → Chat UI → Orchestrator
+                            ↓
+                    Fetch Context (Feature Store)
+                            ↓
+                    Gemini LLM (Intent + Tool Plan)
+                            ↓
+                ┌───────────┴──────────┐
+                ↓                      ↓
+        Missing Params?          Tool Execution
+                ↓                      ↓
+        Ask Clarifying Q      Finance Engine
+                ↓              (EMI, Cashflow)
+                ↓                      ↓
+        User Answers → Gemini Explanation
+                                       ↓
+                            Response Builder
+                            (Charts + Actions)
+                                       ↓
+                                   UI Output
+```
+
+### Architecture Guarantees
+
+- ✅ **Factual accuracy** - Grounded in user's actual data from Neo4j graph
+- ✅ **Explainability** - Every recommendation traceable with decision ID
+- ✅ **Compliance** - RBI/SEBI/GDPR rules enforced in pre/post-LLM filters
+- ✅ **Safety** - Multi-layer guardrails prevent harmful content
+
+---
+
+## Product Context
+
+**Nivesh's Core Promise (from PRD):** _"Your money finally makes sense — decisions, not dashboards."_
+
+**LLM's Role:**
+
+- Convert user questions into Neo4j graph queries
+- Generate natural language explanations for simulations
+- Detect user intent (affordability, retirement, investment, etc.)
+- Provide emotional intelligence (detect anxiety, offer reassurance)
+- Create actionable next steps from complex financial data
+
+**Constraints:**
+
+- Must avoid hallucinations (all facts from user's graph)
+- Must include assumptions in every response
+- Must refuse illegal/unethical requests
+- Must escalate mental health concerns
 
 ---
 
@@ -119,9 +167,9 @@ Now generate the query for: {user_query}
 
 **Example Usage:**
 
-| User Question | Generated Cypher |
-|---------------|------------------|
-| "What's my highest expense category?" | `MATCH (u:User {id: $user_id})-[:SPENDS_ON]->(e:Expense) RETURN e.category, sum(e.amount) AS total ORDER BY total DESC LIMIT 1` |
+| User Question                               | Generated Cypher                                                                                                                                                 |
+| ------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| "What's my highest expense category?"       | `MATCH (u:User {id: $user_id})-[:SPENDS_ON]->(e:Expense) RETURN e.category, sum(e.amount) AS total ORDER BY total DESC LIMIT 1`                                  |
 | "Am I on track for my emergency fund goal?" | `MATCH (u:User)-[:HAS_GOAL]->(g:Goal {name: 'Emergency Fund'}) RETURN g.target_amount, g.current_amount, (g.current_amount / g.target_amount * 100) AS progress` |
 
 ---
@@ -188,12 +236,15 @@ Format:
 
 ```markdown
 ## For User
+
 We recommend investing ₹5,000/month in a diversified mutual fund because:
+
 - Your risk profile is "moderate"
 - You have 15 years until retirement
 - This allocation historically returns 10-12% annually
 
 ## For Audit
+
 - Data sources: User.risk_profile, Goal.deadline, Investment.asset_type
 - Logic: Rule #47 (age-based allocation) + Prophet cash flow forecast
 - Confidence: 87% (based on 10-year backtest)
@@ -251,7 +302,7 @@ MATCH (u:User {id: $user_id})-[:HAS_GOAL]->(g:Goal {name: 'Buy House'})
 WITH g.target_amount AS house_target, g.current_amount AS house_current
 MATCH (u)-[:PLANS_TO_BUY]->(car:Purchase {type: 'Car'})
 WITH house_target, house_current, car.cost AS car_cost
-RETURN 
+RETURN
   house_target - house_current AS gap_before,
   house_target - (house_current - car_cost) AS gap_after,
   (gap_after - gap_before) AS delay_impact
@@ -264,10 +315,10 @@ RETURN
 MATCH (u:User {id: $user_id})-[:EARNS]->(i:Income)
 WHERE i.date >= date() - duration('P6M')
 WITH i.amount AS income
-RETURN 
+RETURN
   avg(income) AS avg_income,
   stdev(income) AS volatility,
-  CASE 
+  CASE
     WHEN stdev(income) / avg(income) < 0.1 THEN 'Stable'
     WHEN stdev(income) / avg(income) < 0.3 THEN 'Moderate'
     ELSE 'Volatile'
@@ -403,11 +454,11 @@ DISTRESS_KEYWORDS = [
 
 ```python
 DISTRESS_RESPONSE = """
-{name}, I can see you're going through a really challenging time financially, 
+{name}, I can see you're going through a really challenging time financially,
 and I want you to know that you're not alone in feeling this way.
 
-While I can help with budgeting and financial planning, it sounds like you 
-might benefit from speaking with a professional who specializes in debt 
+While I can help with budgeting and financial planning, it sounds like you
+might benefit from speaking with a professional who specializes in debt
 counseling or financial crisis support.
 
 Here are some resources that might help:
@@ -415,7 +466,7 @@ Here are some resources that might help:
 - Money Matters India: www.moneymatters.in
 - If you're feeling overwhelmed emotionally: NIMHANS Helpline 080-XXXX-XXXX
 
-Would you like me to help you create a basic plan to prioritize your most 
+Would you like me to help you create a basic plan to prioritize your most
 urgent expenses? We can take this one step at a time.
 """
 ```
@@ -431,19 +482,19 @@ Before sending to Gemini, check:
 ```python
 def pre_llm_filter(user_query: str) -> bool:
     """Return False if query should be blocked."""
-    
+
     # Block illegal requests
     if any(kw in user_query.lower() for kw in ["tax evasion", "insider trading", "money laundering"]):
         return False
-    
+
     # Block requests without consent
     if not user.has_consent("ai_recommendations"):
         return False
-    
+
     # Block requests outside scope
     if "medical advice" in user_query.lower():
         return False
-    
+
     return True
 ```
 
@@ -454,19 +505,19 @@ After Gemini responds, check:
 ```python
 def post_llm_filter(llm_response: str) -> str:
     """Filter or modify LLM output before showing user."""
-    
+
     # Check for hallucinations
     if not verify_facts_in_graph(llm_response):
         return "I couldn't verify all the information. Let me double-check your data."
-    
+
     # Check for harmful advice
     if "invest all your money" in llm_response.lower():
         return "That recommendation seems too risky. Let me recalculate with safer parameters."
-    
+
     # Add disclaimers
     if "invest" in llm_response.lower():
         llm_response += "\n\n*This is not financial advice. Consult a SEBI-registered advisor before investing.*"
-    
+
     return llm_response
 ```
 
@@ -477,18 +528,21 @@ def post_llm_filter(llm_response: str) -> str:
 **User Query:** "Should I invest in stocks right now?"
 
 ### Step 1: Intent Classification
+
 ```python
 intent = classify_intent(query)
 # Result: "investment_advice"
 ```
 
 ### Step 2: Consent Check
+
 ```python
 if not user.has_consent("investment_recommendations"):
     return "I need your permission to analyze your investment profile. Would you like to grant consent?"
 ```
 
 ### Step 3: Graph Retrieval
+
 ```cypher
 MATCH (u:User {id: $user_id})-[:HAS_PROFILE]->(p:RiskProfile)
 MATCH (u)-[:HAS_GOAL]->(g:Goal)
@@ -497,12 +551,14 @@ RETURN p.risk_level, g.deadline, sum(i.amount) AS current_investment
 ```
 
 ### Step 4: Model Prediction
+
 ```python
 risk_score = risk_model.predict(user_data)
 # Result: 0.65 (moderate risk)
 ```
 
 ### Step 5: LLM Generation
+
 ```python
 recommendation = gemini.generate(
     prompt=INVESTMENT_ADVICE_PROMPT,
@@ -515,12 +571,14 @@ recommendation = gemini.generate(
 ```
 
 ### Step 6: Post-Processing
+
 ```python
 final_response = post_llm_filter(recommendation)
 final_response += "\n\n*Disclaimer: This is not financial advice...*"
 ```
 
 ### Step 7: Audit Logging
+
 ```python
 kafka.produce("ai.decision.made", {
     "trace_id": "20260115-103000-abc123",
@@ -530,9 +588,10 @@ kafka.produce("ai.decision.made", {
 ```
 
 ### Step 8: User Response
+
 ```
-Based on your moderate risk profile and 15-year timeline, a diversified 
-mutual fund portfolio would be suitable. Consider starting with ₹5,000/month 
+Based on your moderate risk profile and 15-year timeline, a diversified
+mutual fund portfolio would be suitable. Consider starting with ₹5,000/month
 in ELSS funds for tax benefits.
 
 *This is not financial advice. Consult a SEBI-registered advisor before investing.*
@@ -547,7 +606,7 @@ in ELSS funds for tax benefits.
 ✅ **Add disclaimers for investment/tax advice**  
 ✅ **Detect and escalate emotional distress**  
 ✅ **Refuse illegal/unethical requests**  
-✅ **Explain reasoning transparently**  
+✅ **Explain reasoning transparently**
 
 ---
 
