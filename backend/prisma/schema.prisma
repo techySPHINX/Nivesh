@@ -23,6 +23,7 @@ model User {
   profilePicture    String?
   kycStatus         String      @default("pending") // pending, verified, rejected
   riskProfile       String?     // conservative, moderate, aggressive
+  firebaseUid       String?     @unique
   
   // Relationships
   accounts          Account[]
@@ -39,6 +40,7 @@ model User {
   
   @@map("users")
   @@index([email])
+  @@index([firebaseUid])
 }
 
 // ==========================================
@@ -50,18 +52,20 @@ model Account {
   user              User        @relation(fields: [userId], references: [id], onDelete: Cascade)
   
   // Account details
-  accountType       String      // savings, current, credit_card, investment, loan
   accountName       String
-  bankName          String?
-  accountNumber     String?     @unique
+  accountNumber     String      @unique
+  accountType       String      // savings, current, credit_card, investment, loan
+  bankName          String
   ifscCode          String?
   
   // Balance tracking
-  currentBalance    Decimal     @db.Decimal(15, 2)
+  balance           Decimal     @db.Decimal(15, 2)
   currency          String      @default("INR")
   
+  // Status
+  status            String      @default("ACTIVE") // ACTIVE, INACTIVE, FROZEN, CLOSED
+  
   // External integration
-  fiMcpAccountId    String?     @unique
   isLinked          Boolean     @default(false)
   lastSyncedAt      DateTime?
   
@@ -71,11 +75,11 @@ model Account {
   // Metadata
   createdAt         DateTime    @default(now())
   updatedAt         DateTime    @updatedAt
-  isActive          Boolean     @default(true)
   
   @@map("accounts")
   @@index([userId])
   @@index([accountType])
+  @@index([status])
 }
 
 // ==========================================
@@ -91,25 +95,24 @@ model Transaction {
   // Transaction details
   amount            Decimal     @db.Decimal(15, 2)
   currency          String      @default("INR")
-  type              String      // credit, debit
-  category          String      // groceries, salary, rent, investment, etc.
-  subCategory       String?
-  description       String?
+  type              String      // DEBIT, CREDIT
+  category          String      // FOOD, TRANSPORT, SALARY, etc.
+  description       String
   merchantName      String?
   
   // Date information
   transactionDate   DateTime
-  postedDate        DateTime?
   
-  // External integration
-  fiMcpTransactionId String?    @unique
-  externalReference String?
+  // Reference
+  referenceNumber   String?
   
-  // Classification
-  isRecurring       Boolean     @default(false)
-  tags              String[]
+  // Status
+  status            String      @default("PENDING") // PENDING, COMPLETED, FAILED, REVERSED
   
   // Metadata
+  metadata          Json?
+  
+  // Timestamps
   createdAt         DateTime    @default(now())
   updatedAt         DateTime    @updatedAt
   
@@ -117,6 +120,7 @@ model Transaction {
   @@index([userId, transactionDate])
   @@index([accountId])
   @@index([category])
+  @@index([status])
 }
 
 // ==========================================
