@@ -1,3 +1,27 @@
+export enum KafkaTopics {
+  // User events
+  USER_EVENTS = 'user.events',
+
+  // Account events
+  ACCOUNT_EVENTS = 'account.events',
+
+  // Transaction events
+  TRANSACTION_EVENTS = 'transaction.events',
+
+  // Goal events
+  GOAL_EVENTS = 'goal.events',
+
+  // Alert events
+  ALERT_EVENTS = 'alert.events',
+
+  // AI events
+  AI_EVENTS = 'ai.events',
+
+  // System events
+  SYSTEM_EVENTS = 'system.events',
+}
+
+// Legacy topic names for backward compatibility
 export enum KafkaTopic {
   // User events
   USER_CREATED = 'user.created',
