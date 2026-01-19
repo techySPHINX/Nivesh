@@ -55,6 +55,18 @@ export enum EventType {
   GOAL_UPDATED = 'goal.updated',
   GOAL_ACHIEVED = 'goal.achieved',
   GOAL_PROGRESS_UPDATED = 'goal.progress.updated',
+  GOAL_CONTRIBUTION_ADDED = 'goal.contribution.added',
+  GOAL_COMPLETED = 'goal.completed',
+  GOAL_CANCELLED = 'goal.cancelled',
+  GOAL_EXPIRED = 'goal.expired',
+
+  // Budget Events
+  BUDGET_CREATED = 'budget.created',
+  BUDGET_UPDATED = 'budget.updated',
+  BUDGET_EXCEEDED = 'budget.exceeded',
+  BUDGET_THRESHOLD_REACHED = 'budget.threshold.reached',
+  CATEGORY_BUDGET_EXCEEDED = 'budget.category.exceeded',
+  BUDGET_COMPLETED = 'budget.completed',
 
   // AI Events
   AI_QUERY_RECEIVED = 'ai.query.received',
