@@ -5,6 +5,7 @@ import { ConfigService } from '@nestjs/config';
 import helmet from 'helmet';
 import compression from 'compression';
 import { AppModule } from './app.module';
+import { GlobalExceptionFilter } from './core/exceptions/exception.filter';
 
 async function bootstrap() {
   const logger = new Logger('Bootstrap');
@@ -19,6 +20,9 @@ async function bootstrap() {
   const port = configService.get<number>('PORT', 3000);
   const apiPrefix = configService.get<string>('API_PREFIX', 'api/v1');
   const nodeEnv = configService.get<string>('NODE_ENV', 'development');
+
+  // Global exception filter
+  app.useGlobalFilters(new GlobalExceptionFilter());
 
   // Security middleware
   app.use(helmet());
