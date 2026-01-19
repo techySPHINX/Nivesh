@@ -9,10 +9,11 @@ import { DatabaseModule } from './core/database/database.module';
 import { MessagingModule } from './core/messaging/messaging.module';
 import { SecurityModule } from './core/security/security.module';
 import { ObservabilityModule } from './core/observability/observability.module';
+import { IntegrationsModule } from './core/integrations/integrations.module';
 
-// Feature modules (to be implemented)
-// import { UserModule } from './modules/user/user.module';
-// import { FinancialDataModule } from './modules/financial-data/financial-data.module';
+// Feature modules
+import { UserModule } from './modules/user/user.module';
+import { FinancialDataModule } from './modules/financial-data/financial-data.module';
 // import { KnowledgeGraphModule } from './modules/knowledge-graph/knowledge-graph.module';
 // import { AiReasoningModule } from './modules/ai-reasoning/ai-reasoning.module';
 
@@ -49,14 +50,15 @@ import { HealthController } from './health.controller';
     MessagingModule,
     SecurityModule,
     ObservabilityModule,
+    IntegrationsModule,
 
-    // Feature modules (uncomment as implemented)
-    // UserModule,
-    // FinancialDataModule,
+    // Feature modules
+    UserModule,
+    FinancialDataModule,
     // KnowledgeGraphModule,
     // AiReasoningModule,
   ],
   controllers: [HealthController],
   providers: [],
 })
-export class AppModule {}
+export class AppModule { }
