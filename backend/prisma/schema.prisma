@@ -1,0 +1,254 @@
+// Nivesh - Prisma Schema
+// PostgreSQL Database Schema for Financial Data
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ==========================================
+// User Management
+// ==========================================
+model User {
+  id                String      @id @default(uuid())
+  email             String      @unique
+  phoneNumber       String?     @unique
+  firstName         String
+  lastName          String
+  dateOfBirth       DateTime?
+  profilePicture    String?
+  kycStatus         String      @default("pending") // pending, verified, rejected
+  riskProfile       String?     // conservative, moderate, aggressive
+  
+  // Relationships
+  accounts          Account[]
+  transactions      Transaction[]
+  investments       Investment[]
+  goals             Goal[]
+  alerts            Alert[]
+  
+  // Metadata
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+  lastLoginAt       DateTime?
+  isActive          Boolean     @default(true)
+  
+  @@map("users")
+  @@index([email])
+}
+
+// ==========================================
+// Financial Accounts
+// ==========================================
+model Account {
+  id                String      @id @default(uuid())
+  userId            String
+  user              User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Account details
+  accountType       String      // savings, current, credit_card, investment, loan
+  accountName       String
+  bankName          String?
+  accountNumber     String?     @unique
+  ifscCode          String?
+  
+  // Balance tracking
+  currentBalance    Decimal     @db.Decimal(15, 2)
+  currency          String      @default("INR")
+  
+  // External integration
+  fiMcpAccountId    String?     @unique
+  isLinked          Boolean     @default(false)
+  lastSyncedAt      DateTime?
+  
+  // Relationships
+  transactions      Transaction[]
+  
+  // Metadata
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+  isActive          Boolean     @default(true)
+  
+  @@map("accounts")
+  @@index([userId])
+  @@index([accountType])
+}
+
+// ==========================================
+// Transactions
+// ==========================================
+model Transaction {
+  id                String      @id @default(uuid())
+  userId            String
+  user              User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accountId         String
+  account           Account     @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  
+  // Transaction details
+  amount            Decimal     @db.Decimal(15, 2)
+  currency          String      @default("INR")
+  type              String      // credit, debit
+  category          String      // groceries, salary, rent, investment, etc.
+  subCategory       String?
+  description       String?
+  merchantName      String?
+  
+  // Date information
+  transactionDate   DateTime
+  postedDate        DateTime?
+  
+  // External integration
+  fiMcpTransactionId String?    @unique
+  externalReference String?
+  
+  // Classification
+  isRecurring       Boolean     @default(false)
+  tags              String[]
+  
+  // Metadata
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+  
+  @@map("transactions")
+  @@index([userId, transactionDate])
+  @@index([accountId])
+  @@index([category])
+}
+
+// ==========================================
+// Investments
+// ==========================================
+model Investment {
+  id                String      @id @default(uuid())
+  userId            String
+  user              User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Investment details
+  investmentType    String      // mutual_fund, stock, bond, gold, crypto, fd, etc.
+  assetName         String
+  isinCode          String?
+  folioNumber       String?
+  
+  // Holding details
+  units             Decimal?    @db.Decimal(15, 4)
+  averageBuyPrice   Decimal     @db.Decimal(15, 2)
+  currentPrice      Decimal     @db.Decimal(15, 2)
+  currentValue      Decimal     @db.Decimal(15, 2)
+  investedAmount    Decimal     @db.Decimal(15, 2)
+  
+  // Returns
+  absoluteReturn    Decimal?    @db.Decimal(15, 2)
+  xirr              Decimal?    @db.Decimal(5, 2)
+  
+  // Date information
+  purchaseDate      DateTime
+  lastUpdatedPrice  DateTime?
+  
+  // Metadata
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+  
+  @@map("investments")
+  @@index([userId])
+  @@index([investmentType])
+}
+
+// ==========================================
+// Goals
+// ==========================================
+model Goal {
+  id                String      @id @default(uuid())
+  userId            String
+  user              User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Goal details
+  goalType          String      // retirement, home, education, vacation, emergency, custom
+  title             String
+  description       String?
+  targetAmount      Decimal     @db.Decimal(15, 2)
+  currentAmount     Decimal     @default(0) @db.Decimal(15, 2)
+  currency          String      @default("INR")
+  
+  // Timeline
+  targetDate        DateTime
+  startDate         DateTime    @default(now())
+  
+  // Progress tracking
+  progressPercent   Decimal     @default(0) @db.Decimal(5, 2)
+  status            String      @default("active") // active, completed, paused, failed
+  priority          Int         @default(1)
+  
+  // Strategy
+  monthlySipAmount  Decimal?    @db.Decimal(15, 2)
+  expectedReturn    Decimal?    @db.Decimal(5, 2)
+  
+  // Relationships
+  milestones        Milestone[]
+  
+  // Metadata
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+  
+  @@map("goals")
+  @@index([userId])
+  @@index([status])
+}
+
+// ==========================================
+// Goal Milestones
+// ==========================================
+model Milestone {
+  id                String      @id @default(uuid())
+  goalId            String
+  goal              Goal        @relation(fields: [goalId], references: [id], onDelete: Cascade)
+  
+  // Milestone details
+  title             String
+  targetAmount      Decimal     @db.Decimal(15, 2)
+  targetDate        DateTime
+  isCompleted       Boolean     @default(false)
+  completedAt       DateTime?
+  
+  // Metadata
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+  
+  @@map("milestones")
+  @@index([goalId])
+}
+
+// ==========================================
+// Alerts
+// ==========================================
+model Alert {
+  id                String      @id @default(uuid())
+  userId            String
+  user              User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Alert details
+  alertType         String      // overspending, goal_at_risk, investment_alert, anomaly, recommendation
+  severity          String      // info, warning, critical
+  title             String
+  message           String
+  actionable        Boolean     @default(false)
+  actionUrl         String?
+  
+  // Status
+  isRead            Boolean     @default(false)
+  readAt            DateTime?
+  isDismissed       Boolean     @default(false)
+  dismissedAt       DateTime?
+  
+  // Metadata
+  metadata          Json?
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+  
+  @@map("alerts")
+  @@index([userId, createdAt])
+  @@index([isRead, isDismissed])
+}
