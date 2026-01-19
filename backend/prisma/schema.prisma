@@ -165,41 +165,77 @@ model Investment {
 // Goals
 // ==========================================
 model Goal {
-  id                String      @id @default(uuid())
-  userId            String
-  user              User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id                    String            @id @default(uuid())
+  userId                String
+  user                  User              @relation(fields: [userId], references: [id], onDelete: Cascade)
   
   // Goal details
-  goalType          String      // retirement, home, education, vacation, emergency, custom
-  title             String
-  description       String?
-  targetAmount      Decimal     @db.Decimal(15, 2)
-  currentAmount     Decimal     @default(0) @db.Decimal(15, 2)
-  currency          String      @default("INR")
+  name                  String
+  description           String
+  category              String            // SAVINGS, INVESTMENT, DEBT_PAYMENT, EMERGENCY_FUND, RETIREMENT, EDUCATION, VACATION, REAL_ESTATE, VEHICLE, WEDDING, BUSINESS, OTHER
+  
+  // Amounts
+  targetAmount          Decimal           @db.Decimal(15, 2)
+  currentAmount         Decimal           @default(0) @db.Decimal(15, 2)
+  currency              String            @default("INR")
   
   // Timeline
-  targetDate        DateTime
-  startDate         DateTime    @default(now())
+  startDate             DateTime
+  targetDate            DateTime
   
-  // Progress tracking
-  progressPercent   Decimal     @default(0) @db.Decimal(5, 2)
-  status            String      @default("active") // active, completed, paused, failed
-  priority          Int         @default(1)
+  // Status
+  status                String            @default("ACTIVE") // ACTIVE, COMPLETED, PAUSED, CANCELLED, EXPIRED
+  priority              String            @default("MEDIUM") // LOW, MEDIUM, HIGH, CRITICAL
   
-  // Strategy
-  monthlySipAmount  Decimal?    @db.Decimal(15, 2)
-  expectedReturn    Decimal?    @db.Decimal(5, 2)
+  // Auto-contribution settings
+  linkedAccountId       String?
+  autoContribute        Boolean           @default(false)
+  contributionAmount    Decimal?          @db.Decimal(15, 2)
+  contributionFrequency String?           // DAILY, WEEKLY, MONTHLY
   
   // Relationships
-  milestones        Milestone[]
+  contributions         GoalContribution[]
+  milestones            Milestone[]
   
   // Metadata
-  createdAt         DateTime    @default(now())
-  updatedAt         DateTime    @updatedAt
+  metadata              Json?
+  createdAt             DateTime          @default(now())
+  updatedAt             DateTime          @updatedAt
   
   @@map("goals")
   @@index([userId])
   @@index([status])
+  @@index([category])
+  @@index([targetDate])
+}
+
+// ==========================================
+// Goal Contributions
+// ==========================================
+model GoalContribution {
+  id                String      @id @default(uuid())
+  goalId            String
+  goal              Goal        @relation(fields: [goalId], references: [id], onDelete: Cascade)
+  userId            String
+  
+  // Contribution details
+  amount            Decimal     @db.Decimal(15, 2)
+  currency          String      @default("INR")
+  type              String      @default("MANUAL") // MANUAL, AUTOMATIC, TRANSFER, ADJUSTMENT
+  
+  // References
+  transactionId     String?
+  accountId         String?
+  notes             String?
+  
+  // Metadata
+  metadata          Json?
+  createdAt         DateTime    @default(now())
+  
+  @@map("goal_contributions")
+  @@index([goalId])
+  @@index([userId])
+  @@index([createdAt])
 }
 
 // ==========================================
