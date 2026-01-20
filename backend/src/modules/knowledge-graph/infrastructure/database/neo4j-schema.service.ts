@@ -28,7 +28,7 @@ export class Neo4jSchemaService implements OnModuleInit {
   private readonly logger = new Logger(Neo4jSchemaService.name);
   private readonly schemaPath = join(__dirname, 'neo4j-schema.cypher');
 
-  constructor(private readonly configService: ConfigService) {}
+  constructor(private readonly configService: ConfigService) { }
 
   /**
    * Initialize schema on module initialization
