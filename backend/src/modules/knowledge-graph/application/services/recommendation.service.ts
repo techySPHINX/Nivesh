@@ -15,7 +15,7 @@ export class RecommendationService {
     // private readonly patternDetector: SpendingPatternDetector,
     // private readonly categoryService: CategoryInsightsService,
     // private readonly merchantService: MerchantNetworkService,
-  ) { }
+  ) {}
 
   /**
    * Generate all recommendations for a user

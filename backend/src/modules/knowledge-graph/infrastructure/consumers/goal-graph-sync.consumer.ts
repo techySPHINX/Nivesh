@@ -25,7 +25,7 @@ export class GoalGraphSyncConsumer implements IEventHandler<GoalCreatedEvent> {
   constructor(
     // Will inject IKnowledgeGraphRepository in next commit
     // private readonly graphRepository: IKnowledgeGraphRepository,
-  ) { }
+  ) {}
 
   /**
    * Handle goal created event
