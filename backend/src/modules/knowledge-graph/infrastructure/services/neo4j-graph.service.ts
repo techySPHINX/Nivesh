@@ -36,12 +36,11 @@ import {
  */
 @Injectable()
 export class Neo4jGraphService
-  implements IKnowledgeGraphRepository, OnModuleInit, OnModuleDestroy
-{
+  implements IKnowledgeGraphRepository, OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(Neo4jGraphService.name);
   private driver: Driver;
 
-  constructor(private readonly configService: ConfigService) {}
+  constructor(private readonly configService: ConfigService) { }
 
   /**
    * Initialize Neo4j driver on module initialization

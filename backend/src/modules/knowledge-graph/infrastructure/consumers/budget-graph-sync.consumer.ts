@@ -35,14 +35,13 @@ export interface BudgetCreatedEvent {
 @EventsHandler(BudgetCreatedEvent)
 @Injectable()
 export class BudgetGraphSyncConsumer
-  implements IEventHandler<BudgetCreatedEvent>
-{
+  implements IEventHandler<BudgetCreatedEvent> {
   private readonly logger = new Logger(BudgetGraphSyncConsumer.name);
 
   constructor(
     // Will inject IKnowledgeGraphRepository in next commit
     // private readonly graphRepository: IKnowledgeGraphRepository,
-  ) {}
+  ) { }
 
   /**
    * Handle budget created event
@@ -109,7 +108,7 @@ export class BudgetGraphSyncConsumer
     try {
       // Find User node
       // const userNode = await this.graphRepository.findNodeById(event.userId);
-      
+
       // if (userNode) {
       //   const relationship = GraphRelationship.create(
       //     RelationshipType.HAS_BUDGET,
@@ -138,7 +137,7 @@ export class BudgetGraphSyncConsumer
     try {
       // Find Category node
       // const categoryNode = await this.graphRepository.findNodeById(event.categoryId);
-      
+
       // if (categoryNode) {
       //   // Budget is linked to category (no direct relationship in schema, but stored in properties)
       //   this.logger.debug(`Budget ${event.budgetId} linked to category ${event.categoryId}`);
@@ -158,7 +157,7 @@ export class BudgetGraphSyncConsumer
 
       // Update budget node
       // const existingNode = await this.graphRepository.findNodeById(event.budgetId);
-      
+
       // if (existingNode) {
       //   existingNode.updateProperties({
       //     amount: event.amount,
@@ -188,7 +187,7 @@ export class BudgetGraphSyncConsumer
 
       // Update status to exceeded
       // const existingNode = await this.graphRepository.findNodeById(event.budgetId);
-      
+
       // if (existingNode) {
       //   existingNode.updateProperties({
       //     status: 'exceeded',

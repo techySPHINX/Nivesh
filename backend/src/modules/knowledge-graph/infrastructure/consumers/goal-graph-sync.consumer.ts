@@ -39,7 +39,7 @@ export class GoalGraphSyncConsumer implements IEventHandler<GoalCreatedEvent> {
   constructor(
     // Will inject IKnowledgeGraphRepository in next commit
     // private readonly graphRepository: IKnowledgeGraphRepository,
-  ) {}
+  ) { }
 
   /**
    * Handle goal created event
@@ -77,8 +77,8 @@ export class GoalGraphSyncConsumer implements IEventHandler<GoalCreatedEvent> {
       priority: event.priority,
       status: event.status,
       category: event.category,
-      progress: event.targetAmount > 0 
-        ? (event.currentAmount / event.targetAmount) * 100 
+      progress: event.targetAmount > 0
+        ? (event.currentAmount / event.targetAmount) * 100
         : 0,
       daysRemaining: this.calculateDaysRemaining(event.targetDate),
       metadata: {
@@ -110,7 +110,7 @@ export class GoalGraphSyncConsumer implements IEventHandler<GoalCreatedEvent> {
     try {
       // Find User node
       // const userNode = await this.graphRepository.findNodeById(event.userId);
-      
+
       // if (userNode) {
       //   const relationship = GraphRelationship.create(
       //     RelationshipType.HAS_GOAL,
@@ -142,7 +142,7 @@ export class GoalGraphSyncConsumer implements IEventHandler<GoalCreatedEvent> {
 
       // Update goal node
       // const existingNode = await this.graphRepository.findNodeById(event.goalId);
-      
+
       // if (existingNode) {
       //   existingNode.updateProperties({
       //     name: event.name,
@@ -238,7 +238,7 @@ export class GoalGraphSyncConsumer implements IEventHandler<GoalCreatedEvent> {
 
       // Update goal status
       // const existingNode = await this.graphRepository.findNodeById(event.goalId);
-      
+
       // if (existingNode) {
       //   existingNode.updateProperties({
       //     status: 'completed',
