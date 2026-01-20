@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from '../../../core/database/postgres/prisma.service';
-import { IGoalRepository } from '../domain/repositories/goal.repository.interface';
-import { Goal, GoalStatus, GoalCategory } from '../domain/entities/goal.entity';
+import { PrismaService } from '../../../../core/database/postgres/prisma.service';
+import { IGoalRepository } from '../../domain/repositories/goal.repository.interface';
+import { Goal, GoalStatus, GoalCategory } from '../../domain/entities/goal.entity';
 
 @Injectable()
 export class GoalRepository implements IGoalRepository {
@@ -144,7 +144,7 @@ export class GoalRepository implements IGoalRepository {
       },
     });
 
-    return result._sum.targetAmount || 0;
+    return result._sum.targetAmount ? Number(result._sum.targetAmount) : 0;
   }
 
   async getTotalCurrentAmount(userId: string): Promise<number> {
@@ -160,7 +160,7 @@ export class GoalRepository implements IGoalRepository {
       },
     });
 
-    return result._sum.currentAmount || 0;
+    return result._sum.currentAmount ? Number(result._sum.currentAmount) : 0;
   }
 
   async delete(id: string): Promise<void> {

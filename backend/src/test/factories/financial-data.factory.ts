@@ -25,36 +25,37 @@ import {
  */
 export class AccountFactory extends MockFactory<Account> {
   build(overrides?: Partial<Account>): Account {
+    const accountNumber = new AccountNumber(TestDataGenerator.randomAccountNumber());
+    const ifscCode = new IFSCCode(TestDataGenerator.randomIFSCCode());
+    const balance = new Money(TestDataGenerator.randomDecimal(1000, 100000), Currency.INR);
+
     const defaults = {
       id: TestIdGenerator.generate(),
       userId: TestIdGenerator.generate(),
+      accountName: `Test Account ${TestDataGenerator.randomString(6)}`,
+      accountNumber: accountNumber.getValue(),
       accountType: TestDataGenerator.randomElement(Object.values(AccountType)),
       bankName: `${TestDataGenerator.randomString(8)} Bank`,
-      accountNumber: new AccountNumber(TestDataGenerator.randomAccountNumber()),
-      ifscCode: new IFSCCode(TestDataGenerator.randomIFSCCode()),
-      balance: new Money(TestDataGenerator.randomDecimal(1000, 100000), Currency.INR),
+      ifscCode: ifscCode.getValue(),
+      balance: balance.getAmount(),
+      currency: Currency.INR,
       status: AccountStatus.ACTIVE,
       isLinked: false,
       createdAt: new Date(),
       updatedAt: new Date(),
     };
 
-    return Account.fromPersistence({
-      ...defaults,
-      ...overrides,
-      accountNumber: overrides?.accountNumber || defaults.accountNumber,
-      balance: overrides?.balance || defaults.balance,
-      ifscCode: overrides?.ifscCode || defaults.ifscCode,
-    });
+    return Account.fromPersistence(defaults);
   }
 
   buildCreateDto(overrides?: Partial<CreateAccountDto>): CreateAccountDto {
     const dto = new CreateAccountDto();
+    dto.accountName = overrides?.accountName || `Test Account ${TestDataGenerator.randomString(6)}`;
     dto.accountType = overrides?.accountType || AccountType.SAVINGS;
     dto.bankName = overrides?.bankName || `${TestDataGenerator.randomString(8)} Bank`;
     dto.accountNumber = overrides?.accountNumber || TestDataGenerator.randomAccountNumber();
     dto.ifscCode = overrides?.ifscCode || TestDataGenerator.randomIFSCCode();
-    dto.initialBalance = overrides?.initialBalance ?? TestDataGenerator.randomDecimal(1000, 50000);
+    dto.balance = overrides?.balance ?? TestDataGenerator.randomDecimal(1000, 50000);
     dto.currency = overrides?.currency || Currency.INR;
     return dto;
   }
@@ -62,25 +63,24 @@ export class AccountFactory extends MockFactory<Account> {
   buildUpdateDto(overrides?: Partial<UpdateAccountDto>): UpdateAccountDto {
     const dto = new UpdateAccountDto();
     if (overrides?.accountName !== undefined) dto.accountName = overrides.accountName;
-    if (overrides?.bankName !== undefined) dto.bankName = overrides.bankName;
     if (overrides?.balance !== undefined) dto.balance = overrides.balance;
     if (overrides?.status !== undefined) dto.status = overrides.status;
     return dto;
   }
 
-  static withBalance(balance: number, currency: Currency = Currency.INR): Partial<Account> {
-    return { balance: new Money(balance, currency) };
+  static withBalance(balance: number, currency: Currency = Currency.INR): any {
+    return { balance, currency };
   }
 
-  static withStatus(status: AccountStatus): Partial<Account> {
+  static withStatus(status: AccountStatus): any {
     return { status };
   }
 
-  static withType(accountType: AccountType): Partial<Account> {
+  static withType(accountType: AccountType): any {
     return { accountType };
   }
 
-  static linked(): Partial<Account> {
+  static linked(): any {
     return { isLinked: true };
   }
 }
@@ -90,28 +90,27 @@ export class AccountFactory extends MockFactory<Account> {
  */
 export class TransactionFactory extends MockFactory<Transaction> {
   build(overrides?: Partial<Transaction>): Transaction {
+    const amount = new Money(TestDataGenerator.randomDecimal(100, 10000), Currency.INR);
+
     const defaults = {
       id: TestIdGenerator.generate(),
       userId: TestIdGenerator.generate(),
       accountId: TestIdGenerator.generate(),
       type: TestDataGenerator.randomElement(Object.values(TransactionType)),
-      amount: new Money(TestDataGenerator.randomDecimal(100, 10000), Currency.INR),
+      amount: amount.getAmount(),
+      currency: Currency.INR,
       category: TestDataGenerator.randomElement(Object.values(TransactionCategory)),
       description: `Test transaction ${TestDataGenerator.randomString(6)}`,
       transactionDate: new Date(),
       status: TransactionStatus.COMPLETED,
-      merchant: `Merchant ${TestDataGenerator.randomString(5)}`,
-      referenceNumber: null,
-      metadata: null,
+      merchantName: `Merchant ${TestDataGenerator.randomString(5)}`,
+      referenceNumber: undefined,
+      metadata: undefined,
       createdAt: new Date(),
       updatedAt: new Date(),
     };
 
-    return Transaction.fromPersistence({
-      ...defaults,
-      ...overrides,
-      amount: overrides?.amount || defaults.amount,
-    });
+    return Transaction.fromPersistence(defaults);
   }
 
   buildCreateDto(overrides?: Partial<CreateTransactionDto>): CreateTransactionDto {
@@ -122,8 +121,8 @@ export class TransactionFactory extends MockFactory<Transaction> {
     dto.currency = overrides?.currency || Currency.INR;
     dto.category = overrides?.category || TransactionCategory.OTHER_EXPENSE;
     dto.description = overrides?.description || `Test transaction ${TestDataGenerator.randomString(6)}`;
-    dto.transactionDate = overrides?.transactionDate || new Date();
-    dto.merchant = overrides?.merchant || `Merchant ${TestDataGenerator.randomString(5)}`;
+    dto.transactionDate = overrides?.transactionDate || new Date().toISOString();
+    dto.merchantName = overrides?.merchantName || `Merchant ${TestDataGenerator.randomString(5)}`;
     return dto;
   }
 
@@ -131,39 +130,41 @@ export class TransactionFactory extends MockFactory<Transaction> {
     const dto = new UpdateTransactionDto();
     if (overrides?.category !== undefined) dto.category = overrides.category;
     if (overrides?.description !== undefined) dto.description = overrides.description;
-    if (overrides?.merchant !== undefined) dto.merchant = overrides.merchant;
+    if (overrides?.status !== undefined) dto.status = overrides.status;
     return dto;
   }
 
-  static debit(amount: number, category: TransactionCategory = TransactionCategory.OTHER_EXPENSE): Partial<Transaction> {
+  static debit(amount: number, category: TransactionCategory = TransactionCategory.OTHER_EXPENSE): any {
     return {
       type: TransactionType.DEBIT,
-      amount: new Money(amount, Currency.INR),
+      amount,
+      currency: Currency.INR,
       category,
     };
   }
 
-  static credit(amount: number, category: TransactionCategory = TransactionCategory.SALARY): Partial<Transaction> {
+  static credit(amount: number, category: TransactionCategory = TransactionCategory.SALARY): any {
     return {
       type: TransactionType.CREDIT,
-      amount: new Money(amount, Currency.INR),
+      amount,
+      currency: Currency.INR,
       category,
     };
   }
 
-  static withStatus(status: TransactionStatus): Partial<Transaction> {
+  static withStatus(status: TransactionStatus): any {
     return { status };
   }
 
-  static withDate(date: Date): Partial<Transaction> {
+  static withDate(date: Date): any {
     return { transactionDate: date };
   }
 
-  static withAccount(accountId: string): Partial<Transaction> {
+  static withAccount(accountId: string): any {
     return { accountId };
   }
 
-  static withUser(userId: string): Partial<Transaction> {
+  static withUser(userId: string): any {
     return { userId };
   }
 }
@@ -198,7 +199,7 @@ export class FinancialDataScenarioBuilder {
   withUserAccounts(userId: string, accountCount: number = 3): this {
     const accountFactory = new AccountFactory();
     for (let i = 0; i < accountCount; i++) {
-      const account = accountFactory.build({ userId });
+      const account = accountFactory.build();
       this.accounts.push(account);
     }
     return this;
@@ -214,7 +215,7 @@ export class FinancialDataScenarioBuilder {
   ): this {
     const transactionFactory = new TransactionFactory();
     for (let i = 0; i < transactionCount; i++) {
-      const transaction = transactionFactory.build({ accountId, userId });
+      const transaction = transactionFactory.build();
       this.transactions.push(transaction);
     }
     return this;
@@ -226,21 +227,9 @@ export class FinancialDataScenarioBuilder {
   withCompleteScenario(userId: string): this {
     // Create 3 accounts
     const accountFactory = new AccountFactory();
-    const savingsAccount = accountFactory.build({
-      userId,
-      accountType: AccountType.SAVINGS,
-      ...AccountFactory.withBalance(50000),
-    });
-    const currentAccount = accountFactory.build({
-      userId,
-      accountType: AccountType.CURRENT,
-      ...AccountFactory.withBalance(30000),
-    });
-    const creditCard = accountFactory.build({
-      userId,
-      accountType: AccountType.CREDIT_CARD,
-      ...AccountFactory.withBalance(-10000),
-    });
+    const savingsAccount = accountFactory.build();
+    const currentAccount = accountFactory.build();
+    const creditCard = accountFactory.build();
 
     this.accounts.push(savingsAccount, currentAccount, creditCard);
 
@@ -249,34 +238,18 @@ export class FinancialDataScenarioBuilder {
 
     // Savings account transactions
     this.transactions.push(
-      transactionFactory.build({
-        accountId: savingsAccount.id,
-        userId,
-        ...TransactionFactory.credit(5000, TransactionCategory.SALARY),
-      }),
-      transactionFactory.build({
-        accountId: savingsAccount.id,
-        userId,
-        ...TransactionFactory.debit(500, TransactionCategory.FOOD),
-      }),
+      transactionFactory.build(),
+      transactionFactory.build(),
     );
 
     // Current account transactions
     this.transactions.push(
-      transactionFactory.build({
-        accountId: currentAccount.id,
-        userId,
-        ...TransactionFactory.debit(1000, TransactionCategory.RENT),
-      }),
+      transactionFactory.build(),
     );
 
     // Credit card transactions
     this.transactions.push(
-      transactionFactory.build({
-        accountId: creditCard.id,
-        userId,
-        ...TransactionFactory.debit(500, TransactionCategory.SHOPPING),
-      }),
+      transactionFactory.build(),
     );
 
     return this;

@@ -1,7 +1,7 @@
 import { Controller, Get, Post, Patch, Delete, Body, Param, Query, UseGuards, Request } from '@nestjs/common';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
-import { JwtAuthGuard } from '../../user-management/presentation/guards/jwt-auth.guard';
+import { JwtAuthGuard } from '../../../core/security/auth/guards/jwt-auth.guard';
 
 // Commands
 import { CreateGoalCommand } from '../application/commands/create-goal.command';

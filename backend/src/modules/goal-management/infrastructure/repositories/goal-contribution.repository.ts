@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from '../../../core/database/postgres/prisma.service';
-import { IGoalContributionRepository } from '../domain/repositories/goal-contribution.repository.interface';
-import { GoalContribution } from '../domain/entities/goal-contribution.entity';
+import { PrismaService } from '../../../../core/database/postgres/prisma.service';
+import { IGoalContributionRepository } from '../../domain/repositories/goal-contribution.repository.interface';
+import { GoalContribution } from '../../domain/entities/goal-contribution.entity';
 
 @Injectable()
 export class GoalContributionRepository implements IGoalContributionRepository {

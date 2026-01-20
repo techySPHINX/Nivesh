@@ -11,14 +11,14 @@ describe('Money Value Object', () => {
     it('should create money with valid amount and currency', () => {
       const money = new Money(100, Currency.INR);
 
-      expect(money.getValue()).toBe(100);
+      expect(money.getAmount()).toBe(100);
       expect(money.getCurrency()).toBe(Currency.INR);
     });
 
     it('should create money with zero amount', () => {
       const money = new Money(0, Currency.USD);
 
-      expect(money.getValue()).toBe(0);
+      expect(money.getAmount()).toBe(0);
     });
 
     it('should throw error for negative amount', () => {
@@ -52,7 +52,7 @@ describe('Money Value Object', () => {
 
         const result = money1.add(money2);
 
-        expect(result.getValue()).toBe(150);
+        expect(result.getAmount()).toBe(150);
         expect(result.getCurrency()).toBe(Currency.INR);
       });
 
@@ -70,7 +70,7 @@ describe('Money Value Object', () => {
 
         const result = money1.add(money2);
 
-        expect(result.getValue()).toBe(31.25);
+        expect(result.getAmount()).toBe(31.25);
       });
 
       it('should not mutate original money objects', () => {
@@ -79,8 +79,8 @@ describe('Money Value Object', () => {
 
         money1.add(money2);
 
-        expect(money1.getValue()).toBe(100);
-        expect(money2.getValue()).toBe(50);
+        expect(money1.getAmount()).toBe(100);
+        expect(money2.getAmount()).toBe(50);
       });
     });
 
@@ -91,7 +91,7 @@ describe('Money Value Object', () => {
 
         const result = money1.subtract(money2);
 
-        expect(result.getValue()).toBe(70);
+        expect(result.getAmount()).toBe(70);
         expect(result.getCurrency()).toBe(Currency.INR);
       });
 
@@ -116,7 +116,7 @@ describe('Money Value Object', () => {
 
         const result = money1.subtract(money2);
 
-        expect(result.getValue()).toBe(0);
+        expect(result.getAmount()).toBe(0);
       });
     });
 
@@ -126,7 +126,7 @@ describe('Money Value Object', () => {
 
         const result = money.multiply(2.5);
 
-        expect(result.getValue()).toBe(250);
+        expect(result.getAmount()).toBe(250);
         expect(result.getCurrency()).toBe(Currency.INR);
       });
 
@@ -141,7 +141,7 @@ describe('Money Value Object', () => {
 
         const result = money.multiply(0);
 
-        expect(result.getValue()).toBe(0);
+        expect(result.getAmount()).toBe(0);
       });
 
       it('should round to 2 decimal places', () => {
@@ -149,7 +149,7 @@ describe('Money Value Object', () => {
 
         const result = money.multiply(1.333);
 
-        expect(result.getValue()).toBe(13.33);
+        expect(result.getAmount()).toBe(13.33);
       });
     });
 
@@ -159,7 +159,7 @@ describe('Money Value Object', () => {
 
         const result = money.divide(4);
 
-        expect(result.getValue()).toBe(25);
+        expect(result.getAmount()).toBe(25);
         expect(result.getCurrency()).toBe(Currency.INR);
       });
 
@@ -180,7 +180,7 @@ describe('Money Value Object', () => {
 
         const result = money.divide(3);
 
-        expect(result.getValue()).toBe(33.33);
+        expect(result.getAmount()).toBe(33.33);
       });
     });
   });
@@ -318,14 +318,14 @@ describe('Money Value Object', () => {
     it('should handle very small decimal values', () => {
       const money = new Money(0.01, Currency.INR);
 
-      expect(money.getValue()).toBe(0.01);
+      expect(money.getAmount()).toBe(0.01);
       expect(money.formatAmount()).toBe('₹0.01');
     });
 
     it('should handle maximum allowed amount', () => {
       const money = new Money(1000000000, Currency.INR);
 
-      expect(money.getValue()).toBe(1000000000);
+      expect(money.getAmount()).toBe(1000000000);
     });
 
     it('should handle floating point precision issues', () => {
@@ -334,7 +334,7 @@ describe('Money Value Object', () => {
 
       const result = money1.add(money2);
 
-      expect(result.getValue()).toBe(0.3);
+      expect(result.getAmount()).toBe(0.3);
     });
 
     it('should be immutable', () => {
@@ -344,8 +344,8 @@ describe('Money Value Object', () => {
       // Try to modify (should not affect original)
       const doubled = money.multiply(2);
 
-      expect(money.getValue()).toBe(100);
-      expect(doubled.getValue()).toBe(200);
+      expect(money.getAmount()).toBe(100);
+      expect(doubled.getAmount()).toBe(200);
     });
   });
 });
