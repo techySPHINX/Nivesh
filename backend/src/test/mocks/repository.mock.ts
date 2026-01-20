@@ -4,10 +4,12 @@
  */
 
 import { IAccountRepository } from '../../modules/financial-data/domain/repositories/account.repository.interface';
-import { ITransactionRepository } from '../../modules/financial-data/domain/repositories/transaction.repository.interface';
+import {
+  ITransactionRepository,
+  TransactionFilters,
+} from '../../modules/financial-data/domain/repositories/transaction.repository.interface';
 import { Account } from '../../modules/financial-data/domain/entities/account.entity';
 import { Transaction } from '../../modules/financial-data/domain/entities/transaction.entity';
-import { TransactionFiltersDto } from '../../modules/financial-data/application/dto/transaction.dto';
 
 /**
  * Mock Account Repository
@@ -16,7 +18,7 @@ export class MockAccountRepository implements IAccountRepository {
   private accounts: Map<string, Account> = new Map();
 
   async save(account: Account): Promise<Account> {
-    this.accounts.set(account.id, account);
+    this.accounts.set(account.Id, account);
     return account;
   }
 
@@ -25,39 +27,53 @@ export class MockAccountRepository implements IAccountRepository {
   }
 
   async findByUserId(userId: string): Promise<Account[]> {
-    return Array.from(this.accounts.values()).filter((account) => account.userId === userId);
+    return Array.from(this.accounts.values()).filter((account) => account.UserId === userId);
   }
 
   async findByAccountNumber(accountNumber: string): Promise<Account | null> {
     return (
       Array.from(this.accounts.values()).find(
-        (account) => account.accountNumber.getValue() === accountNumber,
+        (account) => account.AccountNumber.getValue() === accountNumber,
       ) || null
     );
   }
 
   async existsByAccountNumber(accountNumber: string): Promise<boolean> {
     return Array.from(this.accounts.values()).some(
-      (account) => account.accountNumber.getValue() === accountNumber,
+      (account) => account.AccountNumber.getValue() === accountNumber,
     );
   }
 
   async findActiveByUserId(userId: string): Promise<Account[]> {
     return Array.from(this.accounts.values()).filter(
-      (account) => account.userId === userId && account.status === 'ACTIVE',
+      (account) => account.UserId === userId && account.Status === 'ACTIVE',
     );
   }
 
   async findLinkedByUserId(userId: string): Promise<Account[]> {
     return Array.from(this.accounts.values()).filter(
-      (account) => account.userId === userId && account.isLinked,
+      (account) => account.UserId === userId && account.IsLinked,
     );
   }
 
-  async findAll(page: number = 1, limit: number = 50): Promise<Account[]> {
-    const start = (page - 1) * limit;
-    const end = start + limit;
-    return Array.from(this.accounts.values()).slice(start, end);
+  async findAll(options: {
+    skip?: number;
+    take?: number;
+    userId?: string;
+  }): Promise<{ accounts: Account[]; total: number }> {
+    let result = Array.from(this.accounts.values());
+
+    if (options.userId) {
+      result = result.filter((account) => account.UserId === options.userId);
+    }
+
+    const total = result.length;
+    const skip = options.skip || 0;
+    const take = options.take || 50;
+
+    const accounts = result.slice(skip, skip + take);
+
+    return { accounts, total };
   }
 
   async delete(id: string): Promise<void> {
@@ -85,7 +101,7 @@ export class MockTransactionRepository implements ITransactionRepository {
   private transactions: Map<string, Transaction> = new Map();
 
   async save(transaction: Transaction): Promise<Transaction> {
-    this.transactions.set(transaction.id, transaction);
+    this.transactions.set(transaction.Id, transaction);
     return transaction;
   }
 
@@ -93,107 +109,128 @@ export class MockTransactionRepository implements ITransactionRepository {
     return this.transactions.get(id) || null;
   }
 
-  async findByUserId(userId: string, page: number = 1, limit: number = 50): Promise<Transaction[]> {
+  async findByUserId(userId: string, limit: number = 50): Promise<Transaction[]> {
     const userTransactions = Array.from(this.transactions.values()).filter(
-      (transaction) => transaction.userId === userId,
+      (transaction) => transaction.UserId === userId,
     );
-    const start = (page - 1) * limit;
-    const end = start + limit;
-    return userTransactions.slice(start, end);
+    return userTransactions.slice(0, limit);
   }
 
-  async findByAccountId(
-    accountId: string,
-    page: number = 1,
-    limit: number = 50,
-  ): Promise<Transaction[]> {
+  async findByAccountId(accountId: string, limit: number = 50): Promise<Transaction[]> {
     const accountTransactions = Array.from(this.transactions.values()).filter(
-      (transaction) => transaction.accountId === accountId,
+      (transaction) => transaction.AccountId === accountId,
     );
-    const start = (page - 1) * limit;
-    const end = start + limit;
-    return accountTransactions.slice(start, end);
+    return accountTransactions.slice(0, limit);
   }
 
   async findByReferenceNumber(referenceNumber: string): Promise<Transaction | null> {
     return (
       Array.from(this.transactions.values()).find(
-        (transaction) => transaction.referenceNumber === referenceNumber,
+        (transaction) => transaction.ReferenceNumber === referenceNumber,
       ) || null
     );
   }
 
-  async findAll(filters?: TransactionFiltersDto): Promise<Transaction[]> {
+  async findAll(options: {
+    skip?: number;
+    take?: number;
+    filters?: TransactionFilters;
+    sortBy?: 'transactionDate' | 'amount' | 'createdAt';
+    sortOrder?: 'asc' | 'desc';
+  }): Promise<{ transactions: Transaction[]; total: number }> {
     let result = Array.from(this.transactions.values());
 
-    if (filters?.accountId) {
-      result = result.filter((t) => t.accountId === filters.accountId);
-    }
+    // Apply filters
+    if (options.filters) {
+      const filters = options.filters;
 
-    if (filters?.category) {
-      result = result.filter((t) => t.category === filters.category);
-    }
+      if (filters.userId) {
+        result = result.filter((t) => t.UserId === filters.userId);
+      }
 
-    if (filters?.type) {
-      result = result.filter((t) => t.type === filters.type);
-    }
+      if (filters.accountId) {
+        result = result.filter((t) => t.AccountId === filters.accountId);
+      }
 
-    if (filters?.status) {
-      result = result.filter((t) => t.status === filters.status);
-    }
+      if (filters.category) {
+        result = result.filter((t) => t.Category === filters.category);
+      }
 
-    if (filters?.startDate) {
-      result = result.filter((t) => t.transactionDate >= filters.startDate!);
-    }
+      if (filters.startDate) {
+        result = result.filter((t) => t.TransactionDate >= filters.startDate!);
+      }
 
-    if (filters?.endDate) {
-      result = result.filter((t) => t.transactionDate <= filters.endDate!);
+      if (filters.endDate) {
+        result = result.filter((t) => t.TransactionDate <= filters.endDate!);
+      }
+
+      if (filters.minAmount !== undefined) {
+        result = result.filter((t) => t.Amount.getAmount() >= filters.minAmount!);
+      }
+
+      if (filters.maxAmount !== undefined) {
+        result = result.filter((t) => t.Amount.getAmount() <= filters.maxAmount!);
+      }
     }
 
     // Sorting
-    if (filters?.sortBy) {
+    if (options.sortBy) {
       result.sort((a, b) => {
-        const aValue = a[filters.sortBy as keyof Transaction];
-        const bValue = b[filters.sortBy as keyof Transaction];
+        let aValue: any;
+        let bValue: any;
 
-        if (aValue < bValue) return filters.sortOrder === 'ASC' ? -1 : 1;
-        if (aValue > bValue) return filters.sortOrder === 'ASC' ? 1 : -1;
+        switch (options.sortBy) {
+          case 'transactionDate':
+            aValue = a.TransactionDate.getTime();
+            bValue = b.TransactionDate.getTime();
+            break;
+          case 'amount':
+            aValue = a.Amount.getAmount();
+            bValue = b.Amount.getAmount();
+            break;
+          case 'createdAt':
+            aValue = a.CreatedAt.getTime();
+            bValue = b.CreatedAt.getTime();
+            break;
+          default:
+            aValue = a.CreatedAt.getTime();
+            bValue = b.CreatedAt.getTime();
+        }
+
+        const order = options.sortOrder === 'asc' ? 1 : -1;
+        if (aValue < bValue) return -1 * order;
+        if (aValue > bValue) return 1 * order;
         return 0;
       });
     }
 
-    // Pagination
-    if (filters?.page && filters?.limit) {
-      const start = (filters.page - 1) * filters.limit;
-      const end = start + filters.limit;
-      result = result.slice(start, end);
-    }
+    const total = result.length;
+    const skip = options.skip || 0;
+    const take = options.take || 50;
 
-    return result;
+    const transactions = result.slice(skip, skip + take);
+
+    return { transactions, total };
   }
 
   async getTotalByCategory(
     userId: string,
-    startDate?: Date,
-    endDate?: Date,
+    startDate: Date,
+    endDate: Date,
   ): Promise<Array<{ category: string; total: number }>> {
     let userTransactions = Array.from(this.transactions.values()).filter(
-      (transaction) => transaction.userId === userId,
+      (transaction) => transaction.UserId === userId,
     );
 
-    if (startDate) {
-      userTransactions = userTransactions.filter((t) => t.transactionDate >= startDate);
-    }
-
-    if (endDate) {
-      userTransactions = userTransactions.filter((t) => t.transactionDate <= endDate);
-    }
+    userTransactions = userTransactions.filter(
+      (t) => t.TransactionDate >= startDate && t.TransactionDate <= endDate,
+    );
 
     const categoryTotals = new Map<string, number>();
 
     userTransactions.forEach((transaction) => {
-      const current = categoryTotals.get(transaction.category) || 0;
-      categoryTotals.set(transaction.category, current + transaction.amount.getValue());
+      const current = categoryTotals.get(transaction.Category) || 0;
+      categoryTotals.set(transaction.Category, current + transaction.Amount.getAmount());
     });
 
     return Array.from(categoryTotals.entries()).map(([category, total]) => ({
@@ -208,24 +245,30 @@ export class MockTransactionRepository implements ITransactionRepository {
 
     const monthlyTransactions = Array.from(this.transactions.values()).filter(
       (transaction) =>
-        transaction.userId === userId &&
-        transaction.transactionDate >= startDate &&
-        transaction.transactionDate <= endDate &&
-        transaction.type === 'DEBIT',
+        transaction.UserId === userId &&
+        transaction.TransactionDate >= startDate &&
+        transaction.TransactionDate <= endDate &&
+        transaction.Type === 'DEBIT',
     );
 
-    return monthlyTransactions.reduce((sum, transaction) => sum + transaction.amount.getValue(), 0);
+    return monthlyTransactions.reduce((sum, transaction) => sum + transaction.Amount.getAmount(), 0);
   }
 
-  async getRecentTransactions(userId: string, days: number = 7): Promise<Transaction[]> {
+  async getRecentTransactions(userId: string, days: number = 7, limit?: number): Promise<Transaction[]> {
     const cutoffDate = new Date();
     cutoffDate.setDate(cutoffDate.getDate() - days);
 
-    return Array.from(this.transactions.values())
+    let result = Array.from(this.transactions.values())
       .filter(
-        (transaction) => transaction.userId === userId && transaction.transactionDate >= cutoffDate,
+        (transaction) => transaction.UserId === userId && transaction.TransactionDate >= cutoffDate,
       )
-      .sort((a, b) => b.transactionDate.getTime() - a.transactionDate.getTime());
+      .sort((a, b) => b.TransactionDate.getTime() - a.TransactionDate.getTime());
+
+    if (limit) {
+      result = result.slice(0, limit);
+    }
+
+    return result;
   }
 
   async delete(id: string): Promise<void> {
