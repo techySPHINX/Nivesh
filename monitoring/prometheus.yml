@@ -1,0 +1,69 @@
+# Prometheus Configuration for Nivesh
+# Monitors all services: Backend, ML API, Databases, Vector DB
+
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    cluster: "nivesh-dev"
+    environment: "development"
+
+# Scrape configurations
+scrape_configs:
+  # Backend API (NestJS)
+  - job_name: "backend"
+    static_configs:
+      - targets: ["backend:3000"]
+    metrics_path: "/metrics"
+
+  # ML Model Server (FastAPI)
+  - job_name: "ml-api"
+    static_configs:
+      - targets: ["ml-api:8000"]
+    metrics_path: "/metrics"
+
+  # PostgreSQL
+  - job_name: "postgres"
+    static_configs:
+      - targets: ["postgres-exporter:9187"]
+
+  # Redis
+  - job_name: "redis"
+    static_configs:
+      - targets: ["redis-exporter:9121"]
+
+  # Neo4j
+  - job_name: "neo4j"
+    static_configs:
+      - targets: ["neo4j:2004"]
+
+  # Kafka
+  - job_name: "kafka"
+    static_configs:
+      - targets: ["kafka-exporter:9308"]
+
+  # Qdrant Vector DB
+  - job_name: "qdrant"
+    static_configs:
+      - targets: ["qdrant:6333"]
+    metrics_path: "/metrics"
+
+  # MLflow
+  - job_name: "mlflow"
+    static_configs:
+      - targets: ["mlflow:5000"]
+
+  # Prometheus itself
+  - job_name: "prometheus"
+    static_configs:
+      - targets: ["localhost:9090"]
+
+# Alerting rules
+rule_files:
+  - "/etc/prometheus/alerts.yml"
+
+# Alert manager configuration (optional)
+# alerting:
+#   alertmanagers:
+#     - static_configs:
+#         - targets: ['alertmanager:9093']
