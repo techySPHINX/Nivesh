@@ -1,27 +1,12 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { EventsHandler, IEventHandler } from '@nestjs/cqrs';
+import { BudgetCreatedEvent } from '../../../budget-management/domain/events/budget.events';
 import {
   GraphNode,
   GraphRelationship,
   NodeType,
   RelationshipType,
 } from '../../domain';
-
-/**
- * Budget Created Event (placeholder)
- */
-export interface BudgetCreatedEvent {
-  budgetId: string;
-  userId: string;
-  categoryId: string;
-  amount: number;
-  spent: number;
-  period: 'weekly' | 'monthly' | 'yearly';
-  startDate: Date;
-  endDate: Date;
-  status: 'active' | 'exceeded' | 'completed';
-  alertThreshold: number;
-}
 
 /**
  * Kafka Consumer for Budget Graph Synchronization
@@ -57,11 +42,6 @@ export class BudgetGraphSyncConsumer
       // 2. Create User -> Budget relationship
       await this.createUserBudgetRelationship(event, budgetNode);
 
-      // 3. Link to Category if exists
-      if (event.categoryId) {
-        await this.createBudgetCategoryRelationship(event, budgetNode);
-      }
-
       this.logger.log(`Budget synced successfully: ${event.budgetId}`);
     } catch (error) {
       this.logger.error(
@@ -79,15 +59,11 @@ export class BudgetGraphSyncConsumer
   ): Promise<GraphNode> {
     const budgetNode = GraphNode.create(NodeType.BUDGET, {
       userId: event.userId,
-      categoryId: event.categoryId,
-      amount: event.amount,
-      spent: event.spent,
+      name: event.name,
+      totalLimit: event.totalLimit,
       period: event.period,
       startDate: event.startDate,
       endDate: event.endDate,
-      status: event.status,
-      alertThreshold: event.alertThreshold,
-      utilization: event.amount > 0 ? event.spent / event.amount : 0,
       metadata: {
         source: 'budget-service',
         synced: true,

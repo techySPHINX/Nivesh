@@ -8,6 +8,14 @@ export class GoalRepository implements IGoalRepository {
   constructor(private readonly prisma: PrismaService) { }
 
   async save(goal: Goal): Promise<Goal> {
+    // Convert GoalPriority enum to number for Prisma
+    const priorityMap = {
+      'LOW': 1,
+      'MEDIUM': 2,
+      'HIGH': 3,
+      'CRITICAL': 4,
+    };
+
     const data = {
       id: goal.id,
       userId: goal.userId,
@@ -20,12 +28,12 @@ export class GoalRepository implements IGoalRepository {
       startDate: goal.startDate,
       targetDate: goal.targetDate,
       status: goal.status,
-      priority: goal.priority,
+      priority: priorityMap[goal.priority] || 2,
       linkedAccountId: goal.linkedAccountId,
       autoContribute: goal.autoContribute,
       contributionAmount: goal.contributionAmount,
       contributionFrequency: goal.contributionFrequency,
-      metadata: goal.metadata,
+      metadata: goal.metadata || undefined,
       updatedAt: goal.updatedAt,
     };
 

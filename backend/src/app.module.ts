@@ -16,7 +16,7 @@ import { UserModule } from './modules/user/user.module';
 import { FinancialDataModule } from './modules/financial-data/financial-data.module';
 // import { GoalManagementModule } from './modules/goal-management/goal-management.module';
 import { AiReasoningModule } from './modules/ai-reasoning/ai-reasoning.module';
-// import { KnowledgeGraphModule } from './modules/knowledge-graph/knowledge-graph.module';
+import { KnowledgeGraphModule } from './modules/knowledge-graph/knowledge-graph.module';
 // Note: Goal Management requires Prisma migration: pnpm prisma migrate dev --name fix-goal-schema-phase6
 
 // Controllers
@@ -59,7 +59,7 @@ import { HealthController } from './health.controller';
     FinancialDataModule,
     // GoalManagementModule, // Requires Prisma migration first
     AiReasoningModule,
-    // KnowledgeGraphModule,
+    KnowledgeGraphModule,
   ],
   controllers: [HealthController],
   providers: [],

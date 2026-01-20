@@ -12,6 +12,7 @@ import {
   GraphNode,
   GraphRelationship,
   NodeType,
+  NodeProperties,
   RelationshipType,
   CypherQuery,
   GraphQueryResult,
@@ -487,10 +488,11 @@ export class Neo4jGraphService
    * Helper to convert Neo4j node to GraphNode
    */
   private neo4jNodeToGraphNode(node: Neo4jNode, typeLabel: string): GraphNode {
+    const props = node.properties as unknown as NodeProperties;
     return GraphNode.fromPersistence(
-      node.properties.id,
+      props.id,
       typeLabel as NodeType,
-      node.properties,
+      props,
     );
   }
 

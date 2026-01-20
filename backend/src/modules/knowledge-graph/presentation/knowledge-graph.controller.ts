@@ -60,7 +60,7 @@ export class KnowledgeGraphController {
     // private readonly anomalyDetector: AnomalyDetector,
     // private readonly recommendationService: RecommendationService,
     // private readonly graphRepository: IKnowledgeGraphRepository,
-  ) {}
+  ) { }
 
   /**
    * Get spending patterns for a user

@@ -1,26 +1,12 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { EventsHandler, IEventHandler } from '@nestjs/cqrs';
+import { GoalCreatedEvent } from '../../../goal-management/domain/events/goal.events';
 import {
   GraphNode,
   GraphRelationship,
   NodeType,
   RelationshipType,
 } from '../../domain';
-
-/**
- * Goal Created Event (placeholder)
- */
-export interface GoalCreatedEvent {
-  goalId: string;
-  userId: string;
-  name: string;
-  targetAmount: number;
-  currentAmount: number;
-  targetDate: Date;
-  priority: 'low' | 'medium' | 'high';
-  status: 'active' | 'completed' | 'paused';
-  category: string;
-}
 
 /**
  * Kafka Consumer for Goal Graph Synchronization
@@ -72,14 +58,8 @@ export class GoalGraphSyncConsumer implements IEventHandler<GoalCreatedEvent> {
       userId: event.userId,
       name: event.name,
       targetAmount: event.targetAmount,
-      currentAmount: event.currentAmount,
       targetDate: event.targetDate,
-      priority: event.priority,
-      status: event.status,
       category: event.category,
-      progress: event.targetAmount > 0
-        ? (event.currentAmount / event.targetAmount) * 100
-        : 0,
       daysRemaining: this.calculateDaysRemaining(event.targetDate),
       metadata: {
         source: 'goal-service',
