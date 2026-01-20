@@ -18,10 +18,20 @@ import { PromptTemplateService } from './infrastructure/services/prompt-template
 
 // Application Handlers
 import { ProcessQueryHandler } from './application/handlers/process-query.handler';
-// import { SimulateScenarioHandler } from './application/handlers/simulate-scenario.handler';
+import { SimulateScenarioHandler } from './application/handlers/simulate-scenario.handler';
 
 // Presentation
 import { ReasoningController } from './presentation/reasoning.controller';
+
+// Repository imports
+import {
+  ACCOUNT_REPOSITORY
+} from '../financial-data/domain/repositories/account.repository.interface';
+import {
+  TRANSACTION_REPOSITORY
+} from '../financial-data/domain/repositories/transaction.repository.interface';
+import { AccountRepository } from '../financial-data/infrastructure/persistence/account.repository';
+import { TransactionRepository } from '../financial-data/infrastructure/persistence/transaction.repository';
 
 const DomainServices = [
   FinancialContextBuilderService,
@@ -35,7 +45,7 @@ const InfrastructureServices = [
 
 const CommandHandlers = [
   ProcessQueryHandler,
-  // SimulateScenarioHandler,
+  SimulateScenarioHandler,
 ];
 
 const QueryHandlers = [];
@@ -50,6 +60,15 @@ const QueryHandlers = [];
     ...InfrastructureServices,
     ...CommandHandlers,
     ...QueryHandlers,
+    // Repository providers
+    {
+      provide: ACCOUNT_REPOSITORY,
+      useClass: AccountRepository,
+    },
+    {
+      provide: TRANSACTION_REPOSITORY,
+      useClass: TransactionRepository,
+    },
   ],
   exports: [
     FinancialContextBuilderService,

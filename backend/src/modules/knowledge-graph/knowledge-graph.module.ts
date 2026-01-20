@@ -5,6 +5,7 @@ import { ConfigModule } from '@nestjs/config';
 // Infrastructure
 import { Neo4jGraphService } from './infrastructure/services/neo4j-graph.service';
 import { Neo4jSchemaService } from './infrastructure/database/neo4j-schema.service';
+import { DeadLetterQueueService } from './infrastructure/services/dead-letter-queue.service';
 import { UserGraphSyncConsumer } from './infrastructure/consumers/user-graph-sync.consumer';
 import { TransactionGraphSyncConsumer } from './infrastructure/consumers/transaction-graph-sync.consumer';
 import { BudgetGraphSyncConsumer } from './infrastructure/consumers/budget-graph-sync.consumer';
@@ -80,6 +81,7 @@ const Services = [
     // Infrastructure
     Neo4jGraphService,
     Neo4jSchemaService,
+    DeadLetterQueueService,
     ...Consumers,
 
     // Application

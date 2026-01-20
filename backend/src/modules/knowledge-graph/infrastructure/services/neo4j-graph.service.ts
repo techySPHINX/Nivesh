@@ -14,6 +14,7 @@ import {
   NodeType,
   NodeProperties,
   RelationshipType,
+  RelationshipProperties,
   CypherQuery,
   GraphQueryResult,
   IKnowledgeGraphRepository,
@@ -341,12 +342,51 @@ export class Neo4jGraphService
   }
 
   /**
-   * Find relationship by ID (placeholder - Neo4j doesn't support this directly)
+   * Find relationship by ID
+   * Neo4j requires storing relationship ID as a property
    */
   async findRelationshipById(relationshipId: string): Promise<GraphRelationship | null> {
-    // Neo4j doesn't have built-in relationship IDs accessible via Cypher
-    // This would require storing relationship ID as a property
-    throw new Error('findRelationshipById not implemented');
+    const session = this.driver.session();
+    try {
+      const query = CypherQuery.create(
+        `
+        MATCH (from)-[r {id: $id}]->(to)
+        RETURN from, r, to, labels(from) as fromLabels, labels(to) as toLabels, type(r) as relType
+        LIMIT 1
+        `,
+        { id: relationshipId },
+      );
+
+      const result = await session.executeRead((tx) =>
+        this.executeInTransaction(tx, query),
+      );
+
+      if (result.records.length === 0) {
+        return null;
+      }
+
+      const record = result.records[0];
+      const fromNode = this.neo4jNodeToGraphNode(
+        record.get('from'),
+        record.get('fromLabels')[0],
+      );
+      const toNode = this.neo4jNodeToGraphNode(
+        record.get('to'),
+        record.get('toLabels')[0],
+      );
+      const rel = record.get('r');
+      const relType = record.get('relType') as RelationshipType;
+
+      return GraphRelationship.fromPersistence(
+        relationshipId,
+        relType,
+        fromNode,
+        toNode,
+        rel.properties,
+      );
+    } finally {
+      await session.close();
+    }
   }
 
   /**
@@ -497,34 +537,231 @@ export class Neo4jGraphService
   }
 
   /**
-   * Placeholder implementations for remaining interface methods
-   * Will be fully implemented in Branch 3 (analytics)
+   * Save spending pattern to graph
+   * Patterns are stored as specialized nodes with relationships to users
    */
   async savePattern(pattern: any): Promise<any> {
-    throw new Error('Method not implemented.');
+    const session = this.driver.session();
+    try {
+      const query = CypherQuery.create(
+        `
+        MATCH (u:User {id: $userId})
+        MERGE (p:Pattern {id: $patternId})
+        SET p += $properties
+        MERGE (u)-[r:HAS_PATTERN]->(p)
+        SET r.detectedAt = datetime()
+        RETURN p
+        `,
+        {
+          userId: pattern.userId,
+          patternId: pattern.id || `pattern_${Date.now()}`,
+          properties: {
+            type: pattern.type,
+            confidence: pattern.confidence,
+            frequency: pattern.frequency,
+            amount: pattern.amount,
+            category: pattern.category,
+            metadata: pattern.metadata,
+          },
+        },
+      );
+
+      await session.executeWrite((tx) => this.executeInTransaction(tx, query));
+      return pattern;
+    } finally {
+      await session.close();
+    }
   }
 
   async findPatternsByUserId(userId: string): Promise<any[]> {
-    return [];
+    const session = this.driver.session();
+    try {
+      const query = CypherQuery.create(
+        `
+        MATCH (u:User {id: $userId})-[:HAS_PATTERN]->(p:Pattern)
+        RETURN p
+        ORDER BY p.confidence DESC
+        `,
+        { userId },
+      );
+
+      const result = await session.executeRead((tx) =>
+        this.executeInTransaction(tx, query),
+      );
+
+      return result.records.map((record) => record.get('p').properties);
+    } finally {
+      await session.close();
+    }
   }
 
   async findPatternsByType(userId: string, patternType: string): Promise<any[]> {
-    return [];
+    const session = this.driver.session();
+    try {
+      const query = CypherQuery.create(
+        `
+        MATCH (u:User {id: $userId})-[:HAS_PATTERN]->(p:Pattern {type: $patternType})
+        RETURN p
+        ORDER BY p.confidence DESC
+        `,
+        { userId, patternType },
+      );
+
+      const result = await session.executeRead((tx) =>
+        this.executeInTransaction(tx, query),
+      );
+
+      return result.records.map((record) => record.get('p').properties);
+    } finally {
+      await session.close();
+    }
   }
 
   async findPath(
     fromNodeId: string,
     toNodeId: string,
-    maxDepth?: number,
+    maxDepth: number = 5,
   ): Promise<GraphPath[]> {
-    return [];
+    const session = this.driver.session();
+    try {
+      const query = CypherQuery.create(
+        `
+        MATCH path = (from {id: $fromId})-[*1..${maxDepth}]-(to {id: $toId})
+        WITH path, relationships(path) as rels, nodes(path) as nodesList
+        RETURN 
+          nodesList,
+          rels,
+          length(path) as pathLength
+        ORDER BY pathLength ASC
+        LIMIT 10
+        `,
+        { fromId: fromNodeId, toId: toNodeId },
+      );
+
+      const result = await session.executeRead((tx) =>
+        this.executeInTransaction(tx, query),
+      );
+
+      return result.records.map((record) => {
+        const nodes = record.get('nodesList') as Neo4jNode[];
+        const rels = record.get('rels') as Neo4jRelationship[];
+        const length = record.get('pathLength').toNumber();
+
+        return {
+          nodes: nodes.map((n) =>
+            GraphNode.fromPersistence(n.properties.id, NodeType.USER, {
+              ...n.properties,
+              id: n.properties.id,
+              createdAt: n.properties.createdAt || new Date(),
+              updatedAt: n.properties.updatedAt || new Date(),
+            } as NodeProperties)
+          ),
+          relationships: rels.map((r, idx) => {
+            const from = nodes[idx];
+            const to = nodes[idx + 1];
+            return GraphRelationship.fromPersistence(
+              `rel_${idx}`,
+              r.type as RelationshipType,
+              GraphNode.fromPersistence(from.properties.id, NodeType.USER, {
+                ...from.properties,
+                id: from.properties.id,
+                createdAt: from.properties.createdAt || new Date(),
+                updatedAt: from.properties.updatedAt || new Date(),
+              } as NodeProperties),
+              GraphNode.fromPersistence(to.properties.id, NodeType.USER, {
+                ...to.properties,
+                id: to.properties.id,
+                createdAt: to.properties.createdAt || new Date(),
+                updatedAt: to.properties.updatedAt || new Date(),
+              } as NodeProperties),
+              {
+                ...r.properties,
+                createdAt: r.properties.createdAt || new Date(),
+                updatedAt: r.properties.updatedAt || new Date(),
+              } as RelationshipProperties,
+            );
+          }),
+          length,
+          weight: length,
+        } as GraphPath;
+      });
+    } finally {
+      await session.close();
+    }
   }
 
   async findShortestPath(
     fromNodeId: string,
     toNodeId: string,
   ): Promise<GraphPath | null> {
-    return null;
+    const session = this.driver.session();
+    try {
+      const query = CypherQuery.create(
+        `
+        MATCH (from {id: $fromId}), (to {id: $toId})
+        MATCH path = shortestPath((from)-[*]-(to))
+        WITH path, relationships(path) as rels, nodes(path) as nodesList
+        RETURN 
+          nodesList,
+          rels,
+          length(path) as pathLength
+        `,
+        { fromId: fromNodeId, toId: toNodeId },
+      );
+
+      const result = await session.executeRead((tx) =>
+        this.executeInTransaction(tx, query),
+      );
+
+      if (result.records.length === 0) {
+        return null;
+      }
+
+      const record = result.records[0];
+      const nodes = record.get('nodesList') as Neo4jNode[];
+      const rels = record.get('rels') as Neo4jRelationship[];
+      const length = record.get('pathLength').toNumber();
+
+      return {
+        nodes: nodes.map((n) =>
+          GraphNode.fromPersistence(n.properties.id, NodeType.USER, {
+            ...n.properties,
+            id: n.properties.id,
+            createdAt: n.properties.createdAt || new Date(),
+            updatedAt: n.properties.updatedAt || new Date(),
+          } as NodeProperties)
+        ),
+        relationships: rels.map((r, idx) => {
+          const from = nodes[idx];
+          const to = nodes[idx + 1];
+          return GraphRelationship.fromPersistence(
+            `rel_${idx}`,
+            r.type as RelationshipType,
+            GraphNode.fromPersistence(from.properties.id, NodeType.USER, {
+              ...from.properties,
+              id: from.properties.id,
+              createdAt: from.properties.createdAt || new Date(),
+              updatedAt: from.properties.updatedAt || new Date(),
+            } as NodeProperties),
+            GraphNode.fromPersistence(to.properties.id, NodeType.USER, {
+              ...to.properties,
+              id: to.properties.id,
+              createdAt: to.properties.createdAt || new Date(),
+              updatedAt: to.properties.updatedAt || new Date(),
+            } as NodeProperties),
+            {
+              ...r.properties,
+              createdAt: r.properties.createdAt || new Date(),
+              updatedAt: r.properties.updatedAt || new Date(),
+            } as RelationshipProperties,
+          );
+        }),
+        length,
+        weight: length,
+      } as GraphPath;
+    } finally {
+      await session.close();
+    }
   }
 
   async findNeighbors(
@@ -532,7 +769,141 @@ export class Neo4jGraphService
     depth: number,
     relationshipTypes?: RelationshipType[],
   ): Promise<GraphNeighborhood> {
-    throw new Error('Method not implemented.');
+    const session = this.driver.session();
+    try {
+      const relTypeFilter = relationshipTypes
+        ? `:${relationshipTypes.join('|')}`
+        : '';
+
+      const query = CypherQuery.create(
+        `
+        MATCH (center {id: $nodeId})
+        CALL apoc.path.subgraphNodes(center, {
+          relationshipFilter: "${relTypeFilter}",
+          minLevel: 1,
+          maxLevel: $depth
+        }) YIELD node
+        RETURN 
+          collect(DISTINCT node) as neighbors,
+          center
+        `,
+        { nodeId, depth },
+      );
+
+      const result = await session.executeRead((tx) =>
+        this.executeInTransaction(tx, query),
+      );
+
+      if (result.records.length === 0) {
+        const centerNode = await this.findNodeById(nodeId);
+        return {
+          centerNode: centerNode!,
+          neighbors: [],
+          depth,
+        };
+      }
+
+      const record = result.records[0];
+      const centerNode = await this.findNodeById(nodeId);
+      const neighbors = record.get('neighbors') as Neo4jNode[];
+
+      return {
+        centerNode: centerNode!,
+        neighbors: neighbors.map((n) => ({
+          node: GraphNode.fromPersistence(n.properties.id, NodeType.USER, {
+            ...n.properties,
+            id: n.properties.id,
+            createdAt: n.properties.createdAt || new Date(),
+            updatedAt: n.properties.updatedAt || new Date(),
+          } as NodeProperties),
+          relationship: GraphRelationship.fromPersistence(
+            `rel_${n.properties.id}`,
+            RelationshipType.SIMILAR_SPENDING,
+            centerNode!,
+            GraphNode.fromPersistence(n.properties.id, NodeType.USER, {
+              ...n.properties,
+              id: n.properties.id,
+              createdAt: n.properties.createdAt || new Date(),
+              updatedAt: n.properties.updatedAt || new Date(),
+            } as NodeProperties),
+            {
+              createdAt: new Date(),
+              updatedAt: new Date(),
+            } as RelationshipProperties,
+          ),
+          distance: 1,
+        })),
+        depth,
+      };
+    } catch (error) {
+      // Fallback if APOC is not available
+      this.logger.warn('APOC not available, using basic neighbor query');
+      return this.findNeighborsFallback(nodeId, depth);
+    } finally {
+      await session.close();
+    }
+  }
+
+  /**
+   * Fallback method for finding neighbors without APOC
+   */
+  private async findNeighborsFallback(
+    nodeId: string,
+    depth: number,
+  ): Promise<GraphNeighborhood> {
+    const session = this.driver.session();
+    try {
+      const centerNode = await this.findNodeById(nodeId);
+
+      const query = CypherQuery.create(
+        `
+        MATCH (center {id: $nodeId})-[*1..${depth}]-(neighbor)
+        RETURN DISTINCT neighbor
+        LIMIT 100
+        `,
+        { nodeId },
+      );
+
+      const result = await session.executeRead((tx) =>
+        this.executeInTransaction(tx, query),
+      );
+
+      const neighbors = result.records.map((record) => {
+        const n = record.get('neighbor');
+        return {
+          node: GraphNode.fromPersistence(n.properties.id, NodeType.USER, {
+            ...n.properties,
+            id: n.properties.id,
+            createdAt: n.properties.createdAt || new Date(),
+            updatedAt: n.properties.updatedAt || new Date(),
+          } as NodeProperties),
+          relationship: GraphRelationship.fromPersistence(
+            `rel_${n.properties.id}`,
+            RelationshipType.SIMILAR_SPENDING,
+            centerNode!,
+            GraphNode.fromPersistence(n.properties.id, NodeType.USER, {
+              ...n.properties,
+              id: n.properties.id,
+              createdAt: n.properties.createdAt || new Date(),
+              updatedAt: n.properties.updatedAt || new Date(),
+            } as NodeProperties),
+            {
+              createdAt: new Date(),
+              updatedAt: new Date(),
+            } as RelationshipProperties,
+          ),
+          distance: 1,
+        };
+      });
+
+      return {
+        centerNode: centerNode!,
+        neighbors,
+        depth,
+      };
+    } finally {
+      await session.close();
+    }
   }
 
   async executeQuery<T>(query: CypherQuery): Promise<GraphQueryResult<T>> {

@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Inject, Logger } from '@nestjs/common';
 import { CypherQuery, GraphQueryResult, IKnowledgeGraphRepository } from '../../domain';
 import { SpendingPattern, PatternType } from '../../domain/entities/spending-pattern.entity';
 
@@ -11,7 +11,8 @@ export class SpendingPatternDetector {
   private readonly logger = new Logger(SpendingPatternDetector.name);
 
   constructor(
-    // private readonly graphRepository: IKnowledgeGraphRepository,
+    @Inject('IKnowledgeGraphRepository')
+    private readonly graphRepository: IKnowledgeGraphRepository,
   ) { }
 
   /**
@@ -23,11 +24,15 @@ export class SpendingPatternDetector {
     const patterns: SpendingPattern[] = [];
 
     // Detect different pattern types
-    patterns.push(...(await this.detectRecurringPayments(userId)));
-    patterns.push(...(await this.detectCategoryConcentration(userId)));
-    patterns.push(...(await this.detectMerchantLoyalty(userId)));
-    patterns.push(...(await this.detectTimeOfDayPatterns(userId)));
-    patterns.push(...(await this.detectUnusualSpending(userId)));
+    try {
+      patterns.push(...(await this.detectRecurringPayments(userId)));
+      patterns.push(...(await this.detectCategoryConcentration(userId)));
+      patterns.push(...(await this.detectMerchantLoyalty(userId)));
+      patterns.push(...(await this.detectTimeOfDayPatterns(userId)));
+      patterns.push(...(await this.detectUnusualSpending(userId)));
+    } catch (error) {
+      this.logger.error(`Failed to detect patterns for user ${userId}`, error);
+    }
 
     return patterns;
   }
@@ -49,14 +54,44 @@ export class SpendingPatternDetector {
            stdev([t IN transactions | t.amount]) as amountStdDev
       WHERE avgInterval >= 25 AND avgInterval <= 35
         AND amountStdDev < 50
-      RETURN m.id, m.name, transactions, total, SIZE(transactions) as frequency, avgInterval
+      RETURN m.id as merchantId, m.name as merchantName, 
+             total, SIZE(transactions) as frequency, avgInterval
       `,
       { userId },
     );
 
-    // Placeholder - will execute with graphRepository
-    // const result = await this.graphRepository.executeReadQuery(query);
-    return [];
+    try {
+      const result = await this.graphRepository.executeReadQuery<any>(query);
+
+      return result.records.map(record =>
+        SpendingPattern.create({
+          userId,
+          patternType: PatternType.RECURRING_PAYMENT,
+          nodes: [],
+          relationships: [],
+          frequency: record.frequency,
+          confidence: record.amountStdDev < 10 ? 0.95 : 0.75,
+          totalAmount: record.total,
+          timeframe: {
+            startDate: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000),
+            endDate: new Date(),
+            periodicity: 'monthly',
+          },
+          metadata: {
+            avgInterval: record.avgInterval,
+            categories: [],
+            merchants: [record.merchantName],
+            locations: [],
+            tags: [],
+            averageAmount: record.total / record.frequency,
+            lastOccurrence: new Date(),
+          } as any,
+        })
+      );
+    } catch (error) {
+      this.logger.debug('Could not detect recurring payments, graph may not be populated yet');
+      return [];
+    }
   }
 
   /**
@@ -72,16 +107,48 @@ export class SpendingPatternDetector {
       WITH c, SUM(t.amount) as categoryTotal, COUNT(t) as transactionCount
       ORDER BY categoryTotal DESC
       LIMIT 5
-      WITH COLLECT(categoryTotal) as totals, SUM(categoryTotal) as grandTotal
-      UNWIND totals as catTotal
-      WITH catTotal, grandTotal, (catTotal / grandTotal) as percentage
+      WITH c, categoryTotal, transactionCount,
+           SUM(categoryTotal) OVER() as grandTotal
+      WITH c, categoryTotal, transactionCount, grandTotal,
+           (categoryTotal / grandTotal) as percentage
       WHERE percentage > 0.3
-      RETURN percentage, catTotal
+      RETURN c.name as categoryName, percentage, categoryTotal, transactionCount
       `,
       { userId },
     );
 
-    return [];
+    try {
+      const result = await this.graphRepository.executeReadQuery<any>(query);
+
+      return result.records.map(record =>
+        SpendingPattern.create({
+          userId,
+          patternType: PatternType.CATEGORY_CONCENTRATION,
+          nodes: [],
+          relationships: [],
+          frequency: record.transactionCount,
+          confidence: 0.85,
+          totalAmount: record.categoryTotal,
+          timeframe: {
+            startDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
+            endDate: new Date(),
+            periodicity: 'monthly',
+          },
+          metadata: {
+            percentage: record.percentage * 100,
+            categories: [record.categoryName],
+            merchants: [],
+            locations: [],
+            tags: [],
+            averageAmount: record.categoryTotal / record.transactionCount,
+            lastOccurrence: new Date(),
+          } as any,
+        })
+      );
+    } catch (error) {
+      this.logger.debug('Could not detect category concentration');
+      return [];
+    }
   }
 
   /**
@@ -96,14 +163,44 @@ export class SpendingPatternDetector {
       WHERE t.date >= date() - duration('P60D')
       WITH m, COUNT(t) as visitCount, SUM(t.amount) as totalSpent
       WHERE visitCount >= 5
-      RETURN m.id, m.name, visitCount, totalSpent
+      RETURN m.id as merchantId, m.name as merchantName, visitCount, totalSpent
       ORDER BY visitCount DESC
       LIMIT 10
       `,
       { userId },
     );
 
-    return [];
+    try {
+      const result = await this.graphRepository.executeReadQuery<any>(query);
+
+      return result.records.map(record =>
+        SpendingPattern.create({
+          userId,
+          patternType: PatternType.MERCHANT_LOYALTY,
+          nodes: [],
+          relationships: [],
+          frequency: record.visitCount,
+          confidence: 0.80,
+          totalAmount: record.totalSpent,
+          timeframe: {
+            startDate: new Date(Date.now() - 60 * 24 * 60 * 60 * 1000),
+            endDate: new Date(),
+            periodicity: 'monthly',
+          },
+          metadata: {
+            categories: [],
+            merchants: [record.merchantName],
+            locations: [],
+            tags: [],
+            averageAmount: record.totalSpent / record.visitCount,
+            lastOccurrence: new Date(),
+          } as any,
+        })
+      );
+    } catch (error) {
+      this.logger.debug('Could not detect merchant loyalty');
+      return [];
+    }
   }
 
   /**
@@ -118,11 +215,42 @@ export class SpendingPatternDetector {
       WHERE count >= 5
       RETURN hour, count, total
       ORDER BY count DESC
+      LIMIT 3
       `,
       { userId },
     );
 
-    return [];
+    try {
+      const result = await this.graphRepository.executeReadQuery<any>(query);
+
+      return result.records.map(record =>
+        SpendingPattern.create({
+          userId,
+          patternType: PatternType.TIME_OF_DAY,
+          nodes: [],
+          relationships: [],
+          frequency: record.count,
+          confidence: 0.70,
+          totalAmount: record.total,
+          timeframe: {
+            startDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
+            endDate: new Date(),
+            periodicity: 'daily',
+          },
+          metadata: {
+            categories: [],
+            merchants: [],
+            locations: [],
+            tags: [],
+            averageAmount: record.total / record.count,
+            lastOccurrence: new Date(),
+          } as any,
+        })
+      );
+    } catch (error) {
+      this.logger.debug('Could not detect time-of-day patterns');
+      return [];
+    }
   }
 
   /**
@@ -137,11 +265,42 @@ export class SpendingPatternDetector {
       MATCH (u:User {id: $userId})-[:OWNS]->(a:Account)-[:MADE_TRANSACTION]->(t2:Transaction)
       WHERE t2.date >= date() - duration('P7D')
         AND t2.amount > (avgAmount + 2 * stdDev)
-      RETURN t2, avgAmount, stdDev
+      RETURN t2.id as transactionId, t2.amount as amount, 
+             t2.description as description, avgAmount, stdDev
+      LIMIT 5
       `,
       { userId },
     );
 
-    return [];
+    try {
+      const result = await this.graphRepository.executeReadQuery<any>(query);
+
+      return result.records.map(record =>
+        SpendingPattern.create({
+          userId,
+          patternType: PatternType.UNUSUAL_SPENDING,
+          nodes: [],
+          relationships: [],
+          frequency: 1,
+          confidence: 0.90,
+          totalAmount: record.amount,
+          timeframe: {
+            startDate: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
+            endDate: new Date(),
+          },
+          metadata: {
+            categories: [],
+            merchants: [],
+            locations: [],
+            tags: [],
+            averageAmount: record.amount,
+            lastOccurrence: new Date(),
+          } as any,
+        })
+      );
+    } catch (error) {
+      this.logger.debug('Could not detect unusual spending');
+      return [];
+    }
   }
 }

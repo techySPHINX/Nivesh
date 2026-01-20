@@ -1,11 +1,19 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { Logger } from '@nestjs/common';
+import { Inject, Logger } from '@nestjs/common';
 import { ProcessQueryCommand } from '../commands/process-query.command';
 import { FinancialContextBuilderService } from '../../domain/services/context-builder.service';
 import { DecisionEngineService } from '../../domain/services/decision-engine.service';
 import { GeminiReasoningService } from '../../infrastructure/services/gemini-reasoning.service';
 import { PromptTemplateService } from '../../infrastructure/services/prompt-template.service';
 import { Decision, ConfidenceLevel } from '../../domain/value-objects/decision.vo';
+import {
+  IAccountRepository,
+  ACCOUNT_REPOSITORY
+} from '../../../financial-data/domain/repositories/account.repository.interface';
+import {
+  ITransactionRepository,
+  TRANSACTION_REPOSITORY
+} from '../../../financial-data/domain/repositories/transaction.repository.interface';
 
 /**
  * Process Query Handler
@@ -26,6 +34,8 @@ export class ProcessQueryHandler implements ICommandHandler<ProcessQueryCommand>
     private readonly decisionEngine: DecisionEngineService,
     private readonly geminiService: GeminiReasoningService,
     private readonly promptService: PromptTemplateService,
+    @Inject(ACCOUNT_REPOSITORY) private readonly accountRepository: IAccountRepository,
+    @Inject(TRANSACTION_REPOSITORY) private readonly transactionRepository: ITransactionRepository,
   ) { }
 
   async execute(command: ProcessQueryCommand): Promise<Decision> {
@@ -34,13 +44,37 @@ export class ProcessQueryHandler implements ICommandHandler<ProcessQueryCommand>
     this.logger.log(`Processing query for user ${userId}: ${queryType}`);
 
     try {
-      // Step 1: Build financial context
-      // TODO: Fetch actual data from repositories
+      // Step 1: Build financial context from actual data
+      const [accounts, recentTransactions] = await Promise.all([
+        this.accountRepository.findByUserId(userId),
+        this.transactionRepository.getRecentTransactions(userId, 90),
+      ]);
+
+      const accountsData = accounts.map(acc => ({
+        id: acc.Id,
+        userId: acc.UserId,
+        accountType: acc.AccountType,
+        balance: acc.Balance.getAmount(),
+        currency: acc.Balance.getCurrency(),
+        status: acc.Status,
+      }));
+
+      const transactionsData = recentTransactions.map(txn => ({
+        id: txn.Id,
+        userId: txn.UserId,
+        accountId: txn.AccountId,
+        amount: txn.Amount.getAmount(),
+        type: txn.Type,
+        category: txn.Category,
+        transactionDate: txn.TransactionDate,
+        description: txn.Description,
+      }));
+
       const financialContext = await this.contextBuilder.buildContext({
         userId,
-        accountsData: [],
-        transactionsData: [],
-        goalsData: [],
+        accountsData,
+        transactionsData,
+        goalsData: [], // Goals will be fetched when GoalManagement module is enabled
       });
 
       // Step 2: Check if rule-based engine can handle
@@ -66,7 +100,9 @@ export class ProcessQueryHandler implements ICommandHandler<ProcessQueryCommand>
       this.logger.debug('Using AI reasoning for complex query');
       return await this.processWithAI(financialContext, query, queryType, context);
     } catch (error) {
-      this.logger.error(`Failed to process query: ${error.message}`, error.stack);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      const errorStack = error instanceof Error ? error.stack : undefined;
+      this.logger.error(`Failed to process query: ${errorMessage}`, errorStack);
       throw error;
     }
   }
