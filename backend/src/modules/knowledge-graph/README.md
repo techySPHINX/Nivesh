@@ -33,6 +33,7 @@ knowledge-graph/
 ## Graph Data Model
 
 ### Node Types (9)
+
 - **User**: User accounts with risk profiles
 - **Account**: Financial accounts (checking, savings, credit)
 - **Transaction**: Financial transactions with metadata
@@ -44,6 +45,7 @@ knowledge-graph/
 - **Tag**: Custom tags for categorization
 
 ### Relationship Types (16)
+
 - **OWNS**: User owns account
 - **MADE_TRANSACTION**: Account made transaction
 - **BELONGS_TO_CATEGORY**: Transaction belongs to category
@@ -64,7 +66,9 @@ knowledge-graph/
 ## Features
 
 ### 1. Pattern Detection
+
 Detects 10 types of spending patterns:
+
 - Recurring payments
 - Periodic spending
 - Category concentration
@@ -77,6 +81,7 @@ Detects 10 types of spending patterns:
 - Goal progress patterns
 
 ### 2. Graph Queries
+
 - **Node Operations**: CRUD for all node types
 - **Relationship Operations**: Create, update, delete relationships
 - **Path Finding**: Find paths between nodes with max depth
@@ -85,6 +90,7 @@ Detects 10 types of spending patterns:
 - **Batch Operations**: Efficient bulk operations
 
 ### 3. Analytics Support
+
 - Node/relationship counting by type
 - Graph statistics (density, average degree)
 - Pattern confidence scoring
@@ -93,9 +99,11 @@ Detects 10 types of spending patterns:
 ## Neo4j Schema
 
 ### Constraints (9 unique constraints)
+
 All node types have unique ID constraints to ensure data integrity.
 
 ### Indexes (15+ indexes)
+
 - **User**: email, createdAt
 - **Transaction**: date, amount, type (time-based queries)
 - **Category/Merchant**: name (lookups)
@@ -105,6 +113,7 @@ All node types have unique ID constraints to ensure data integrity.
 - **Relationships**: createdAt, confidence (pattern detection)
 
 ### Full-Text Indexes (3)
+
 - Merchant search (name, description)
 - Category search (name, description)
 - Tag search (name)
@@ -112,12 +121,14 @@ All node types have unique ID constraints to ensure data integrity.
 ## Business Rules
 
 ### Node Validation
+
 - Every node must have unique ID
 - Node type determines allowed relationships
 - Properties are immutable (use update method)
 - Timestamps automatically managed
 
 ### Relationship Validation
+
 - Relationships must connect valid node types
 - Relationship type determines allowed node combinations
 - Weight represents strength (0-1 scale)
@@ -125,6 +136,7 @@ All node types have unique ID constraints to ensure data integrity.
 - Bidirectional support for symmetric relationships
 
 ### Pattern Requirements
+
 - Minimum 3 occurrences to be considered valid
 - Confidence score ≥ 0.7 for actionable patterns
 - Frequency ≥ 5 for recurring patterns
@@ -133,6 +145,7 @@ All node types have unique ID constraints to ensure data integrity.
 ## Sample Queries
 
 ### Find User Spending by Category
+
 ```cypher
 MATCH (u:User {id: $userId})-[:OWNS]->(a:Account)-[:MADE_TRANSACTION]->(t:Transaction)
       -[:BELONGS_TO_CATEGORY]->(c:Category)
@@ -142,6 +155,7 @@ ORDER BY total DESC;
 ```
 
 ### Find Similar Users
+
 ```cypher
 MATCH (u1:User {id: $userId})-[r:SIMILAR_SPENDING]->(u2:User)
 WHERE r.confidence > 0.7
@@ -151,6 +165,7 @@ LIMIT 10;
 ```
 
 ### Detect Recurring Transactions
+
 ```cypher
 MATCH (u:User {id: $userId})-[:OWNS]->(a:Account)-[:MADE_TRANSACTION]->(t:Transaction)
       -[:AT_MERCHANT]->(m:Merchant)
@@ -166,6 +181,7 @@ RETURN m.name, dates, amounts, avgInterval;
 ## Configuration
 
 Add to `.env`:
+
 ```env
 # Neo4j Configuration
 NEO4J_URI=bolt://localhost:7687
@@ -180,13 +196,16 @@ NEO4J_AUTO_INIT_SCHEMA=true
 ## Development
 
 ### Schema Initialization
+
 The schema is automatically initialized on application startup using `Neo4jSchemaService`. This service:
+
 1. Reads `neo4j-schema.cypher` file
 2. Parses Cypher commands
 3. Executes constraints and indexes
 4. Validates connection
 
 ### Adding New Node Types
+
 1. Add to `NodeType` enum in `graph-node.entity.ts`
 2. Define validation rules in `canConnectTo()`
 3. Add constraint in `neo4j-schema.cypher`
@@ -194,6 +213,7 @@ The schema is automatically initialized on application startup using `Neo4jSchem
 5. Update documentation
 
 ### Adding New Relationship Types
+
 1. Add to `RelationshipType` enum in `graph-relationship.entity.ts`
 2. Define valid node pairs in `isValidRelationship()`
 3. Update `canConnectTo()` in GraphNode
@@ -202,12 +222,14 @@ The schema is automatically initialized on application startup using `Neo4jSchem
 ## Performance Considerations
 
 ### Indexing Strategy
+
 - All ID fields have unique constraints (automatic indexes)
 - Time-based queries indexed on date fields
 - Filter queries indexed on status/type fields
 - Full-text search for text matching
 
 ### Query Optimization
+
 - Use parameterized queries (CypherQuery VO)
 - Limit relationship traversal depth
 - Use `MERGE` for idempotent operations
@@ -215,6 +237,7 @@ The schema is automatically initialized on application startup using `Neo4jSchem
 - Read-only transactions for queries
 
 ### Scaling
+
 - Connection pooling (max 50 connections)
 - Read replicas for analytics queries
 - Relationship weight for query pruning
@@ -223,14 +246,18 @@ The schema is automatically initialized on application startup using `Neo4jSchem
 ## Testing
 
 ### Unit Tests
+
 Test domain entities and value objects:
+
 - GraphNode creation and validation
 - GraphRelationship type checking
 - SpendingPattern detection logic
 - CypherQuery sanitization
 
 ### Integration Tests
+
 Test Neo4j operations:
+
 - Schema initialization
 - Node CRUD operations
 - Relationship creation
@@ -240,6 +267,7 @@ Test Neo4j operations:
 ## Next Steps
 
 Phase 10 implementation continues with:
+
 1. **Branch 2**: Kafka consumers + Neo4j graph service
 2. **Branch 3**: Pattern detection + recommendation engine
 3. **Branch 4**: REST API controller + module integration

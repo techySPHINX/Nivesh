@@ -1,27 +1,12 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { EventsHandler, IEventHandler } from '@nestjs/cqrs';
+import { BudgetCreatedEvent } from '../../../budget-management/domain/events/budget.events';
 import {
   GraphNode,
   GraphRelationship,
   NodeType,
   RelationshipType,
 } from '../../domain';
-
-/**
- * Budget Created Event (placeholder)
- */
-export interface BudgetCreatedEvent {
-  budgetId: string;
-  userId: string;
-  categoryId: string;
-  amount: number;
-  spent: number;
-  period: 'weekly' | 'monthly' | 'yearly';
-  startDate: Date;
-  endDate: Date;
-  status: 'active' | 'exceeded' | 'completed';
-  alertThreshold: number;
-}
 
 /**
  * Kafka Consumer for Budget Graph Synchronization
@@ -35,14 +20,13 @@ export interface BudgetCreatedEvent {
 @EventsHandler(BudgetCreatedEvent)
 @Injectable()
 export class BudgetGraphSyncConsumer
-  implements IEventHandler<BudgetCreatedEvent>
-{
+  implements IEventHandler<BudgetCreatedEvent> {
   private readonly logger = new Logger(BudgetGraphSyncConsumer.name);
 
   constructor(
     // Will inject IKnowledgeGraphRepository in next commit
     // private readonly graphRepository: IKnowledgeGraphRepository,
-  ) {}
+  ) { }
 
   /**
    * Handle budget created event
@@ -57,11 +41,6 @@ export class BudgetGraphSyncConsumer
 
       // 2. Create User -> Budget relationship
       await this.createUserBudgetRelationship(event, budgetNode);
-
-      // 3. Link to Category if exists
-      if (event.categoryId) {
-        await this.createBudgetCategoryRelationship(event, budgetNode);
-      }
 
       this.logger.log(`Budget synced successfully: ${event.budgetId}`);
     } catch (error) {
@@ -80,15 +59,11 @@ export class BudgetGraphSyncConsumer
   ): Promise<GraphNode> {
     const budgetNode = GraphNode.create(NodeType.BUDGET, {
       userId: event.userId,
-      categoryId: event.categoryId,
-      amount: event.amount,
-      spent: event.spent,
+      name: event.name,
+      totalLimit: event.totalLimit,
       period: event.period,
       startDate: event.startDate,
       endDate: event.endDate,
-      status: event.status,
-      alertThreshold: event.alertThreshold,
-      utilization: event.amount > 0 ? event.spent / event.amount : 0,
       metadata: {
         source: 'budget-service',
         synced: true,
@@ -109,7 +84,7 @@ export class BudgetGraphSyncConsumer
     try {
       // Find User node
       // const userNode = await this.graphRepository.findNodeById(event.userId);
-      
+
       // if (userNode) {
       //   const relationship = GraphRelationship.create(
       //     RelationshipType.HAS_BUDGET,
@@ -138,7 +113,7 @@ export class BudgetGraphSyncConsumer
     try {
       // Find Category node
       // const categoryNode = await this.graphRepository.findNodeById(event.categoryId);
-      
+
       // if (categoryNode) {
       //   // Budget is linked to category (no direct relationship in schema, but stored in properties)
       //   this.logger.debug(`Budget ${event.budgetId} linked to category ${event.categoryId}`);
@@ -158,7 +133,7 @@ export class BudgetGraphSyncConsumer
 
       // Update budget node
       // const existingNode = await this.graphRepository.findNodeById(event.budgetId);
-      
+
       // if (existingNode) {
       //   existingNode.updateProperties({
       //     amount: event.amount,
@@ -188,7 +163,7 @@ export class BudgetGraphSyncConsumer
 
       // Update status to exceeded
       // const existingNode = await this.graphRepository.findNodeById(event.budgetId);
-      
+
       // if (existingNode) {
       //   existingNode.updateProperties({
       //     status: 'exceeded',

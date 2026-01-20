@@ -1,29 +1,12 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { EventsHandler, IEventHandler } from '@nestjs/cqrs';
+import { TransactionCreatedEvent } from '../../../financial-data/domain/events/transaction.events';
 import {
   GraphNode,
   GraphRelationship,
   NodeType,
   RelationshipType,
 } from '../../domain';
-
-/**
- * Transaction Created Event (placeholder - will be defined in transaction module)
- */
-export interface TransactionCreatedEvent {
-  transactionId: string;
-  accountId: string;
-  userId: string;
-  amount: number;
-  type: 'income' | 'expense' | 'transfer';
-  description: string;
-  date: Date;
-  categoryId?: string;
-  merchantId?: string;
-  locationId?: string;
-  tags?: string[];
-  isRecurring: boolean;
-}
 
 /**
  * Kafka Consumer for Transaction Graph Synchronization
@@ -62,25 +45,8 @@ export class TransactionGraphSyncConsumer
       // 2. Create Account -> Transaction relationship
       await this.createAccountRelationship(event, transactionNode);
 
-      // 3. Create Category relationship if present
-      if (event.categoryId) {
-        await this.createCategoryRelationship(event, transactionNode);
-      }
-
-      // 4. Create Merchant relationship if present
-      if (event.merchantId) {
-        await this.createMerchantRelationship(event, transactionNode);
-      }
-
-      // 5. Create Location relationship if present
-      if (event.locationId) {
-        await this.createLocationRelationship(event, transactionNode);
-      }
-
-      // 6. Create Tag relationships
-      if (event.tags && event.tags.length > 0) {
-        await this.createTagRelationships(event, transactionNode);
-      }
+      // 3. Create Category relationship
+      await this.createCategoryRelationship(event, transactionNode);
 
       this.logger.log(
         `Transaction synced successfully: ${event.transactionId}`,
@@ -101,14 +67,10 @@ export class TransactionGraphSyncConsumer
   ): Promise<GraphNode> {
     const transactionNode = GraphNode.create(NodeType.TRANSACTION, {
       accountId: event.accountId,
+      userId: event.userId,
       amount: event.amount,
       type: event.type,
-      description: event.description || '',
-      date: event.date,
-      merchantId: event.merchantId,
-      categoryId: event.categoryId,
-      locationId: event.locationId,
-      isRecurring: event.isRecurring,
+      category: event.category,
       confidence: 1.0, // Manual transactions have 100% confidence
       metadata: {
         source: 'transaction-service',
@@ -240,35 +202,6 @@ export class TransactionGraphSyncConsumer
       );
     } catch (error) {
       this.logger.error('Failed to create location relationship', error.stack);
-    }
-  }
-
-  /**
-   * Create Transaction -[HAS_TAG]-> Tag relationships
-   */
-  private async createTagRelationships(
-    event: TransactionCreatedEvent,
-    transactionNode: GraphNode,
-  ): Promise<void> {
-    try {
-      for (const tagId of event.tags!) {
-        // Find or create Tag node
-        // const tagNode = await this.findOrCreateTagNode(tagId);
-
-        // const relationship = GraphRelationship.create(
-        //   RelationshipType.HAS_TAG,
-        //   transactionNode,
-        //   tagNode,
-        // );
-
-        // await this.graphRepository.createRelationship(relationship);
-      }
-
-      this.logger.debug(
-        `Created HAS_TAG relationships for ${event.transactionId}`,
-      );
-    } catch (error) {
-      this.logger.error('Failed to create tag relationships', error.stack);
     }
   }
 

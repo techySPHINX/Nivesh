@@ -18,7 +18,7 @@ export class GoalContributionRepository implements IGoalContributionRepository {
       transactionId: contribution.transactionId,
       accountId: contribution.accountId,
       notes: contribution.notes,
-      metadata: contribution.metadata,
+      metadata: contribution.metadata || undefined,
       createdAt: contribution.createdAt,
     };
 
@@ -63,7 +63,7 @@ export class GoalContributionRepository implements IGoalContributionRepository {
       },
     });
 
-    return result._sum.amount || 0;
+    return Number(result._sum.amount) || 0;
   }
 
   async getRecentContributions(userId: string, limit: number): Promise<GoalContribution[]> {

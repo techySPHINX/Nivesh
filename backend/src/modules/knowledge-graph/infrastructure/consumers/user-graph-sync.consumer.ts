@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { EventsHandler, IEventHandler } from '@nestjs/cqrs';
-import { UserCreatedEvent } from '../../../../modules/user/domain/events/user-created.event';
+import { UserCreatedEvent } from '../../../user/domain/events/user.events';
 import { GraphNode, NodeType } from '../../domain';
 
 /**
@@ -33,7 +33,7 @@ export class UserGraphSyncConsumer implements IEventHandler<UserCreatedEvent> {
       // Create User node
       const userNode = GraphNode.create(NodeType.USER, {
         email: event.email,
-        name: event.name || 'Unknown',
+        phoneNumber: event.phoneNumber,
         riskProfile: 'moderate', // Default risk profile
         monthlyIncome: 0,
         metadata: {

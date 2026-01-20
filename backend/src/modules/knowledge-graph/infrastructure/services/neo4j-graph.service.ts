@@ -12,6 +12,7 @@ import {
   GraphNode,
   GraphRelationship,
   NodeType,
+  NodeProperties,
   RelationshipType,
   CypherQuery,
   GraphQueryResult,
@@ -36,12 +37,11 @@ import {
  */
 @Injectable()
 export class Neo4jGraphService
-  implements IKnowledgeGraphRepository, OnModuleInit, OnModuleDestroy
-{
+  implements IKnowledgeGraphRepository, OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(Neo4jGraphService.name);
   private driver: Driver;
 
-  constructor(private readonly configService: ConfigService) {}
+  constructor(private readonly configService: ConfigService) { }
 
   /**
    * Initialize Neo4j driver on module initialization
@@ -488,10 +488,11 @@ export class Neo4jGraphService
    * Helper to convert Neo4j node to GraphNode
    */
   private neo4jNodeToGraphNode(node: Neo4jNode, typeLabel: string): GraphNode {
+    const props = node.properties as unknown as NodeProperties;
     return GraphNode.fromPersistence(
-      node.properties.id,
+      props.id,
       typeLabel as NodeType,
-      node.properties,
+      props,
     );
   }
 
