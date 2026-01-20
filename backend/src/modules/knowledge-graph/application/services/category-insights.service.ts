@@ -24,7 +24,7 @@ export class CategoryInsightsService {
 
   constructor(
     // private readonly graphRepository: IKnowledgeGraphRepository,
-  ) {}
+  ) { }
 
   /**
    * Get category insights for a user

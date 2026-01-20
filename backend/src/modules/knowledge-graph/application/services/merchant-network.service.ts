@@ -25,7 +25,7 @@ export class MerchantNetworkService {
 
   constructor(
     // private readonly graphRepository: IKnowledgeGraphRepository,
-  ) {}
+  ) { }
 
   /**
    * Get merchant network for a merchant

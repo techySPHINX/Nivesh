@@ -12,7 +12,7 @@ export class SpendingPatternDetector {
 
   constructor(
     // private readonly graphRepository: IKnowledgeGraphRepository,
-  ) {}
+  ) { }
 
   /**
    * Detect all patterns for a user

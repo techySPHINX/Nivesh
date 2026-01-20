@@ -25,7 +25,7 @@ export class AnomalyDetector {
 
   constructor(
     // private readonly graphRepository: IKnowledgeGraphRepository,
-  ) {}
+  ) { }
 
   /**
    * Detect all types of anomalies for a user
