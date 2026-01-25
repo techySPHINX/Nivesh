@@ -281,6 +281,111 @@ services:
       retries: 5
 
   # ==========================================
+  # Apache Airflow for ML Training Pipelines
+  # ==========================================
+
+  airflow-postgres:
+    image: postgres:16-alpine
+    container_name: nivesh-airflow-postgres
+    environment:
+      POSTGRES_USER: airflow
+      POSTGRES_PASSWORD: airflow
+      POSTGRES_DB: airflow
+    volumes:
+      - airflow_postgres_data:/var/lib/postgresql/data
+    networks:
+      - nivesh-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U airflow"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  airflow-init:
+    image: apache/airflow:2.8.0-python3.11
+    container_name: nivesh-airflow-init
+    depends_on:
+      - airflow-postgres
+    environment:
+      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@airflow-postgres/airflow
+      AIRFLOW__CORE__FERNET_KEY: ''
+      AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: 'true'
+      AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
+      _AIRFLOW_DB_MIGRATE: 'true'
+      _AIRFLOW_WWW_USER_CREATE: 'true'
+      _AIRFLOW_WWW_USER_USERNAME: admin
+      _AIRFLOW_WWW_USER_PASSWORD: admin
+    volumes:
+      - ./ml-services/airflow/dags:/opt/airflow/dags
+      - ./ml-services:/opt/airflow/ml-services
+      - airflow_logs:/opt/airflow/logs
+    networks:
+      - nivesh-network
+    entrypoint: /bin/bash
+    command:
+      - -c
+      - |
+        airflow db migrate &&
+        airflow users create \
+          --username admin \
+          --password admin \
+          --firstname Admin \
+          --lastname User \
+          --role Admin \
+          --email admin@nivesh.ai || true
+
+  airflow-webserver:
+    image: apache/airflow:2.8.0-python3.11
+    container_name: nivesh-airflow-webserver
+    depends_on:
+      - airflow-postgres
+      - airflow-init
+    environment:
+      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@airflow-postgres/airflow
+      AIRFLOW__CORE__FERNET_KEY: ''
+      AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: 'true'
+      AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
+      AIRFLOW__WEBSERVER__EXPOSE_CONFIG: 'true'
+      MLFLOW_TRACKING_URI: http://mlflow:5000
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./ml-services/airflow/dags:/opt/airflow/dags
+      - ./ml-services:/opt/airflow/ml-services
+      - airflow_logs:/opt/airflow/logs
+    networks:
+      - nivesh-network
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    command: webserver
+
+  airflow-scheduler:
+    image: apache/airflow:2.8.0-python3.11
+    container_name: nivesh-airflow-scheduler
+    depends_on:
+      - airflow-postgres
+      - airflow-init
+    environment:
+      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@airflow-postgres/airflow
+      AIRFLOW__CORE__FERNET_KEY: ''
+      AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: 'true'
+      AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
+      MLFLOW_TRACKING_URI: http://mlflow:5000
+    volumes:
+      - ./ml-services/airflow/dags:/opt/airflow/dags
+      - ./ml-services:/opt/airflow/ml-services
+      - airflow_logs:/opt/airflow/logs
+    networks:
+      - nivesh-network
+    command: scheduler
+
+  # ==========================================
   # Backend Service (NestJS)
   # ==========================================
 
@@ -361,6 +466,8 @@ volumes:
   ml_models:
   prometheus_data:
   grafana_data:
+  airflow_postgres_data:
+  airflow_logs:
 
 # ==========================================
 # Networks
