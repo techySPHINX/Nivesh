@@ -34,6 +34,7 @@ import { SimulateScenarioHandler } from './application/handlers/simulate-scenari
 // Presentation
 import { ReasoningController } from './presentation/reasoning.controller';
 import { LLMController } from './presentation/llm.controller';
+import { AgentController } from './presentation/agent.controller';
 import { AIChatGateway } from './presentation/gateways/ai-chat.gateway';
 
 // Agent System
@@ -121,6 +122,7 @@ const Gateways = [
   controllers: [
     ReasoningController,
     LLMController,
+    AgentController,
   ],
   providers: [
     ...DomainServices,
