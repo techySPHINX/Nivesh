@@ -118,7 +118,13 @@ export class GeminiService {
     }
 
     try {
-      const enhancedPrompt = `${prompt}\n\nIMPORTANT: Respond ONLY with valid JSON matching this schema. No other text.\n\nSchema: ${JSON.stringify(schema.shape, null, 2)}`;
+      // Generate a simple schema description instead of using .shape
+      let schemaDescription = 'a valid JSON object';
+      if (schema instanceof z.ZodObject) {
+        schemaDescription = JSON.stringify(schema.shape, null, 2);
+      }
+      
+      const enhancedPrompt = `${prompt}\n\nIMPORTANT: Respond ONLY with valid JSON matching this schema. No other text.\n\nSchema: ${schemaDescription}`;
       
       const model = this.getModel({
         ...config,
