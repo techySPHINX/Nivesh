@@ -333,25 +333,37 @@ async def predict_spending(request: SpendingPredictionRequest):
 async def detect_anomaly(request: AnomalyDetectionRequest):
     """
     Detect anomalous transactions using Isolation Forest
+    Returns anomaly flag, score, and threshold
     """
     try:
         prediction_counter.labels(model_name='anomaly_detector').inc()
 
-        # Load user-specific model
-        model = load_model(f'anomaly_detector_{request.user_id}', 'production')
+        # Check cache (shorter TTL for anomaly detection)
+        cache_key = generate_cache_key(
+            'anomaly_detector', 
+            f"{request.user_id}:{json.dumps(request.transaction, sort_keys=True)}"
+        )
+        cached = get_cached_prediction(cache_key)
+        if cached:
+            return AnomalyDetectionResponse(**cached)
 
-        # Engineer features from transaction
-        features = engineer_transaction_features(request.transaction)
+        # Load model (try user-specific, fall back to general)
+        try:
+            model = load_model(f'anomaly_detector_{request.user_id}', 'production')
+        except:
+            model = load_model('anomaly_detector', 'production')
 
-        # Predict
-        is_anomaly = model.predict([features])[0] == -1
-        anomaly_score = float(model.score_samples([features])[0])
+        # Predict using the AnomalyDetector's predict method
+        result = model.predict(request.transaction, return_score=True)
 
         response = {
-            "is_anomaly": bool(is_anomaly),
-            "anomaly_score": anomaly_score,
-            "threshold": -0.5  # Configurable threshold
+            "is_anomaly": result['is_anomaly'],
+            "anomaly_score": result['anomaly_score'],
+            "threshold": result['threshold']
         }
+
+        # Cache result (5 min TTL for fresh anomaly detection)
+        set_cached_prediction(cache_key, response, ttl=300)
 
         return AnomalyDetectionResponse(**response)
 
@@ -360,23 +372,6 @@ async def detect_anomaly(request: AnomalyDetectionRequest):
                              error_type=type(e).__name__).inc()
         logger.error(f"Anomaly detection failed: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
-
-# ==========================================
-# Utility Functions
-# ==========================================
-
-
-def engineer_transaction_features(transaction: Dict[str, Any]) -> List[float]:
-    """
-    Engineer features from transaction for anomaly detection
-    """
-    # TODO: Implement proper feature engineering
-    return [
-        float(transaction.get('amount', 0)),
-        float(transaction.get('hour', 0)),
-        float(transaction.get('day_of_week', 0)),
-        # Add more features
-    ]
 
 # ==========================================
 # Admin Endpoints
