@@ -293,3 +293,101 @@ model Alert {
   @@index([userId, createdAt])
   @@index([isRead, isDismissed])
 }
+
+// ==========================================
+// Prompt Registry (LLM Integration)
+// ==========================================
+model PromptRegistry {
+  id                    String                @id @default(uuid())
+  promptName            String
+  version               String
+  promptText            String                @db.Text
+  systemInstruction     String?               @db.Text
+  
+  // Generation config
+  temperature           Float                 @default(0.3)
+  topP                  Float                 @default(0.9)
+  topK                  Int                   @default(40)
+  maxTokens             Int                   @default(2048)
+  model                 String                @default("gemini-1.5-pro")
+  
+  // Status management
+  status                String                @default("draft") // draft, testing, canary, production, deprecated
+  rolloutPercentage     Int                   @default(0)
+  
+  // Metadata
+  createdBy             String?
+  createdAt             DateTime              @default(now())
+  deployedAt            DateTime?
+  deprecatedAt          DateTime?
+  performanceMetrics    Json?
+  rollbackTrigger       String?
+  
+  // Relationships
+  executions            PromptExecution[]
+  controlTests          PromptABTest[]        @relation("ControlPrompt")
+  treatmentTests        PromptABTest[]        @relation("TreatmentPrompt")
+  
+  @@unique([promptName, version])
+  @@map("prompt_registry")
+  @@index([promptName, status])
+  @@index([status, rolloutPercentage])
+}
+
+model PromptABTest {
+  id                    String                @id @default(uuid())
+  testName              String
+  controlPromptId       String
+  controlPrompt         PromptRegistry        @relation("ControlPrompt", fields: [controlPromptId], references: [id], onDelete: Cascade)
+  treatmentPromptId     String
+  treatmentPrompt       PromptRegistry        @relation("TreatmentPrompt", fields: [treatmentPromptId], references: [id], onDelete: Cascade)
+  
+  // Test configuration
+  trafficSplitPercentage Int                  @default(50) // % going to treatment
+  
+  // Status
+  status                String                @default("running") // running, paused, completed
+  startDate             DateTime              @default(now())
+  endDate               DateTime?
+  
+  // Results
+  metrics               Json?
+  winner                String?               // 'control', 'treatment', or null
+  
+  @@map("prompt_ab_tests")
+  @@index([testName])
+  @@index([status, startDate])
+}
+
+model PromptExecution {
+  id                    String                @id @default(uuid())
+  promptId              String
+  prompt                PromptRegistry        @relation(fields: [promptId], references: [id], onDelete: Cascade)
+  userId                String
+  
+  // Execution details
+  inputText             String                @db.Text
+  outputText            String?               @db.Text
+  tokensUsed            Int?
+  latencyMs             Int?
+  confidenceScore       Float?
+  
+  // Feedback & Safety
+  userFeedback          Int?                  @default(0) // -1 (thumbs down), 0 (no feedback), 1 (thumbs up)
+  safetyTriggered       Boolean               @default(false)
+  safetyReason          String?
+  
+  // Context
+  ragContextUsed        Json?
+  functionCallsExecuted Json?
+  
+  // Metadata
+  traceId               String?
+  createdAt             DateTime              @default(now())
+  
+  @@map("prompt_executions")
+  @@index([promptId, createdAt])
+  @@index([userId, createdAt])
+  @@index([traceId])
+}
+
