@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { PrismaService } from '../../../core/database/prisma.service';
+import { PrismaService } from '../../../core/database/postgres/prisma.service';
 import { AgentType, AgentResponse } from '../types/agent.types';
 import { DecisionTraceService } from './decision-trace.service';
 

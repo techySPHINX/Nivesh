@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { AgentLearningService } from '../agent-learning.service';
-import { PrismaService } from '../../../core/database/prisma.service';
+import { PrismaService } from '../../../../core/database/postgres/prisma.service';
 import { DecisionTraceService } from '../decision-trace.service';
 import { AgentType } from '../../types/agent.types';
 

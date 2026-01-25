@@ -10,6 +10,9 @@ import {
 import { ToolRegistry } from '../services/tool-registry.service';
 import { DecisionTraceService } from '../services/decision-trace.service';
 import { AgentRegistry } from '../services/agent-registry.service';
+import { SemanticRetrieverService } from '../../rag-pipeline/application/services/semantic-retriever.service';
+import { ContextBuilderService } from '../../rag-pipeline/application/services/context-builder.service';
+import { AgentMemoryService } from '../services/agent-memory.service';
 
 /**
  * User Intent Interface
@@ -91,6 +94,9 @@ export class OrchestratorAgent extends BaseAgent {
     toolRegistry: ToolRegistry,
     decisionTraceService: DecisionTraceService,
     private readonly agentRegistry: AgentRegistry,
+    private readonly semanticRetriever: SemanticRetrieverService,
+    private readonly contextBuilder: ContextBuilderService,
+    private readonly agentMemory: AgentMemoryService,
   ) {
     super(AgentType.ORCHESTRATOR, toolRegistry, decisionTraceService);
     this.initializeWorkflows();
@@ -102,17 +108,38 @@ export class OrchestratorAgent extends BaseAgent {
   async execute(message: AgentMessage): Promise<AgentResponse> {
     const { query, context } = message.payload;
     const traceId = context.traceId || (await this.decisionTraceService.generateTraceId());
+    const userId = context.userId || context.userContext?.userId;
 
-    this.logger.log(`Orchestrating query: "${query}"`);
+    this.logger.log(`Orchestrating query: "${query}" for user: ${userId}`);
 
     try {
       await this.recordReasoning(
-        `Starting orchestration for: ${query}`,
+        `Starting RAG-enhanced orchestration for: ${query}`,
         traceId,
       );
 
-      // Step 1: Classify user intent
-      const intent = await this.classifyIntent(query, context, traceId);
+      // Step 0: Retrieve relevant context from RAG pipeline
+      const ragContext = await this.retrieveRelevantContext(query, userId, traceId);
+
+      await this.recordReasoning(
+        `Retrieved ${ragContext.documentsCount} relevant documents from RAG pipeline`,
+        traceId,
+      );
+
+      // Enrich context with RAG results and user memory
+      const enrichedContext = await this.enrichContextWithMemory(
+        { ...context, ragContext },
+        userId,
+        traceId,
+      );
+
+      await this.recordReasoning(
+        `Context enriched with user preferences and conversation history`,
+        traceId,
+      );
+
+      // Step 1: Classify user intent (using RAG-enriched context)
+      const intent = await this.classifyIntent(query, enrichedContext, traceId);
 
       await this.recordReasoning(
         `Classified intent: ${intent.intent} (confidence: ${intent.confidence})`,
@@ -120,7 +147,7 @@ export class OrchestratorAgent extends BaseAgent {
       );
 
       // Step 2: Build execution plan
-      const plan = await this.buildExecutionPlan(intent, context, traceId);
+      const plan = await this.buildExecutionPlan(intent, enrichedContext, traceId);
 
       await this.recordReasoning(
         `Execution plan: ${plan.steps.length} steps (${intent.executionMode} mode)`,
@@ -139,7 +166,7 @@ export class OrchestratorAgent extends BaseAgent {
       const synthesis = await this.synthesizeResults(
         query,
         results,
-        context,
+        enrichedContext,
         traceId,
       );
 
@@ -171,6 +198,142 @@ export class OrchestratorAgent extends BaseAgent {
       );
       return this.handleError(error, context);
     }
+  }
+
+  /**
+   * Retrieve relevant context from RAG pipeline
+   * Searches across user financial data, knowledge base, and conversation history
+   */
+  private async retrieveRelevantContext(
+    query: string,
+    userId: string | undefined,
+    traceId: string,
+  ): Promise<any> {
+    try {
+      if (!userId) {
+        this.logger.warn('No userId provided, skipping RAG context retrieval');
+        return { documents: [], documentsCount: 0 };
+      }
+
+      // Retrieve semantically similar documents
+      const retrievalResults = await this.semanticRetriever.retrieveContext(
+        query,
+        userId,
+        {
+          topK: 8,
+          scoreThreshold: 0.7,
+          diversityWeight: 0.2,
+          recencyWeight: 0.3,
+        },
+      );
+
+      // Build structured context from retrieval results
+      const structuredContext = await this.contextBuilder.buildContext(
+        retrievalResults,
+        {
+          maxTokens: 2000,
+          includeMetadata: true,
+          format: 'structured',
+        },
+      );
+
+      await this.recordReasoning(
+        `RAG retrieved: ${retrievalResults.length} documents (avg score: ${this.calculateAvgScore(retrievalResults)})`,
+        traceId,
+      );
+
+      return {
+        documents: retrievalResults,
+        documentsCount: retrievalResults.length,
+        structuredContext,
+        userFinancialSnapshot: this.extractFinancialSnapshot(retrievalResults),
+      };
+    } catch (error) {
+      this.logger.error('RAG context retrieval failed:', error);
+      return { documents: [], documentsCount: 0 };
+    }
+  }
+
+  /**
+   * Enrich context with user memory and preferences
+   */
+  private async enrichContextWithMemory(
+    context: any,
+    userId: string | undefined,
+    traceId: string,
+  ): Promise<any> {
+    try {
+      if (!userId) {
+        return context;
+      }
+
+      // Get user preferences from memory service
+      const userPreferences = await this.agentMemory.getUserPreferences(userId);
+
+      // Get relevant past conversations
+      const conversationHistory = await this.agentMemory.getRelevantConversations(
+        userId,
+        context.query || '',
+        3, // Top 3 relevant conversations
+      );
+
+      await this.recordReasoning(
+        `Memory enrichment: preferences loaded, ${conversationHistory.length} relevant conversations`,
+        traceId,
+      );
+
+      return {
+        ...context,
+        userPreferences,
+        conversationHistory,
+        personalization: {
+          riskTolerance: userPreferences.riskTolerance,
+          investmentStyle: userPreferences.investmentStyle,
+          preferredAgents: userPreferences.preferredAgents,
+          communicationStyle: userPreferences.communicationStyle,
+        },
+      };
+    } catch (error) {
+      this.logger.error('Memory enrichment failed:', error);
+      return context;
+    }
+  }
+
+  /**
+   * Calculate average retrieval score
+   */
+  private calculateAvgScore(results: any[]): string {
+    if (results.length === 0) return '0.00';
+    const avg = results.reduce((sum, r) => sum + (r.score || 0), 0) / results.length;
+    return avg.toFixed(2);
+  }
+
+  /**
+   * Extract financial snapshot from RAG results
+   */
+  private extractFinancialSnapshot(results: any[]): any {
+    const snapshot = {
+      recentTransactions: [],
+      activeGoals: [],
+      portfolioSummary: {},
+      budgetStatus: {},
+    };
+
+    results.forEach((result) => {
+      const metadata = result.metadata || {};
+
+      if (metadata.type === 'transaction') {
+        snapshot.recentTransactions.push(metadata);
+      } else if (metadata.type === 'goal') {
+        snapshot.activeGoals.push(metadata);
+      } else if (metadata.type === 'portfolio') {
+        snapshot.portfolioSummary = { ...snapshot.portfolioSummary, ...metadata };
+      } else if (metadata.type === 'budget') {
+        snapshot.budgetStatus = { ...snapshot.budgetStatus, ...metadata };
+      }
+    });
+
+    return snapshot;
   }
 
   /**

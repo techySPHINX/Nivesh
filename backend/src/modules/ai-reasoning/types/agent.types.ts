@@ -106,13 +106,25 @@ export interface ToolMetadata {
  * Execution Step Interface
  * Defines a single step in an agent execution plan
  *
- * @property agent - The agent type to execute
+ * @property stepId - Unique identifier for this execution step
+ * @property agentType - The agent type to execute
+ * @property task - Description of the task for this agent
+ * @property dependencies - IDs of steps that must complete before this one
  * @property parallel - Whether this step can run concurrently with others
+ * @property timeout - Maximum execution time in milliseconds
+ * @property retryOnFailure - Whether to retry this step if it fails
+ * @property maxRetries - Maximum number of retry attempts
  * @property condition - Optional condition that must be met to execute this step
  */
 export interface ExecutionStep {
-  agent: AgentType;
+  stepId: string;
+  agentType: AgentType;
+  task: string;
+  dependencies: string[];
   parallel: boolean;
+  timeout?: number;
+  retryOnFailure?: boolean;
+  maxRetries?: number;
   condition?: (context: Record<string, any>) => boolean;
 }
 

@@ -185,7 +185,7 @@ export class LLMController {
 
       // Execute function calls if present
       if (result.functionCalls && result.functionCalls.length > 0) {
-        const functionResults = [];
+        const functionResults: Array<{ function: string; result: any }> = [];
 
         for (const call of result.functionCalls) {
           const fnResult = await this.functionExecutor.executeFunction(
