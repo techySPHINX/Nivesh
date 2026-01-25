@@ -1,0 +1,17 @@
+{
+  "name": "llm-integration-tests",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "test:quick": "node quick-test.js",
+    "test:websocket": "node websocket-test.js",
+    "test:all": "jest --config=jest-e2e.json",
+    "test:llm": "jest llm-integration.e2e.spec.ts --config=jest-e2e.json",
+    "test:streaming": "jest websocket-streaming.e2e.spec.ts --config=jest-e2e.json",
+    "test:functions": "jest function-calling.spec.ts"
+  },
+  "dependencies": {
+    "axios": "^1.6.5",
+    "socket.io-client": "^4.6.1"
+  }
+}
