@@ -100,6 +100,18 @@ class AnomalyDetectionResponse(BaseModel):
     anomaly_score: float
     threshold: float
 
+
+class CreditRiskRequest(BaseModel):
+    applicant_data: Dict[str, Any]
+
+
+class CreditRiskResponse(BaseModel):
+    will_default: bool
+    risk_score: int
+    risk_category: str
+    default_probability: Optional[float] = None
+    no_default_probability: Optional[float] = None
+
 # ==========================================
 # Helper Functions
 # ==========================================
@@ -371,6 +383,51 @@ async def detect_anomaly(request: AnomalyDetectionRequest):
         error_counter.labels(model_name='anomaly_detector',
                              error_type=type(e).__name__).inc()
         logger.error(f"Anomaly detection failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/predict/credit-risk", response_model=CreditRiskResponse)
+@prediction_latency.labels(model_name='credit_risk_scorer').time()
+async def predict_credit_risk(request: CreditRiskRequest):
+    """
+    Predict loan default risk using XGBoost classifier
+    Returns risk score (0-100), risk category, and default probability
+    """
+    try:
+        prediction_counter.labels(model_name='credit_risk_scorer').inc()
+
+        # Check cache
+        cache_key = generate_cache_key(
+            'credit_risk_scorer',
+            json.dumps(request.applicant_data, sort_keys=True)
+        )
+        cached = get_cached_prediction(cache_key)
+        if cached:
+            return CreditRiskResponse(**cached)
+
+        # Load model
+        model = load_model('credit_risk_scorer', 'production')
+
+        # Predict using CreditRiskScorer's predict method
+        result = model.predict(request.applicant_data, return_probability=True)
+
+        response = {
+            "will_default": result['will_default'],
+            "risk_score": result['risk_score'],
+            "risk_category": result['risk_category'],
+            "default_probability": result.get('default_probability'),
+            "no_default_probability": result.get('no_default_probability')
+        }
+
+        # Cache result (1 hour TTL)
+        set_cached_prediction(cache_key, response, ttl=3600)
+
+        return CreditRiskResponse(**response)
+
+    except Exception as e:
+        error_counter.labels(model_name='credit_risk_scorer',
+                             error_type=type(e).__name__).inc()
+        logger.error(f"Credit risk prediction failed: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
 # ==========================================
