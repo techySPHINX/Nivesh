@@ -34,7 +34,27 @@ import { SimulateScenarioHandler } from './application/handlers/simulate-scenari
 // Presentation
 import { ReasoningController } from './presentation/reasoning.controller';
 import { LLMController } from './presentation/llm.controller';
+import { AgentController } from './presentation/agent.controller';
 import { AIChatGateway } from './presentation/gateways/ai-chat.gateway';
+
+// Agent System
+import { ToolRegistry } from './services/tool-registry.service';
+import { AgentRegistry } from './services/agent-registry.service';
+import { DecisionTraceService } from './services/decision-trace.service';
+import { ExecutionPlanBuilder } from './services/execution-plan-builder.service';
+import { ToolBootstrapService } from './services/tool-bootstrap.service';
+import { AgentMemoryService } from './services/agent-memory.service';
+import { AgentLearningService } from './services/agent-learning.service';
+
+// Specialized Agents
+import { FinancialPlanningAgent } from './agents/financial-planning.agent';
+import { RiskAssessmentAgent } from './agents/risk-assessment.agent';
+import { InvestmentAdvisorAgent } from './agents/investment-advisor.agent';
+import { SimulationAgent } from './agents/simulation.agent';
+import { FinancialGraphAgent } from './agents/financial-graph.agent';
+import { ActionExecutionAgent } from './agents/action-execution.agent';
+import { MonitoringAgent } from './agents/monitoring.agent';
+import { OrchestratorAgent } from './agents/orchestrator.agent';
 
 // Repository imports
 import {
@@ -61,6 +81,27 @@ const InfrastructureServices = [
   StreamingResponseService,
 ];
 
+const AgentServices = [
+  ToolRegistry,
+  AgentRegistry,
+  DecisionTraceService,
+  ExecutionPlanBuilder,
+  ToolBootstrapService,
+  AgentMemoryService,
+  AgentLearningService,
+];
+
+const SpecializedAgents = [
+  FinancialPlanningAgent,
+  RiskAssessmentAgent,
+  InvestmentAdvisorAgent,
+  SimulationAgent,
+  FinancialGraphAgent,
+  ActionExecutionAgent,
+  MonitoringAgent,
+  OrchestratorAgent,
+];
+
 const CommandHandlers = [
   ProcessQueryHandler,
   SimulateScenarioHandler,
@@ -81,10 +122,13 @@ const Gateways = [
   controllers: [
     ReasoningController,
     LLMController,
+    AgentController,
   ],
   providers: [
     ...DomainServices,
     ...InfrastructureServices,
+    ...AgentServices,
+    ...SpecializedAgents,
     ...CommandHandlers,
     ...QueryHandlers,
     ...Gateways,
@@ -105,6 +149,12 @@ const Gateways = [
     PromptManagementService,
     FunctionRegistry,
     FunctionExecutorService,
+    // Export Agent System
+    ToolRegistry,
+    AgentRegistry,
+    DecisionTraceService,
+    ExecutionPlanBuilder,
+    OrchestratorAgent,
   ],
 })
 export class AiReasoningModule { }
