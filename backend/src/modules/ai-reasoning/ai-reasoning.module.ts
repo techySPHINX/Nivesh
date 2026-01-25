@@ -8,6 +8,9 @@
 import { Module } from '@nestjs/common';
 import { CqrsModule } from '@nestjs/cqrs';
 
+// RAG Pipeline Integration
+import { RAGPipelineModule } from '../rag-pipeline/rag-pipeline.module';
+
 // Domain Services
 import { FinancialContextBuilderService } from './domain/services/context-builder.service';
 import { DecisionEngineService } from './domain/services/decision-engine.service';
@@ -51,7 +54,10 @@ const CommandHandlers = [
 const QueryHandlers = [];
 
 @Module({
-  imports: [CqrsModule],
+  imports: [
+    CqrsModule,
+    RAGPipelineModule, // Import RAG capabilities
+  ],
   controllers: [
     ReasoningController,
   ],
