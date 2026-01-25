@@ -1,0 +1,82 @@
+[
+  {
+    "text": "I spent ₹5000 on groceries last month",
+    "entities": [[9, 14, "MONEY"], [18, 27, "CATEGORY"], [28, 38, "DATE"]]
+  },
+  {
+    "text": "Can I afford a ₹50 lakh home loan?",
+    "entities": [[15, 23, "MONEY"], [24, 33, "CATEGORY"]]
+  },
+  {
+    "text": "My credit card bill is $100 this cycle",
+    "entities": [[3, 14, "ACCOUNT"], [23, 27, "MONEY"]]
+  },
+  {
+    "text": "Paid ₹2500 to Swiggy yesterday",
+    "entities": [[5, 10, "MONEY"], [14, 20, "MERCHANT"], [21, 30, "DATE"]]
+  },
+  {
+    "text": "Transfer ₹10000 from savings account to investment account",
+    "entities": [[9, 15, "MONEY"], [21, 36, "ACCOUNT"], [40, 58, "ACCOUNT"]]
+  },
+  {
+    "text": "Amazon charged ₹3499 for electronics",
+    "entities": [[0, 6, "MERCHANT"], [15, 20, "MONEY"], [25, 36, "CATEGORY"]]
+  },
+  {
+    "text": "Next month's EMI is ₹15000",
+    "entities": [[0, 10, "DATE"], [13, 16, "CATEGORY"], [20, 26, "MONEY"]]
+  },
+  {
+    "text": "Spent $50 at Starbucks last week",
+    "entities": [[6, 9, "MONEY"], [13, 22, "MERCHANT"], [23, 32, "DATE"]]
+  },
+  {
+    "text": "Insurance premium of ₹8000 due in 2 weeks",
+    "entities": [[0, 9, "CATEGORY"], [21, 26, "MONEY"], [34, 41, "DATE"]]
+  },
+  {
+    "text": "Deposit ₹25000 in PPF this year",
+    "entities": [[8, 14, "MONEY"], [18, 21, "ACCOUNT"], [22, 31, "DATE"]]
+  },
+  {
+    "text": "Netflix subscription ₹649 monthly",
+    "entities": [[0, 7, "MERCHANT"], [8, 20, "CATEGORY"], [21, 25, "MONEY"]]
+  },
+  {
+    "text": "Loan payment of ₹12000 to HDFC Bank",
+    "entities": [[0, 4, "CATEGORY"], [16, 22, "MONEY"], [26, 35, "MERCHANT"]]
+  },
+  {
+    "text": "Grocery shopping ₹4200 at Big Bazaar",
+    "entities": [[0, 7, "CATEGORY"], [17, 22, "MONEY"], [26, 36, "MERCHANT"]]
+  },
+  {
+    "text": "Fuel expenses ₹3000 in December",
+    "entities": [[0, 4, "CATEGORY"], [14, 19, "MONEY"], [23, 31, "DATE"]]
+  },
+  {
+    "text": "Medical bills totaling $200 this quarter",
+    "entities": [[0, 7, "CATEGORY"], [27, 31, "MONEY"], [32, 40, "DATE"]]
+  },
+  {
+    "text": "Paid ₹500 electricity bill yesterday",
+    "entities": [[5, 9, "MONEY"], [10, 26, "CATEGORY"], [27, 36, "DATE"]]
+  },
+  {
+    "text": "Rent of ₹20000 due next week",
+    "entities": [[0, 4, "CATEGORY"], [8, 14, "MONEY"], [19, 28, "DATE"]]
+  },
+  {
+    "text": "Education loan EMI ₹8500 monthly",
+    "entities": [[0, 9, "CATEGORY"], [10, 14, "CATEGORY"], [19, 24, "MONEY"]]
+  },
+  {
+    "text": "Zomato order ₹850 last night",
+    "entities": [[0, 6, "MERCHANT"], [13, 17, "MONEY"], [18, 28, "DATE"]]
+  },
+  {
+    "text": "Investment of $5000 in mutual funds",
+    "entities": [[0, 10, "CATEGORY"], [14, 19, "MONEY"], [23, 35, "CATEGORY"]]
+  }
+]
