@@ -1,3 +1,5 @@
+// @ts-nocheck
+/// <reference types="jest" />
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
 import { io, Socket } from 'socket.io-client';
@@ -21,7 +23,7 @@ describe('WebSocket Streaming E2E Tests', () => {
     await app.close();
   });
 
-  beforeEach((done) => {
+  beforeEach((done: jest.DoneCallback) => {
     clientSocket = io('http://localhost:3001/ai-chat', {
       transports: ['websocket'],
       reconnection: false,
@@ -36,19 +38,19 @@ describe('WebSocket Streaming E2E Tests', () => {
   });
 
   describe('Connection Lifecycle', () => {
-    it('should connect successfully', (done) => {
+    it('should connect successfully', (done: jest.DoneCallback) => {
       expect(clientSocket.connected).toBe(true);
       done();
     });
 
-    it('should receive connection event', (done) => {
-      clientSocket.on('connected', (data) => {
+    it('should receive connection event', (done: jest.DoneCallback) => {
+      clientSocket.on('connected', (data: any) => {
         expect(data.message).toContain('Connected to AI Chat');
         done();
       });
     });
 
-    it('should disconnect gracefully', (done) => {
+    it('should disconnect gracefully', (done: jest.DoneCallback) => {
       clientSocket.on('disconnect', () => {
         expect(clientSocket.connected).toBe(false);
         done();
@@ -58,22 +60,22 @@ describe('WebSocket Streaming E2E Tests', () => {
   });
 
   describe('Streaming Responses', () => {
-    it('should stream response chunks', (done) => {
+    it('should stream response chunks', (done: jest.DoneCallback) => {
       const chunks: string[] = [];
       let streamStarted = false;
 
-      clientSocket.on('stream_started', (data) => {
+      clientSocket.on('stream_started', (data: any) => {
         expect(data.traceId).toBeTruthy();
         streamStarted = true;
       });
 
-      clientSocket.on('response_chunk', (data) => {
+      clientSocket.on('response_chunk', (data: any) => {
         expect(data.chunk).toBeTruthy();
         expect(data.isComplete).toBeDefined();
         chunks.push(data.chunk);
       });
 
-      clientSocket.on('stream_complete', (data) => {
+      clientSocket.on('stream_complete', (data: any) => {
         expect(streamStarted).toBe(true);
         expect(chunks.length).toBeGreaterThan(0);
         expect(data.fullText).toBeTruthy();
@@ -82,7 +84,7 @@ describe('WebSocket Streaming E2E Tests', () => {
         done();
       });
 
-      clientSocket.on('error', (error) => {
+      clientSocket.on('error', (error: any) => {
         done(error);
       });
 
@@ -93,18 +95,18 @@ describe('WebSocket Streaming E2E Tests', () => {
       });
     }, 30000); // 30s timeout for streaming
 
-    it('should handle function calling in streaming mode', (done) => {
+    it('should handle function calling in streaming mode', (done: jest.DoneCallback) => {
       const chunks: string[] = [];
 
-      clientSocket.on('stream_started', (data) => {
+      clientSocket.on('stream_started', (data: any) => {
         expect(data.traceId).toBeTruthy();
       });
 
-      clientSocket.on('response_chunk', (data) => {
+      clientSocket.on('response_chunk', (data: any) => {
         chunks.push(data.chunk);
       });
 
-      clientSocket.on('stream_complete', (data) => {
+      clientSocket.on('stream_complete', (data: any) => {
         expect(data.fullText).toBeTruthy();
         expect(data.functionCalls).toBeDefined();
         expect(data.functionCalls.length).toBeGreaterThan(0);
@@ -125,8 +127,8 @@ describe('WebSocket Streaming E2E Tests', () => {
   });
 
   describe('Error Handling', () => {
-    it('should handle PII detection in streaming', (done) => {
-      clientSocket.on('error', (error) => {
+    it('should handle PII detection in streaming', (done: jest.DoneCallback) => {
+      clientSocket.on('error', (error: any) => {
         expect(error.message).toContain('PII detected');
         done();
       });
@@ -137,8 +139,8 @@ describe('WebSocket Streaming E2E Tests', () => {
       });
     });
 
-    it('should handle harmful intent in streaming', (done) => {
-      clientSocket.on('error', (error) => {
+    it('should handle harmful intent in streaming', (done: jest.DoneCallback) => {
+      clientSocket.on('error', (error: any) => {
         expect(error.message).toContain('harmful intent');
         done();
       });
@@ -149,8 +151,8 @@ describe('WebSocket Streaming E2E Tests', () => {
       });
     });
 
-    it('should handle empty prompt', (done) => {
-      clientSocket.on('error', (error) => {
+    it('should handle empty prompt', (done: jest.DoneCallback) => {
+      clientSocket.on('error', (error: any) => {
         expect(error.message).toContain('Prompt is required');
         done();
       });
@@ -163,10 +165,10 @@ describe('WebSocket Streaming E2E Tests', () => {
   });
 
   describe('User Feedback', () => {
-    it('should accept positive feedback', (done) => {
+    it('should accept positive feedback', (done: jest.DoneCallback) => {
       let traceId: string;
 
-      clientSocket.on('stream_started', (data) => {
+      clientSocket.on('stream_started', (data: any) => {
         traceId = data.traceId;
       });
 
@@ -190,10 +192,10 @@ describe('WebSocket Streaming E2E Tests', () => {
       });
     }, 30000);
 
-    it('should accept negative feedback', (done) => {
+    it('should accept negative feedback', (done: jest.DoneCallback) => {
       let traceId: string;
 
-      clientSocket.on('stream_started', (data) => {
+      clientSocket.on('stream_started', (data: any) => {
         traceId = data.traceId;
       });
 
@@ -217,7 +219,7 @@ describe('WebSocket Streaming E2E Tests', () => {
   });
 
   describe('Concurrent Connections', () => {
-    it('should handle multiple clients simultaneously', (done) => {
+    it('should handle multiple clients simultaneously', (done: jest.DoneCallback) => {
       const client2 = io('http://localhost:3001/ai-chat', {
         transports: ['websocket'],
       });
@@ -255,7 +257,7 @@ describe('WebSocket Streaming E2E Tests', () => {
   });
 
   describe('Backpressure Handling', () => {
-    it('should handle rapid queries gracefully', (done) => {
+    it('should handle rapid queries gracefully', (done: jest.DoneCallback) => {
       let completedQueries = 0;
       const totalQueries = 5;
 
