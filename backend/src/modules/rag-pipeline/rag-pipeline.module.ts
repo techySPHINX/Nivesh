@@ -11,7 +11,8 @@ import { SemanticRetrieverService } from './application/services/semantic-retrie
 import { ContextBuilderService } from './application/services/context-builder.service';
 import { VectorIndexerService } from './application/services/vector-indexer.service';
 
-// Presentation (Controllers will be added later)
+// Presentation
+import { RAGPipelineController } from './presentation/rag-pipeline.controller';
 
 /**
  * RAG Pipeline Module
@@ -40,6 +41,9 @@ import { VectorIndexerService } from './application/services/vector-indexer.serv
   imports: [
     ConfigModule,
     EventEmitterModule.forRoot(),
+  ],
+  controllers: [
+    RAGPipelineController,
   ],
   providers: [
     // Infrastructure
