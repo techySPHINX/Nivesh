@@ -270,6 +270,7 @@ async def extract_entities(request: NERRequest):
 async def predict_spending(request: SpendingPredictionRequest):
     """
     Predict future spending using Prophet time series model
+    Returns monthly spending forecasts with confidence intervals
     """
     try:
         prediction_counter.labels(model_name='spending_predictor').inc()
@@ -281,19 +282,38 @@ async def predict_spending(request: SpendingPredictionRequest):
         if cached:
             return SpendingPredictionResponse(**cached)
 
-        # Load user-specific model
-        model = load_model(
-            f'spending_predictor_{request.user_id}', 'production')
+        # Load spending predictor model (shared or user-specific)
+        try:
+            # Try user-specific model first
+            model = load_model(f'spending_predictor_{request.user_id}', 'production')
+        except:
+            # Fall back to general model
+            model = load_model('spending_predictor', 'production')
 
-        # Generate forecast
-        future = model.make_future_dataframe(periods=request.months * 30)
-        forecast = model.predict(future)
+        # Generate predictions for next N months (in days)
+        periods = request.months * 30
+        forecast_result = model.predict(periods=periods, freq='D')
 
-        # Format response
-        forecast_data = forecast[['ds', 'yhat', 'yhat_lower', 'yhat_upper']].tail(
-            request.months * 30)
+        # Convert predictions to monthly aggregates
+        import pandas as pd
+        df = pd.DataFrame(forecast_result['predictions'])
+        df['date'] = pd.to_datetime(df['date'])
+        df['month'] = df['date'].dt.to_period('M')
+        
+        # Aggregate by month
+        monthly_forecast = []
+        for month in df['month'].unique():
+            month_data = df[df['month'] == month]
+            monthly_forecast.append({
+                'month': str(month),
+                'predicted_amount': float(month_data['predicted_amount'].sum()),
+                'lower_bound': float(month_data['lower_bound'].sum()),
+                'upper_bound': float(month_data['upper_bound'].sum()),
+                'daily_average': float(month_data['predicted_amount'].mean()),
+            })
+
         response = {
-            "forecast": forecast_data.to_dict('records')
+            "forecast": monthly_forecast[:request.months]
         }
 
         # Cache result
