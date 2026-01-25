@@ -55,9 +55,37 @@ pyyaml==6.0.1
 joblib==1.3.2
 tqdm==4.66.1
 
+# Database
+psycopg2-binary==2.9.9
+asyncpg==0.29.0
+
+# Airflow (for training pipelines)
+apache-airflow==2.8.0
+apache-airflow-providers-postgres==5.10.0
+
+# ONNX (for model export)
+onnx==1.15.0
+onnxruntime==1.16.3
+
+# Google AI (for Gemini fine-tuning)
+google-generativeai==0.3.2
+google-cloud-aiplatform==1.38.1
+
+# Additional ML utilities
+nltk==3.8.1
+matplotlib==3.8.2
+seaborn==0.13.0
+plotly==5.18.0
+python-multipart==0.0.6
+httpx==0.25.2
+locust==2.20.0  # Load testing
+hiredis==2.2.3  # Redis performance
+pyarrow==14.0.1  # Data serialization
+
 # Development
 pytest==8.0.0
 pytest-asyncio==0.23.4
 black==24.1.1
 flake8==7.0.0
 mypy==1.8.0
+pylint==3.0.3
