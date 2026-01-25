@@ -21,7 +21,7 @@
     "esModuleInterop": true,
     "resolveJsonModule": true,
     "moduleResolution": "node10",
-    "types": ["node"],
+    "types": ["node", "jest"],
     "paths": {
       "@core/*": ["src/core/*"],
       "@modules/*": ["src/modules/*"],
