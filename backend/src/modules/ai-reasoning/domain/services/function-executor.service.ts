@@ -425,7 +425,7 @@ export class FunctionExecutorService {
     const portfolio = Object.entries(allocation).map(([asset, percentage]) => ({
       asset_class: asset,
       allocation_percentage: percentage,
-      amount: Math.round((investment_amount * percentage) / 100),
+      amount: Math.round((investment_amount * (percentage as number)) / 100),
     }));
 
     return {
