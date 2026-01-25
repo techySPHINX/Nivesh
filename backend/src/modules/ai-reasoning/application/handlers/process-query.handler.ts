@@ -14,6 +14,9 @@ import {
   ITransactionRepository,
   TRANSACTION_REPOSITORY
 } from '../../../financial-data/domain/repositories/transaction.repository.interface';
+import { SemanticRetrieverService } from '../../../rag-pipeline/application/services/semantic-retriever.service';
+import { ContextBuilderService as RAGContextBuilder } from '../../../rag-pipeline/application/services/context-builder.service';
+import { VectorIndexerService } from '../../../rag-pipeline/application/services/vector-indexer.service';
 
 /**
  * Process Query Handler
@@ -34,6 +37,9 @@ export class ProcessQueryHandler implements ICommandHandler<ProcessQueryCommand>
     private readonly decisionEngine: DecisionEngineService,
     private readonly geminiService: GeminiReasoningService,
     private readonly promptService: PromptTemplateService,
+    private readonly semanticRetriever: SemanticRetrieverService,
+    private readonly ragContextBuilder: RAGContextBuilder,
+    private readonly vectorIndexer: VectorIndexerService,
     @Inject(ACCOUNT_REPOSITORY) private readonly accountRepository: IAccountRepository,
     @Inject(TRANSACTION_REPOSITORY) private readonly transactionRepository: ITransactionRepository,
   ) { }
@@ -113,12 +119,41 @@ export class ProcessQueryHandler implements ICommandHandler<ProcessQueryCommand>
     queryType: string,
     context?: Record<string, any>,
   ): Promise<Decision> {
-    // Build appropriate prompt based on query type
-    let userPrompt: string;
+    const startTime = Date.now();
+
+    // ========================================
+    // RAG PIPELINE: Retrieve relevant context
+    // ========================================
+    this.logger.debug('Starting RAG retrieval for query');
+    const retrievedContext = await this.semanticRetriever.retrieveContext(
+      query,
+      financialContext.userId,
+      {
+        topK: 10,
+        scoreThreshold: 0.7,
+        diversityWeight: 0.2,
+        recencyWeight: 0.2,
+      },
+    );
+
+    this.logger.log(
+      `RAG retrieved ${retrievedContext.length} relevant documents (avg score: ${(retrievedContext.reduce((sum, r) => sum + r.score, 0) / retrievedContext.length).toFixed(2)})`,
+    );
+
+    // Build enriched prompt with retrieved context
+    const ragEnrichedPrompt = this.ragContextBuilder.buildPromptWithContext(
+      query,
+      retrievedContext,
+    );
+
+    // ========================================
+    // Traditional prompt building (for structured queries)
+    // ========================================
+    let structuredPrompt: string;
 
     switch (queryType) {
       case 'affordability':
-        userPrompt = this.promptService.buildAffordabilityPrompt({
+        structuredPrompt = this.promptService.buildAffordabilityPrompt({
           context: financialContext,
           expenseDescription: context?.description || query,
           amount: context?.amount || 0,
@@ -127,7 +162,7 @@ export class ProcessQueryHandler implements ICommandHandler<ProcessQueryCommand>
         break;
 
       case 'goal_projection':
-        userPrompt = this.promptService.buildGoalProjectionPrompt({
+        structuredPrompt = this.promptService.buildGoalProjectionPrompt({
           context: financialContext,
           goalName: context?.goalName || query,
           targetAmount: context?.targetAmount || 0,
@@ -137,18 +172,22 @@ export class ProcessQueryHandler implements ICommandHandler<ProcessQueryCommand>
         break;
 
       case 'budget_optimization':
-        userPrompt = this.promptService.buildBudgetOptimizationPrompt({
+        structuredPrompt = this.promptService.buildBudgetOptimizationPrompt({
           context: financialContext,
           targetSavingsRate: context?.targetSavingsRate || 20,
         });
         break;
 
       default:
-        userPrompt = this.promptService.buildGeneralAdvicePrompt({
-          context: financialContext,
-          question: query,
-        });
+        // For general queries, use RAG-enriched prompt
+        structuredPrompt = ragEnrichedPrompt;
     }
+
+    // Combine structured prompt with RAG context for hybrid approach
+    const finalPrompt =
+      queryType === 'general'
+        ? ragEnrichedPrompt
+        : `${structuredPrompt}\n\n--- Additional Context from RAG Retrieval ---\n${this.formatRetrievedContext(retrievedContext)}`;
 
     // Get system prompt
     const systemPrompt = this.promptService.getSystemPrompt();
@@ -156,9 +195,12 @@ export class ProcessQueryHandler implements ICommandHandler<ProcessQueryCommand>
     // Call Gemini API
     const response = await this.geminiService.generateResponse({
       systemPrompt,
-      userPrompt,
+      userPrompt: finalPrompt,
       temperature: 0.7,
     });
+
+    const totalTime = Date.now() - startTime;
+    this.logger.log(`AI reasoning completed in ${totalTime}ms`);
 
     if (!response.success) {
       throw new Error(`AI reasoning failed: ${response.error}`);
@@ -174,7 +216,7 @@ export class ProcessQueryHandler implements ICommandHandler<ProcessQueryCommand>
     const hasWarnings = this.geminiService.hasFinancialWarnings(response.content);
 
     // Parse AI response into Decision structure
-    return Decision.createFromAI({
+    const decision = Decision.createFromAI({
       query,
       queryType: queryType as any,
       answer: this.extractAnswer(response.content),
@@ -182,8 +224,79 @@ export class ProcessQueryHandler implements ICommandHandler<ProcessQueryCommand>
       recommendations: this.extractRecommendations(response.content),
       warnings: hasWarnings ? this.extractWarnings(response.content) : [],
       confidence: this.determineConfidence(response.content),
-      dataCitations: [`Based on user's financial snapshot as of ${new Date().toLocaleDateString('en-IN')}`],
+      dataCitations: this.buildCitations(retrievedContext),
     });
+
+    // ========================================
+    // Index conversation for future retrieval
+    // ========================================
+    this.vectorIndexer
+      .indexConversation({
+        userId: financialContext.userId,
+        query,
+        response: decision.answer,
+        intent: queryType,
+        contextUsed: retrievedContext.map((r) => r.id),
+      })
+      .catch((err) => this.logger.warn('Failed to index conversation:', err));
+
+    return decision;
+  }
+
+  /**
+   * Format retrieved context for inclusion in prompt
+   */
+  private formatRetrievedContext(retrievedDocs: any[]): string {
+    if (retrievedDocs.length === 0) return 'No additional context available.';
+
+    return retrievedDocs
+      .map((doc, idx) => {
+        return `[${idx + 1}] ${doc.text} (Relevance: ${(doc.score * 100).toFixed(0)}%, Source: ${doc.collection})`;
+      })
+      .join('\n\n');
+  }
+
+  /**
+   * Build source citations from retrieved documents
+   */
+  private buildCitations(retrievedDocs: any[]): string[] {
+    const citations: string[] = [
+      `Based on user's financial snapshot as of ${new Date().toLocaleDateString('en-IN')}`,
+    ];
+
+    // Add citations from knowledge base
+    const knowledgeDocs = retrievedDocs.filter((d) => d.collection === 'knowledge');
+    if (knowledgeDocs.length > 0) {
+      citations.push(
+        `Referenced ${knowledgeDocs.length} financial knowledge article(s)`,
+      );
+    }
+
+    // Add citations from user context
+    const userDocs = retrievedDocs.filter((d) => d.collection === 'user_context');
+    if (userDocs.length > 0) {
+      const transactions = userDocs.filter(
+        (d) => d.metadata.contextType === 'transaction',
+      );
+      const goals = userDocs.filter((d) => d.metadata.contextType === 'goal');
+
+      if (transactions.length > 0) {
+        citations.push(`Analyzed ${transactions.length} relevant transaction(s)`);
+      }
+      if (goals.length > 0) {
+        citations.push(`Considered ${goals.length} active goal(s)`);
+      }
+    }
+
+    // Add citations from conversation history
+    const conversationDocs = retrievedDocs.filter(
+      (d) => d.collection === 'conversation',
+    );
+    if (conversationDocs.length > 0) {
+      citations.push(`Referenced ${conversationDocs.length} previous conversation(s)`);
+    }
+
+    return citations;
   }
 
   private extractAnswer(content: string): string {
