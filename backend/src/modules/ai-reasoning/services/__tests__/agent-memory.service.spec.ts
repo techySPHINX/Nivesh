@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { AgentMemoryService } from '../agent-memory.service';
-import { PrismaService } from '../../../core/database/prisma.service';
+import { PrismaService } from '../../../../core/database/postgres/prisma.service';
 
 describe('AgentMemoryService', () => {
   let service: AgentMemoryService;
