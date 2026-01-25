@@ -475,6 +475,23 @@ async def clear_cache():
         logger.error(f"Failed to clear cache: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
+# ==========================================
+# Drift Detection Endpoints
+# ==========================================
+
+# Import drift detection router
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).parent.parent / 'drift_detection'))
+
+try:
+    from drift_endpoints import router as drift_router
+    app.include_router(drift_router)
+    logger.info("Drift detection endpoints registered")
+except Exception as e:
+    logger.warning(f"Failed to load drift detection endpoints: {e}")
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)
+
