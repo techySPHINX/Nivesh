@@ -460,3 +460,41 @@ model AgentMetrics {
   @@map("agent_metrics")
 }
 
+model ConversationMemory {
+  conversationId        String                @id
+  userId                String
+  
+  // Conversation data
+  messages              Json                  // Array of user messages
+  responses             Json                  // Array of agent responses
+  metadata              Json                  // Topic, sentiment, entities
+  
+  // Timestamps
+  createdAt             DateTime              @default(now())
+  lastUpdatedAt         DateTime              @updatedAt
+  expiresAt             DateTime?             // Auto-cleanup after 24 hours
+  
+  @@map("conversation_memory")
+  @@index([userId, createdAt])
+  @@index([expiresAt])
+}
+
+model UserPreferences {
+  userId                String                @id
+  
+  // Financial preferences
+  riskTolerance         String?               // conservative, moderate, aggressive
+  investmentStyle       String?               // value, growth, balanced, income
+  preferredAgents       String[]              @default([]) // Agent types user prefers
+  communicationStyle    String?               // concise, detailed, educational
+  notificationPreferences Json?               // Email, push, frequency settings
+  
+  // Financial goals (denormalized for quick access)
+  financialGoals        Json?                 // Array of goal summaries
+  
+  // Metadata
+  lastUpdated           DateTime              @default(now()) @updatedAt
+  
+  @@map("user_preferences")
+}
+

@@ -42,6 +42,8 @@ import { AgentRegistry } from './services/agent-registry.service';
 import { DecisionTraceService } from './services/decision-trace.service';
 import { ExecutionPlanBuilder } from './services/execution-plan-builder.service';
 import { ToolBootstrapService } from './services/tool-bootstrap.service';
+import { AgentMemoryService } from './services/agent-memory.service';
+import { AgentLearningService } from './services/agent-learning.service';
 
 // Specialized Agents
 import { FinancialPlanningAgent } from './agents/financial-planning.agent';
@@ -84,6 +86,8 @@ const AgentServices = [
   DecisionTraceService,
   ExecutionPlanBuilder,
   ToolBootstrapService,
+  AgentMemoryService,
+  AgentLearningService,
 ];
 
 const SpecializedAgents = [
