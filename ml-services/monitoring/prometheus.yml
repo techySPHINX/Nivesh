@@ -1,0 +1,19 @@
+# Prometheus configuration for ML model monitoring
+
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    monitor: 'nivesh-ml-monitor'
+
+scrape_configs:
+  # Model Server Metrics
+  - job_name: 'model-server'
+    static_configs:
+      - targets: ['model-server:8000']
+    metrics_path: '/metrics'
+    
+  # Prometheus self-monitoring
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']

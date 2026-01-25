@@ -100,6 +100,18 @@ class AnomalyDetectionResponse(BaseModel):
     anomaly_score: float
     threshold: float
 
+
+class CreditRiskRequest(BaseModel):
+    applicant_data: Dict[str, Any]
+
+
+class CreditRiskResponse(BaseModel):
+    will_default: bool
+    risk_score: int
+    risk_category: str
+    default_probability: Optional[float] = None
+    no_default_probability: Optional[float] = None
+
 # ==========================================
 # Helper Functions
 # ==========================================
@@ -270,6 +282,7 @@ async def extract_entities(request: NERRequest):
 async def predict_spending(request: SpendingPredictionRequest):
     """
     Predict future spending using Prophet time series model
+    Returns monthly spending forecasts with confidence intervals
     """
     try:
         prediction_counter.labels(model_name='spending_predictor').inc()
@@ -281,19 +294,38 @@ async def predict_spending(request: SpendingPredictionRequest):
         if cached:
             return SpendingPredictionResponse(**cached)
 
-        # Load user-specific model
-        model = load_model(
-            f'spending_predictor_{request.user_id}', 'production')
+        # Load spending predictor model (shared or user-specific)
+        try:
+            # Try user-specific model first
+            model = load_model(f'spending_predictor_{request.user_id}', 'production')
+        except:
+            # Fall back to general model
+            model = load_model('spending_predictor', 'production')
 
-        # Generate forecast
-        future = model.make_future_dataframe(periods=request.months * 30)
-        forecast = model.predict(future)
+        # Generate predictions for next N months (in days)
+        periods = request.months * 30
+        forecast_result = model.predict(periods=periods, freq='D')
 
-        # Format response
-        forecast_data = forecast[['ds', 'yhat', 'yhat_lower', 'yhat_upper']].tail(
-            request.months * 30)
+        # Convert predictions to monthly aggregates
+        import pandas as pd
+        df = pd.DataFrame(forecast_result['predictions'])
+        df['date'] = pd.to_datetime(df['date'])
+        df['month'] = df['date'].dt.to_period('M')
+        
+        # Aggregate by month
+        monthly_forecast = []
+        for month in df['month'].unique():
+            month_data = df[df['month'] == month]
+            monthly_forecast.append({
+                'month': str(month),
+                'predicted_amount': float(month_data['predicted_amount'].sum()),
+                'lower_bound': float(month_data['lower_bound'].sum()),
+                'upper_bound': float(month_data['upper_bound'].sum()),
+                'daily_average': float(month_data['predicted_amount'].mean()),
+            })
+
         response = {
-            "forecast": forecast_data.to_dict('records')
+            "forecast": monthly_forecast[:request.months]
         }
 
         # Cache result
@@ -313,25 +345,37 @@ async def predict_spending(request: SpendingPredictionRequest):
 async def detect_anomaly(request: AnomalyDetectionRequest):
     """
     Detect anomalous transactions using Isolation Forest
+    Returns anomaly flag, score, and threshold
     """
     try:
         prediction_counter.labels(model_name='anomaly_detector').inc()
 
-        # Load user-specific model
-        model = load_model(f'anomaly_detector_{request.user_id}', 'production')
+        # Check cache (shorter TTL for anomaly detection)
+        cache_key = generate_cache_key(
+            'anomaly_detector', 
+            f"{request.user_id}:{json.dumps(request.transaction, sort_keys=True)}"
+        )
+        cached = get_cached_prediction(cache_key)
+        if cached:
+            return AnomalyDetectionResponse(**cached)
 
-        # Engineer features from transaction
-        features = engineer_transaction_features(request.transaction)
+        # Load model (try user-specific, fall back to general)
+        try:
+            model = load_model(f'anomaly_detector_{request.user_id}', 'production')
+        except:
+            model = load_model('anomaly_detector', 'production')
 
-        # Predict
-        is_anomaly = model.predict([features])[0] == -1
-        anomaly_score = float(model.score_samples([features])[0])
+        # Predict using the AnomalyDetector's predict method
+        result = model.predict(request.transaction, return_score=True)
 
         response = {
-            "is_anomaly": bool(is_anomaly),
-            "anomaly_score": anomaly_score,
-            "threshold": -0.5  # Configurable threshold
+            "is_anomaly": result['is_anomaly'],
+            "anomaly_score": result['anomaly_score'],
+            "threshold": result['threshold']
         }
+
+        # Cache result (5 min TTL for fresh anomaly detection)
+        set_cached_prediction(cache_key, response, ttl=300)
 
         return AnomalyDetectionResponse(**response)
 
@@ -341,22 +385,50 @@ async def detect_anomaly(request: AnomalyDetectionRequest):
         logger.error(f"Anomaly detection failed: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
-# ==========================================
-# Utility Functions
-# ==========================================
 
+@app.post("/predict/credit-risk", response_model=CreditRiskResponse)
+@prediction_latency.labels(model_name='credit_risk_scorer').time()
+async def predict_credit_risk(request: CreditRiskRequest):
+    """
+    Predict loan default risk using XGBoost classifier
+    Returns risk score (0-100), risk category, and default probability
+    """
+    try:
+        prediction_counter.labels(model_name='credit_risk_scorer').inc()
 
-def engineer_transaction_features(transaction: Dict[str, Any]) -> List[float]:
-    """
-    Engineer features from transaction for anomaly detection
-    """
-    # TODO: Implement proper feature engineering
-    return [
-        float(transaction.get('amount', 0)),
-        float(transaction.get('hour', 0)),
-        float(transaction.get('day_of_week', 0)),
-        # Add more features
-    ]
+        # Check cache
+        cache_key = generate_cache_key(
+            'credit_risk_scorer',
+            json.dumps(request.applicant_data, sort_keys=True)
+        )
+        cached = get_cached_prediction(cache_key)
+        if cached:
+            return CreditRiskResponse(**cached)
+
+        # Load model
+        model = load_model('credit_risk_scorer', 'production')
+
+        # Predict using CreditRiskScorer's predict method
+        result = model.predict(request.applicant_data, return_probability=True)
+
+        response = {
+            "will_default": result['will_default'],
+            "risk_score": result['risk_score'],
+            "risk_category": result['risk_category'],
+            "default_probability": result.get('default_probability'),
+            "no_default_probability": result.get('no_default_probability')
+        }
+
+        # Cache result (1 hour TTL)
+        set_cached_prediction(cache_key, response, ttl=3600)
+
+        return CreditRiskResponse(**response)
+
+    except Exception as e:
+        error_counter.labels(model_name='credit_risk_scorer',
+                             error_type=type(e).__name__).inc()
+        logger.error(f"Credit risk prediction failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 # ==========================================
 # Admin Endpoints
@@ -403,6 +475,23 @@ async def clear_cache():
         logger.error(f"Failed to clear cache: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
+# ==========================================
+# Drift Detection Endpoints
+# ==========================================
+
+# Import drift detection router
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).parent.parent / 'drift_detection'))
+
+try:
+    from drift_endpoints import router as drift_router
+    app.include_router(drift_router)
+    logger.info("Drift detection endpoints registered")
+except Exception as e:
+    logger.warning(f"Failed to load drift detection endpoints: {e}")
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)
+

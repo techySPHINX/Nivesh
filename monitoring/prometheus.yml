@@ -8,6 +8,10 @@ global:
     cluster: "nivesh-dev"
     environment: "development"
 
+# Alert rules
+rule_files:
+  - "alerts/*.yml"
+
 # Scrape configurations
 scrape_configs:
   # Backend API (NestJS)

@@ -1,0 +1,60 @@
+# ML Model Drift Alerts
+# Monitors data drift and triggers retraining alerts
+
+groups:
+  - name: ml_drift
+    interval: 5m
+    rules:
+      # High drift warning
+      - alert: HighModelDrift
+        expr: model_drift_score > 0.3
+        for: 10m
+        labels:
+          severity: warning
+          component: ml
+          team: ml-ops
+        annotations:
+          summary: "High drift detected on {{ $labels.model_name }}"
+          description: "Model {{ $labels.model_name }} drift score {{ $value }} exceeds threshold 0.3. Consider retraining within 7 days."
+          runbook_url: "https://github.com/nivesh/docs/runbooks/model-drift"
+          dashboard_url: "http://grafana:3000/d/nivesh-ml-performance"
+
+      # Critical drift alert  
+      - alert: CriticalModelDrift
+        expr: model_drift_score > 0.5
+        for: 5m
+        labels:
+          severity: critical
+          component: ml
+          team: ml-ops
+        annotations:
+          summary: "CRITICAL drift on {{ $labels.model_name }}"
+          description: "Model {{ $labels.model_name }} drift score {{ $value }} exceeds critical threshold 0.5. IMMEDIATE retraining required."
+          runbook_url: "https://github.com/nivesh/docs/runbooks/model-drift"
+          action_required: "Trigger manual retraining or verify automated pipeline"
+
+      # Dataset drift detected
+      - alert: DatasetDriftDetected
+        expr: model_dataset_drift == 1
+        for: 15m
+        labels:
+          severity: warning
+          component: ml
+          team: ml-ops
+        annotations:
+          summary: "Dataset drift detected on {{ $labels.model_name }}"
+          description: "Model {{ $labels.model_name }} has statistically significant dataset drift."
+          runbook_url: "https://github.com/nivesh/docs/runbooks/dataset-drift"
+
+      # Many drifted features
+      - alert: ManyDriftedFeatures
+        expr: model_drifted_features > 5
+        for: 10m
+        labels:
+          severity: warning
+          component: ml
+          team: ml-ops
+        annotations:
+          summary: "Multiple features drifted on {{ $labels.model_name }}"
+          description: "Model {{ $labels.model_name }} has {{ $value }} drifted features."
+          runbook_url: "https://github.com/nivesh/docs/runbooks/feature-drift"
