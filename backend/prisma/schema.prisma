@@ -392,3 +392,71 @@ model PromptExecution {
   @@index([traceId])
 }
 
+// ==========================================
+// Multi-Agent Orchestration System
+// ==========================================
+
+model AgentExecution {
+  id                    String                @id @default(uuid())
+  traceId               String                // Correlates multi-agent workflows
+  agentType             String                // orchestrator, financial_planning, risk_assessment, etc.
+  
+  // Execution data
+  inputPayload          Json                  // Agent input (task, context)
+  outputPayload         Json?                 // Agent output (result)
+  reasoning             String[]              @default([]) // Step-by-step reasoning
+  toolsUsed             String[]              @default([]) // Tools called during execution
+  
+  // Metrics
+  confidence            Float?                // Agent's confidence score (0-1)
+  durationMs            Int?                  // Execution time in milliseconds
+  success               Boolean               @default(false)
+  errorMessage          String?               @db.Text
+  
+  // Metadata
+  createdAt             DateTime              @default(now())
+  
+  @@map("agent_executions")
+  @@index([traceId])
+  @@index([agentType, createdAt])
+  @@index([createdAt])
+}
+
+model AgentFeedback {
+  id                    String                @id @default(uuid())
+  traceId               String                // References agent_executions.traceId
+  userId                String
+  
+  // Feedback data
+  feedback              String                // 'positive' or 'negative'
+  comment               String?               @db.Text
+  rating                Int?                  // 1-5 star rating
+  
+  // Metadata
+  createdAt             DateTime              @default(now())
+  
+  @@map("agent_feedback")
+  @@index([traceId])
+  @@index([userId, createdAt])
+  @@index([feedback])
+}
+
+model AgentMetrics {
+  agentType             String                @id // Primary key
+  
+  // Execution statistics
+  totalExecutions       BigInt                @default(0)
+  successfulExecutions  BigInt                @default(0)
+  avgConfidence         Float?
+  avgDurationMs         Int?
+  
+  // Feedback statistics
+  positiveFeedbackCount BigInt                @default(0)
+  negativeFeedbackCount BigInt                @default(0)
+  
+  // Metadata
+  lastUpdated           DateTime              @default(now())
+  
+  @@map("agent_metrics")
+}
+
