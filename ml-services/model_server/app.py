@@ -1,9 +1,15 @@
 """
 ML Model Serving API
 FastAPI server for serving trained models
+
+Version: 2.0.0
+Last Updated: January 27, 2026
 """
 
-from fastapi import FastAPI, HTTPException
+from model_server.health import router as health_router
+from shared.logger import setup_logger
+from shared.config import MLConfig
+from fastapi import FastAPI, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import List, Dict, Any, Optional
@@ -14,37 +20,64 @@ import hashlib
 from prometheus_client import Counter, Histogram, generate_latest, CONTENT_TYPE_LATEST
 from fastapi.responses import Response
 import logging
+import sys
+from pathlib import Path
+
+# Add parent directory to path for imports
+sys.path.append(str(Path(__file__).parent.parent))
+
 
 # Configure logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+config = MLConfig()
+logger = setup_logger(__name__, config.log_level)
 
 # Initialize FastAPI
 app = FastAPI(
     title="Nivesh ML API",
     description="Machine Learning Model Serving for Financial Intelligence",
-    version="1.0.0"
+    version="2.0.0",
+    docs_url="/docs",
+    redoc_url="/redoc",
+    openapi_url="/openapi.json"
 )
 
 # CORS middleware
+cors_origins = config.cors_origins if hasattr(
+    config, 'cors_origins') else ["*"]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
+# Include health check router
+app.include_router(health_router)
+
 # Redis cache
-redis_client = redis.Redis(
-    host='redis',
-    port=6379,
-    password='nivesh_password',
-    decode_responses=True
-)
+try:
+    redis_client = redis.Redis(
+        host=config.redis_host,
+        port=config.redis_port,
+        password=config.redis_password,
+        db=config.redis_db,
+        decode_responses=True,
+        socket_connect_timeout=5
+    )
+    # Test connection
+    redis_client.ping()
+    logger.info("✅ Redis connected successfully")
+except Exception as e:
+    logger.error(f"❌ Redis connection failed: {e}")
+    redis_client = None
 
 # MLflow setup
-mlflow.set_tracking_uri("http://mlflow:5000")
+try:
+    mlflow.set_tracking_uri(config.mlflow_tracking_uri)
+    logger.info(f"✅ MLflow tracking URI set: {config.mlflow_tracking_uri}")
+except Exception as e:
+    logger.error(f"❌ MLflow setup failed: {e}")
 
 # Prometheus metrics
 prediction_counter = Counter(
@@ -297,7 +330,8 @@ async def predict_spending(request: SpendingPredictionRequest):
         # Load spending predictor model (shared or user-specific)
         try:
             # Try user-specific model first
-            model = load_model(f'spending_predictor_{request.user_id}', 'production')
+            model = load_model(
+                f'spending_predictor_{request.user_id}', 'production')
         except:
             # Fall back to general model
             model = load_model('spending_predictor', 'production')
@@ -311,7 +345,7 @@ async def predict_spending(request: SpendingPredictionRequest):
         df = pd.DataFrame(forecast_result['predictions'])
         df['date'] = pd.to_datetime(df['date'])
         df['month'] = df['date'].dt.to_period('M')
-        
+
         # Aggregate by month
         monthly_forecast = []
         for month in df['month'].unique():
@@ -352,7 +386,7 @@ async def detect_anomaly(request: AnomalyDetectionRequest):
 
         # Check cache (shorter TTL for anomaly detection)
         cache_key = generate_cache_key(
-            'anomaly_detector', 
+            'anomaly_detector',
             f"{request.user_id}:{json.dumps(request.transaction, sort_keys=True)}"
         )
         cached = get_cached_prediction(cache_key)
@@ -361,7 +395,8 @@ async def detect_anomaly(request: AnomalyDetectionRequest):
 
         # Load model (try user-specific, fall back to general)
         try:
-            model = load_model(f'anomaly_detector_{request.user_id}', 'production')
+            model = load_model(
+                f'anomaly_detector_{request.user_id}', 'production')
         except:
             model = load_model('anomaly_detector', 'production')
 
@@ -480,8 +515,6 @@ async def clear_cache():
 # ==========================================
 
 # Import drift detection router
-import sys
-from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent / 'drift_detection'))
 
 try:
@@ -494,4 +527,3 @@ except Exception as e:
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)
-
