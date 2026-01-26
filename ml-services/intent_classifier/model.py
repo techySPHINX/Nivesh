@@ -285,16 +285,40 @@ class IntentClassifier:
 
         Returns:
             Dictionary with intent, confidence, and alternatives
+
+        Raises:
+            ValueError: If model not loaded or input is invalid
+            TypeError: If query is not a string
         """
+        # Validate model loaded
         if self.model is None or self.tokenizer is None:
             raise ValueError("Model not loaded. Call load_model() first.")
+
+        # Input validation
+        if not isinstance(query, str):
+            raise TypeError(f"Query must be a string, got {type(query)}")
+
+        # Strip and validate
+        query = query.strip()
+        if not query:
+            raise ValueError("Query cannot be empty")
+
+        # Length validation and truncation
+        max_length = config.intent_max_length
+        if len(query) > max_length * 4:  # Approximate token count
+            logger.warning(
+                f"Query too long ({len(query)} chars), truncating to {max_length * 4}")
+            query = query[:max_length * 4]
+
+        # Sanitize - remove null bytes
+        query = query.replace('\x00', '')
 
         # Tokenize
         inputs = self.tokenizer(
             query,
             truncation=True,
             padding='max_length',
-            max_length=config.intent_max_length,
+            max_length=max_length,
             return_tensors='pt'
         )
 
@@ -311,6 +335,7 @@ class IntentClassifier:
         results = {
             'intent': self.id_to_label[top_indices[0][0].item()],
             'confidence': float(top_probs[0][0]),
+            'query_length': len(query),
             'alternatives': [
                 {
                     'intent': self.id_to_label[idx.item()],
