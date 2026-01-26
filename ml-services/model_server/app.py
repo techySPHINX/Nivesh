@@ -16,6 +16,13 @@ from shared.exceptions import (
 )
 from shared.circuit_breaker import circuit_breaker
 from shared.retry import retry_redis, retry_mlflow
+from shared.monitoring import (
+    track_prediction, get_prediction_tracker, health_monitor,
+    track_cache_access, track_invalid_input
+)
+from shared.performance import (
+    LRUCache, lru_cache, RequestDeduplicator, measure_performance
+)
 from fastapi import FastAPI, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -24,6 +31,7 @@ import mlflow
 import redis
 import json
 import hashlib
+import time
 from prometheus_client import Counter, Histogram, generate_latest, CONTENT_TYPE_LATEST
 from fastapi.responses import Response
 import logging
@@ -97,6 +105,10 @@ error_counter = Counter('ml_errors_total', 'Total ML errors', [
 # Model cache
 models_cache: Dict[str, Any] = {}
 
+# Initialize performance optimizations
+prediction_cache = LRUCache(max_size=1000, default_ttl=3600)
+request_deduplicator = RequestDeduplicator()
+
 # ==========================================
 # Request/Response Models
 # ==========================================
@@ -164,16 +176,25 @@ def load_model(model_name: str, version: str = "production"):
 
     if cache_key in models_cache:
         logger.debug(f"Model loaded from cache: {cache_key}")
+        track_cache_access("model", hit=True)
         return models_cache[cache_key]
 
+    track_cache_access("model", hit=False)
+    
     try:
+        start_time = time.time()
         model_uri = f"models:/{model_name}/{version}"
         logger.info(f"Loading model from MLflow: {model_uri}")
         model = mlflow.pyfunc.load_model(model_uri)
         models_cache[cache_key] = model
-        logger.info(f"Model loaded successfully: {cache_key}")
+        
+        load_time = time.time() - start_time
+        health_monitor.record_load(model_name, success=True, load_time=load_time)
+        logger.info(f"Model loaded successfully: {cache_key} in {load_time:.2f}s")
+        
         return model
     except Exception as e:
+        health_monitor.record_load(model_name, success=False, load_time=0)
         logger.error(f"Failed to load model {cache_key}: {str(e)}")
         raise ModelNotLoadedError(
             message=f"Model loading failed: {model_name}",
@@ -192,9 +213,12 @@ def get_cached_prediction(cache_key: str) -> Optional[Dict]:
             return None
         cached = redis_client.get(cache_key)
         if cached:
+            track_cache_access("redis", hit=True)
             return json.loads(cached)
+        track_cache_access("redis", hit=False)
     except Exception as e:
         logger.warning(f"Cache read failed: {str(e)}")
+        track_cache_access("redis", hit=False)
         raise  # Let retry/circuit breaker handle it
     return None
 
@@ -237,6 +261,39 @@ async def metrics():
     """Prometheus metrics endpoint"""
     return Response(content=generate_latest(), media_type=CONTENT_TYPE_LATEST)
 
+
+@app.get("/monitoring/health")
+async def monitoring_health():
+    """
+    Detailed health monitoring endpoint.
+    Returns health status for all models and cache statistics.
+    """
+    return {
+        "status": "ok",
+        "models": health_monitor.get_all_health_status(),
+        "cache": {
+            "prediction_cache": prediction_cache.get_stats(),
+            "model_cache_size": len(models_cache)
+        },
+        "redis": {
+            "connected": redis_client is not None,
+            "ping": redis_client.ping() if redis_client else False
+        }
+    }
+
+
+@app.get("/monitoring/statistics")
+async def monitoring_statistics():
+    """
+    Get prediction statistics for all models.
+    """
+    stats = {}
+    for model_name in ["intent_classifier", "financial_ner", "spending_predictor",
+                       "anomaly_detector", "credit_risk_scorer"]:
+        tracker = get_prediction_tracker(model_name)
+        stats[model_name] = tracker.get_statistics()
+    return stats
+
 # ==========================================
 # Model Endpoints
 # ==========================================
@@ -259,26 +316,35 @@ async def predict_intent(
         - X-API-Key header for authentication
         - Rate limit: 100 requests per minute per IP
     """
+    start_time = time.time()
+    model_name = 'intent_classifier'
+    
     try:
-        prediction_counter.labels(model_name='intent_classifier').inc()
+        prediction_counter.labels(model_name=model_name).inc()
 
         # Validate input
-        query = InputValidator.validate_text(
-            request.query,
-            field_name="query",
-            min_length=3,
-            max_length=512
-        )
+        try:
+            query = InputValidator.validate_text(
+                request.query,
+                field_name="query",
+                min_length=3,
+                max_length=512
+            )
+        except ValidationError as e:
+            track_invalid_input(model_name, "invalid_query")
+            raise
 
         # Check cache
-        cache_key = generate_cache_key('intent_classifier', query)
+        cache_key = generate_cache_key(model_name, query)
         cached = get_cached_prediction(cache_key)
         if cached:
             logger.debug(f"Cache hit for intent query: {query[:50]}...")
+            latency = time.time() - start_time
+            health_monitor.record_prediction(model_name, latency, success=True)
             return IntentClassificationResponse(**cached)
 
         # Load model
-        model = load_model('intent_classifier', 'production')
+        model = load_model(model_name, 'production')
 
         # Make prediction
         result = model.predict([query])
@@ -295,6 +361,17 @@ async def predict_intent(
 
         # Cache result
         set_cached_prediction(cache_key, response, ttl=3600)
+        
+        # Track prediction
+        latency = time.time() - start_time
+        health_monitor.record_prediction(model_name, latency, success=True)
+        
+        tracker = get_prediction_tracker(model_name)
+        tracker.log_prediction(
+            input_data={"query": query[:100]},  # Store truncated for privacy
+            prediction=response,
+            latency=latency
+        )
 
         return IntentClassificationResponse(**response)
 
@@ -584,7 +661,7 @@ async def warmup_models():
     Load models into memory and run test predictions.
     """
     logger.info("🚀 Starting model warmup...")
-    
+
     warmup_models_list = [
         "intent_classifier",
         "financial_ner",
@@ -592,28 +669,32 @@ async def warmup_models():
         "anomaly_detector",
         "credit_risk_scorer"
     ]
-    
+
+    # Register models with health monitor
+    for model_name in warmup_models_list:
+        health_monitor.register_model(model_name)
+
     successful_warmups = []
     failed_warmups = []
-    
+
     for model_name in warmup_models_list:
         try:
             logger.info(f"Warming up {model_name}...")
-            
+
             # Pre-load model
             model = load_model(model_name, "production")
             successful_warmups.append(model_name)
-            
+
             logger.info(f"✅ {model_name} warmed up successfully")
         except Exception as e:
             logger.error(f"❌ Failed to warm up {model_name}: {e}")
             failed_warmups.append(model_name)
-    
+
     logger.info(
         f"Model warmup completed: {len(successful_warmups)} successful, "
         f"{len(failed_warmups)} failed"
     )
-    
+
     if failed_warmups:
         logger.warning(f"Failed to warm up models: {failed_warmups}")
 
@@ -627,7 +708,7 @@ async def shutdown_event():
     - Log shutdown completion
     """
     logger.info("🔴 Starting graceful shutdown...")
-    
+
     try:
         # Close Redis connection
         if redis_client:
@@ -635,14 +716,14 @@ async def shutdown_event():
             logger.info("Redis connection closed")
     except Exception as e:
         logger.error(f"Error closing Redis connection: {e}")
-    
+
     try:
         # Clear model cache
         models_cache.clear()
         logger.info("Model cache cleared")
     except Exception as e:
         logger.error(f"Error clearing model cache: {e}")
-    
+
     logger.info("✅ Shutdown complete")
 
 

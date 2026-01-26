@@ -45,6 +45,7 @@ data = InputValidator.validate_dict(
 ### API Authentication
 
 **Server Side:**
+
 ```python
 from fastapi import Depends
 from shared.security import verify_api_key
@@ -58,6 +59,7 @@ async def predict(
 ```
 
 **Client Side:**
+
 ```bash
 # cURL
 curl -X POST http://localhost:8000/predict/intent \
@@ -81,6 +83,7 @@ response = requests.post(
 ```
 
 **Configuration:**
+
 ```bash
 # .env file
 ML_API_KEYS=key1,key2,key3
@@ -89,6 +92,7 @@ ML_API_KEYS=key1,key2,key3
 ### Rate Limiting
 
 **Server Side:**
+
 ```python
 from fastapi import Depends
 from shared.security import check_rate_limit
@@ -102,14 +106,17 @@ async def predict(
 ```
 
 **Client Response (Rate Limited):**
+
 ```json
 {
-    "detail": "Rate limit exceeded. Please try again later."
+  "detail": "Rate limit exceeded. Please try again later."
 }
 ```
+
 HTTP Status: 429 Too Many Requests
 
 **Configuration:**
+
 ```python
 from shared.security import SecurityConfig
 
@@ -125,6 +132,7 @@ config = SecurityConfig(
 ### Circuit Breaker
 
 **Decorator Usage:**
+
 ```python
 from shared.circuit_breaker import circuit_breaker
 
@@ -141,6 +149,7 @@ except Exception as e:
 ```
 
 **Function Call Usage:**
+
 ```python
 from shared.circuit_breaker import get_circuit_breaker
 
@@ -151,6 +160,7 @@ def query_database():
 ```
 
 **Check Circuit Status:**
+
 ```python
 from shared.circuit_breaker import get_all_circuit_breakers_status
 
@@ -162,6 +172,7 @@ status = get_all_circuit_breakers_status()
 ```
 
 **Manual Reset:**
+
 ```python
 from shared.circuit_breaker import get_circuit_breaker
 
@@ -172,6 +183,7 @@ breaker.reset()  # Manually close the circuit
 ### Retry with Exponential Backoff
 
 **Decorator Usage:**
+
 ```python
 from shared.retry import retry_with_backoff
 
@@ -192,6 +204,7 @@ def fetch_data_from_api():
 ```
 
 **Predefined Retry Configs:**
+
 ```python
 from shared.retry import retry_redis, retry_database, retry_mlflow
 
@@ -209,6 +222,7 @@ def load_model(model_name):
 ```
 
 **Retrier Class:**
+
 ```python
 from shared.retry import Retrier, RetryConfig
 
@@ -240,15 +254,15 @@ from shared.exceptions import (
 def predict(query: str):
     if not query:
         raise ValidationError("Query cannot be empty")
-    
+
     if not model_loaded:
         raise ModelNotLoadedError("Model not initialized")
-    
+
     try:
         result = model.predict(query)
     except Exception as e:
         raise ModelPredictionError(f"Prediction failed: {e}")
-    
+
     return result
 ```
 
@@ -338,7 +352,7 @@ logger = logging.getLogger(__name__)
 # Periodic health check
 def check_service_health():
     circuit_status = get_all_circuit_breakers_status()
-    
+
     for service, status in circuit_status.items():
         if status["state"] == "open":
             logger.error(
@@ -379,7 +393,7 @@ def test_api_with_auth():
 def test_rate_limiting():
     """Test rate limiting works"""
     headers = {"X-API-Key": "test-key"}
-    
+
     # Make 101 requests (limit is 100)
     for i in range(101):
         response = client.post(
@@ -387,7 +401,7 @@ def test_rate_limiting():
             headers=headers,
             json={"query": f"test query {i}"}
         )
-    
+
     # Last request should be rate limited
     assert response.status_code == 429
 ```
@@ -457,17 +471,20 @@ retry_config = RetryConfig(
 ### Common Issues
 
 **Issue:** API returns 403 Forbidden
+
 ```
 Solution: Add X-API-Key header with valid API key
 ```
 
 **Issue:** API returns 429 Too Many Requests
+
 ```
 Solution: Wait for rate limit window to reset (60 seconds)
 Or: Contact admin to increase rate limit
 ```
 
 **Issue:** Circuit breaker is OPEN
+
 ```
 Solution: Wait for recovery timeout, or manually reset:
   breaker = get_circuit_breaker("service_name")
@@ -475,6 +492,7 @@ Solution: Wait for recovery timeout, or manually reset:
 ```
 
 **Issue:** Validation errors
+
 ```
 Solution: Check error message for specific validation failure
 Common: Empty input, too long, invalid characters, wrong type
