@@ -10,7 +10,7 @@ torchaudio==2.2.0
 transformers==4.37.0
 sentence-transformers==2.3.0
 spacy==3.7.2
-tokenizers==0.15.0
+tokenizers==0.15.2
 
 # Time Series & Prophet
 prophet==1.1.5
@@ -40,6 +40,7 @@ evidently==0.4.13
 fastapi==0.109.0
 uvicorn[standard]==0.27.0
 pydantic==2.6.0
+pydantic-settings==2.1.0
 
 # Vector DB & Embeddings
 qdrant-client==1.7.3

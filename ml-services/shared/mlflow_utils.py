@@ -4,7 +4,8 @@ MLflow configuration and utilities
 import mlflow
 from mlflow.tracking import MlflowClient
 from typing import Dict, Any, Optional
-from ..shared import config, get_logger
+from shared.config import config
+from shared.logger import get_logger
 
 
 logger = get_logger(__name__)
@@ -24,11 +25,11 @@ def get_client() -> MlflowClient:
 def create_experiment(experiment_name: str, tags: Optional[Dict[str, str]] = None) -> str:
     """
     Create or get existing experiment
-    
+
     Args:
         experiment_name: Name of the experiment
         tags: Optional tags for the experiment
-        
+
     Returns:
         Experiment ID
     """
@@ -37,13 +38,15 @@ def create_experiment(experiment_name: str, tags: Optional[Dict[str, str]] = Non
             experiment_name,
             tags=tags or {}
         )
-        logger.info(f"Created experiment: {experiment_name} (ID: {experiment_id})")
+        logger.info(
+            f"Created experiment: {experiment_name} (ID: {experiment_id})")
         return experiment_id
     except Exception as e:
         # Experiment might already exist
         experiment = mlflow.get_experiment_by_name(experiment_name)
         if experiment:
-            logger.info(f"Using existing experiment: {experiment_name} (ID: {experiment.experiment_id})")
+            logger.info(
+                f"Using existing experiment: {experiment_name} (ID: {experiment.experiment_id})")
             return experiment.experiment_id
         else:
             logger.error(f"Failed to create experiment {experiment_name}: {e}")
@@ -75,13 +78,13 @@ def register_model(
 ) -> Any:
     """
     Register model in MLflow Model Registry
-    
+
     Args:
         model_name: Name of the model
         model_uri: URI of the model
         tags: Optional tags
         description: Optional description
-        
+
     Returns:
         Registered model version
     """
@@ -91,7 +94,7 @@ def register_model(
             name=model_name,
             tags=tags or {}
         )
-        
+
         # Add description if provided
         if description:
             client = get_client()
@@ -100,8 +103,9 @@ def register_model(
                 version=model_version.version,
                 description=description
             )
-        
-        logger.info(f"Registered model {model_name} version {model_version.version}")
+
+        logger.info(
+            f"Registered model {model_name} version {model_version.version}")
         return model_version
     except Exception as e:
         logger.error(f"Failed to register model {model_name}: {e}")
@@ -116,7 +120,7 @@ def transition_model_stage(
 ):
     """
     Transition model to a different stage
-    
+
     Args:
         model_name: Name of the model
         version: Model version
@@ -140,11 +144,11 @@ def transition_model_stage(
 def load_model(model_name: str, stage: str = "Production"):
     """
     Load model from MLflow registry
-    
+
     Args:
         model_name: Name of the model
         stage: Stage to load from (Staging, Production)
-        
+
     Returns:
         Loaded model
     """
@@ -161,11 +165,11 @@ def load_model(model_name: str, stage: str = "Production"):
 def get_latest_version(model_name: str, stage: str = "Production") -> Optional[str]:
     """
     Get latest version of a model in a specific stage
-    
+
     Args:
         model_name: Name of the model
         stage: Stage to check (Staging, Production)
-        
+
     Returns:
         Latest version number or None
     """
@@ -194,7 +198,7 @@ EXPERIMENTS = {
 def setup_experiments():
     """Create all required experiments"""
     init_mlflow()
-    
+
     for model_key, experiment_name in EXPERIMENTS.items():
         create_experiment(
             experiment_name,
@@ -204,7 +208,7 @@ def setup_experiments():
                 "version": "1.0"
             }
         )
-    
+
     logger.info("All experiments set up successfully")
 
 
