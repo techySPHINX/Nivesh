@@ -180,18 +180,20 @@ def load_model(model_name: str, version: str = "production"):
         return models_cache[cache_key]
 
     track_cache_access("model", hit=False)
-    
+
     try:
         start_time = time.time()
         model_uri = f"models:/{model_name}/{version}"
         logger.info(f"Loading model from MLflow: {model_uri}")
         model = mlflow.pyfunc.load_model(model_uri)
         models_cache[cache_key] = model
-        
+
         load_time = time.time() - start_time
-        health_monitor.record_load(model_name, success=True, load_time=load_time)
-        logger.info(f"Model loaded successfully: {cache_key} in {load_time:.2f}s")
-        
+        health_monitor.record_load(
+            model_name, success=True, load_time=load_time)
+        logger.info(
+            f"Model loaded successfully: {cache_key} in {load_time:.2f}s")
+
         return model
     except Exception as e:
         health_monitor.record_load(model_name, success=False, load_time=0)
@@ -318,7 +320,7 @@ async def predict_intent(
     """
     start_time = time.time()
     model_name = 'intent_classifier'
-    
+
     try:
         prediction_counter.labels(model_name=model_name).inc()
 
@@ -361,11 +363,11 @@ async def predict_intent(
 
         # Cache result
         set_cached_prediction(cache_key, response, ttl=3600)
-        
+
         # Track prediction
         latency = time.time() - start_time
         health_monitor.record_prediction(model_name, latency, success=True)
-        
+
         tracker = get_prediction_tracker(model_name)
         tracker.log_prediction(
             input_data={"query": query[:100]},  # Store truncated for privacy

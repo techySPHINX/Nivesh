@@ -111,7 +111,7 @@ circuit_breaker_failures = Counter(
 def track_prediction(model_name: str):
     """
     Decorator to track prediction metrics.
-    
+
     Usage:
         @track_prediction("intent_classifier")
         def predict(query: str):
@@ -122,18 +122,18 @@ def track_prediction(model_name: str):
         def wrapper(*args, **kwargs):
             start_time = time.time()
             status = "success"
-            
+
             try:
                 result = func(*args, **kwargs)
-                
+
                 # Track confidence if available
                 if isinstance(result, dict) and 'confidence' in result:
                     prediction_confidence.labels(
                         model_name=model_name
                     ).observe(result['confidence'])
-                
+
                 return result
-                
+
             except Exception as e:
                 status = "error"
                 logger.error(
@@ -141,26 +141,26 @@ def track_prediction(model_name: str):
                     exc_info=True
                 )
                 raise
-                
+
             finally:
                 # Track latency
                 duration = time.time() - start_time
                 prediction_latency.labels(
                     model_name=model_name
                 ).observe(duration)
-                
+
                 # Track total predictions
                 prediction_total.labels(
                     model_name=model_name,
                     status=status
                 ).inc()
-                
+
                 # Log slow predictions
                 if duration > 1.0:
                     logger.warning(
                         f"Slow prediction in {model_name}: {duration:.2f}s"
                     )
-        
+
         return wrapper
     return decorator
 
@@ -168,7 +168,7 @@ def track_prediction(model_name: str):
 def track_feature_retrieval(feature_type: str):
     """
     Decorator to track feature retrieval metrics.
-    
+
     Usage:
         @track_feature_retrieval("user_features")
         def get_features(user_id: str):
@@ -178,24 +178,24 @@ def track_feature_retrieval(feature_type: str):
         @wraps(func)
         def wrapper(*args, **kwargs):
             start_time = time.time()
-            
+
             try:
                 result = func(*args, **kwargs)
-                
+
                 # Track not found
                 if result is None:
                     feature_not_found.labels(
                         feature_type=feature_type
                     ).inc()
-                
+
                 return result
-                
+
             finally:
                 duration = time.time() - start_time
                 feature_retrieval_latency.labels(
                     feature_type=feature_type
                 ).observe(duration)
-        
+
         return wrapper
     return decorator
 
@@ -206,12 +206,12 @@ def track_feature_retrieval(feature_type: str):
 
 class PredictionTracker:
     """Track predictions for drift detection and monitoring"""
-    
+
     def __init__(self, model_name: str):
         self.model_name = model_name
         self.predictions = []
         self.max_history = 1000
-    
+
     def log_prediction(
         self,
         input_data: Dict[str, Any],
@@ -221,7 +221,7 @@ class PredictionTracker:
     ):
         """
         Log a prediction for monitoring and drift detection.
-        
+
         Args:
             input_data: Input features (sanitized)
             prediction: Prediction results
@@ -236,13 +236,13 @@ class PredictionTracker:
             "latency": latency,
             "confidence": prediction.get('confidence', None)
         }
-        
+
         self.predictions.append(record)
-        
+
         # Keep only recent predictions
         if len(self.predictions) > self.max_history:
             self.predictions = self.predictions[-self.max_history:]
-        
+
         # Log structured record
         logger.info(
             "prediction_logged",
@@ -253,11 +253,11 @@ class PredictionTracker:
                 "timestamp": record["timestamp"]
             }
         )
-    
+
     def _summarize_input(self, input_data: Dict[str, Any]) -> Dict[str, Any]:
         """Summarize input data for logging (avoid storing large data)"""
         summary = {}
-        
+
         for key, value in input_data.items():
             if isinstance(value, str):
                 summary[key] = f"str(len={len(value)})"
@@ -267,25 +267,25 @@ class PredictionTracker:
                 summary[key] = f"dict(keys={len(value)})"
             else:
                 summary[key] = type(value).__name__
-        
+
         return summary
-    
+
     def get_recent_predictions(self, n: int = 100) -> list:
         """Get N most recent predictions"""
         return self.predictions[-n:]
-    
+
     def get_statistics(self) -> Dict[str, Any]:
         """Get prediction statistics"""
         if not self.predictions:
             return {}
-        
+
         confidences = [
             p['confidence'] for p in self.predictions
             if p.get('confidence') is not None
         ]
-        
+
         latencies = [p['latency'] for p in self.predictions]
-        
+
         return {
             "total_predictions": len(self.predictions),
             "avg_confidence": sum(confidences) / len(confidences) if confidences else None,
@@ -300,10 +300,10 @@ class PredictionTracker:
 
 class ModelHealthMonitor:
     """Monitor model health and performance"""
-    
+
     def __init__(self):
         self.model_states = {}
-    
+
     def register_model(self, model_name: str):
         """Register a model for monitoring"""
         self.model_states[model_name] = {
@@ -315,15 +315,15 @@ class ModelHealthMonitor:
             "avg_latency": 0.0
         }
         logger.info(f"Registered model for monitoring: {model_name}")
-    
+
     def record_load(self, model_name: str, success: bool, load_time: float):
         """Record model loading"""
         if model_name not in self.model_states:
             self.register_model(model_name)
-        
+
         self.model_states[model_name]["loaded"] = success
         self.model_states[model_name]["load_time"] = load_time
-        
+
         if not success:
             model_load_failures.labels(model_name=model_name).inc()
             logger.error(f"Model load failed: {model_name}")
@@ -332,7 +332,7 @@ class ModelHealthMonitor:
             active_models.set(sum(
                 1 for s in self.model_states.values() if s["loaded"]
             ))
-    
+
     def record_prediction(
         self,
         model_name: str,
@@ -342,31 +342,31 @@ class ModelHealthMonitor:
         """Record a prediction"""
         if model_name not in self.model_states:
             self.register_model(model_name)
-        
+
         state = self.model_states[model_name]
         state["last_prediction"] = datetime.utcnow()
         state["prediction_count"] += 1
-        
+
         if not success:
             state["error_count"] += 1
-        
+
         # Update rolling average latency
         n = state["prediction_count"]
         state["avg_latency"] = (
             (state["avg_latency"] * (n - 1) + latency) / n
         )
-    
+
     def get_health_status(self, model_name: str) -> Dict[str, Any]:
         """Get model health status"""
         if model_name not in self.model_states:
             return {"status": "unknown"}
-        
+
         state = self.model_states[model_name]
         error_rate = (
             state["error_count"] / state["prediction_count"]
             if state["prediction_count"] > 0 else 0
         )
-        
+
         # Determine health status
         if not state["loaded"]:
             status = "not_loaded"
@@ -376,7 +376,7 @@ class ModelHealthMonitor:
             status = "degraded"
         else:
             status = "healthy"
-        
+
         return {
             "status": status,
             "loaded": state["loaded"],
@@ -386,7 +386,7 @@ class ModelHealthMonitor:
             "avg_latency": state["avg_latency"],
             "last_prediction": state["last_prediction"].isoformat() if state["last_prediction"] else None
         }
-    
+
     def get_all_health_status(self) -> Dict[str, Dict[str, Any]]:
         """Get health status for all models"""
         return {
@@ -440,7 +440,7 @@ def track_invalid_input(model_name: str, error_type: str):
 def update_circuit_breaker_state(service_name: str, state: str):
     """
     Update circuit breaker state metric.
-    
+
     Args:
         service_name: Name of the service
         state: State ('closed', 'open', 'half_open')
@@ -450,7 +450,7 @@ def update_circuit_breaker_state(service_name: str, state: str):
         'open': 1,
         'half_open': 2
     }
-    
+
     circuit_breaker_state.labels(
         service_name=service_name
     ).set(state_map.get(state, 0))
