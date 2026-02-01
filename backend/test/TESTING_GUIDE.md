@@ -4,7 +4,7 @@
 
 Your `.env` file already contains:
 ```env
-GEMINI_API_KEY=AIzaSyA9hkwLQSzBYqkguLK_2avVRFpl09EQnOo
+GEMINI_API_KEY="Your API Key"
 ```
 
 ## 📦 Dependencies Installed
