@@ -2,7 +2,7 @@
 
 ## Complete Development Guide & Technical Blueprint
 
-⚠️ **PROPRIETARY DOCUMENTATION** - Copyright © 2026 Prateek (techySPHINX). All Rights Reserved.  
+⚠️ **PROPRIETARY DOCUMENTATION** - Copyright © 2026 Jagan (techySPHINX). All Rights Reserved.  
 This document is part of proprietary software. See [LICENSE](LICENSE) for terms.
 
 **AI-Native Financial Reasoning Platform**
