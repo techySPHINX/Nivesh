@@ -31,6 +31,7 @@ model User {
   investments       Investment[]
   goals             Goal[]
   alerts            Alert[]
+  budgets           Budget[]
   
   // Metadata
   createdAt         DateTime    @default(now())
@@ -293,6 +294,44 @@ model Alert {
   @@map("alerts")
   @@index([userId, createdAt])
   @@index([isRead, isDismissed])
+}
+
+// ==========================================
+// Budgets
+// ==========================================
+model Budget {
+  id                String      @id @default(uuid())
+  userId            String
+  user              User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Budget details
+  category          String      // FOOD, TRANSPORT, ENTERTAINMENT, SHOPPING, UTILITIES, HEALTHCARE, EDUCATION, etc.
+  amount            Decimal     @db.Decimal(15, 2)
+  currency          String      @default("INR")
+  period            String      // DAILY, WEEKLY, MONTHLY, YEARLY
+  
+  // Timeline
+  startDate         DateTime
+  endDate           DateTime
+  
+  // Status
+  isActive          Boolean     @default(true)
+  isRecurring       Boolean     @default(false)
+  alertThreshold    Int         @default(90) // Alert when spending reaches this % of budget
+  
+  // Tracking
+  currentSpending   Decimal     @default(0) @db.Decimal(15, 2)
+  lastCalculatedAt  DateTime?
+  
+  // Metadata
+  metadata          Json?
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+  
+  @@map("budgets")
+  @@index([userId, period, isActive])
+  @@index([category])
+  @@index([endDate])
 }
 
 // ==========================================
