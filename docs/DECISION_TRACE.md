@@ -1,4 +1,4 @@
-# AI Decision Trace & Explainability
+git # AI Decision Trace & Explainability
 
 > **Complete audit trail for every AI recommendation in Nivesh - Your AI Financial Strategist**
 

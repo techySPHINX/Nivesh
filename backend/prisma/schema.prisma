@@ -537,3 +537,85 @@ model UserPreferences {
   @@map("user_preferences")
 }
 
+// ==========================================
+// ML Model Registry & MLOps
+// ==========================================
+model ModelRegistry {
+  id                    String      @id @default(uuid())
+  modelName             String      // intent_classifier, financial_ner, etc.
+  modelType             String      // classification, regression, ner
+  version               String      // Semantic versioning (v1.0.0, v1.1.0)
+  framework             String?     // pytorch, sklearn, spacy, xgboost
+  artifactPath          String      // S3/GCS path or local path
+  metrics               Json?       // {accuracy, f1, auc, etc.}
+  trainingDataVersion   String?
+  status                String      @default("staging") // staging, production, archived, failed
+  createdBy             String?
+  deployedAt            DateTime?
+  
+  // Relationships
+  deployments           ModelDeployment[]
+  predictions           ModelPrediction[]
+  
+  // Metadata
+  createdAt             DateTime    @default(now())
+  updatedAt             DateTime    @updatedAt
+  
+  @@unique([modelName, version])
+  @@map("model_registry")
+  @@index([modelName, status])
+  @@index([createdAt])
+}
+
+model ModelDeployment {
+  id                    String      @id @default(uuid())
+  modelId               String
+  model                 ModelRegistry @relation(fields: [modelId], references: [id])
+  environment           String      // development, staging, production
+  endpointUrl           String?
+  trafficPercentage     Int         @default(100) // For canary deployments
+  status                String      @default("active") // active, paused, rolled_back
+  
+  // Metadata
+  deployedAt            DateTime    @default(now())
+  updatedAt             DateTime    @updatedAt
+  
+  @@map("model_deployments")
+  @@index([modelId, environment])
+  @@index([status])
+}
+
+model ModelPrediction {
+  id                    String      @id @default(uuid())
+  modelId               String
+  model                 ModelRegistry @relation(fields: [modelId], references: [id])
+  userId                String?
+  inputData             Json        // Input features
+  prediction            Json        // Model output
+  confidence            Float?
+  actualOutcome         Json?       // Filled later for feedback loop
+  latencyMs             Int?
+  
+  // Metadata
+  createdAt             DateTime    @default(now())
+  
+  @@map("model_predictions")
+  @@index([modelId, createdAt])
+  @@index([userId, createdAt])
+}
+
+model TrainingDataset {
+  id                    String      @id @default(uuid())
+  datasetName           String
+  modelType             String      // intent_classification, ner, credit_risk
+  dataSource            String?     // user_queries, transactions, feedback
+  size                  Int?
+  s3Path                String?
+  
+  // Metadata
+  createdAt             DateTime    @default(now())
+  
+  @@map("training_datasets")
+  @@index([modelType])
+  @@index([createdAt])
+}

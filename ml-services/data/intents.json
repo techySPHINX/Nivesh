@@ -1,0 +1,170 @@
+[
+  {
+    "query": "Can I afford a ₹50L loan?",
+    "intent": "affordability_check"
+  },
+  {
+    "query": "Will I be able to take a loan of 30 lakhs?",
+    "intent": "affordability_check"
+  },
+  {
+    "query": "Can I afford to buy a car worth ₹15L?",
+    "intent": "affordability_check"
+  },
+  {
+    "query": "Help me save for house down payment",
+    "intent": "goal_planning"
+  },
+  {
+    "query": "I want to save ₹10L in 2 years",
+    "intent": "goal_planning"
+  },
+  {
+    "query": "How can I plan for my child's education?",
+    "intent": "goal_planning"
+  },
+  {
+    "query": "Where is my money going?",
+    "intent": "spending_analysis"
+  },
+  {
+    "query": "Show me my spending patterns",
+    "intent": "spending_analysis"
+  },
+  {
+    "query": "Why did I spend so much this month?",
+    "intent": "spending_analysis"
+  },
+  {
+    "query": "Should I invest in mutual funds?",
+    "intent": "investment_advice"
+  },
+  {
+    "query": "What are good investment options for me?",
+    "intent": "investment_advice"
+  },
+  {
+    "query": "Where should I invest my ₹50000?",
+    "intent": "investment_advice"
+  },
+  {
+    "query": "How can I pay off my credit card debt?",
+    "intent": "debt_management"
+  },
+  {
+    "query": "Help me manage my loans",
+    "intent": "debt_management"
+  },
+  {
+    "query": "Should I consolidate my debts?",
+    "intent": "debt_management"
+  },
+  {
+    "query": "How can I save tax?",
+    "intent": "tax_planning"
+  },
+  {
+    "query": "What are tax saving options under 80C?",
+    "intent": "tax_planning"
+  },
+  {
+    "query": "Show me tax deductions available",
+    "intent": "tax_planning"
+  },
+  {
+    "query": "How much emergency fund do I need?",
+    "intent": "emergency_fund"
+  },
+  {
+    "query": "Do I have enough savings for emergencies?",
+    "intent": "emergency_fund"
+  },
+  {
+    "query": "Help me build an emergency fund",
+    "intent": "emergency_fund"
+  },
+  {
+    "query": "How much should I save for retirement?",
+    "intent": "retirement_planning"
+  },
+  {
+    "query": "Am I on track for retirement?",
+    "intent": "retirement_planning"
+  },
+  {
+    "query": "When can I retire comfortably?",
+    "intent": "retirement_planning"
+  },
+  {
+    "query": "Do I need health insurance?",
+    "intent": "insurance_advice"
+  },
+  {
+    "query": "What insurance should I buy?",
+    "intent": "insurance_advice"
+  },
+  {
+    "query": "Is my life insurance enough?",
+    "intent": "insurance_advice"
+  },
+  {
+    "query": "Show my transactions from last week",
+    "intent": "transaction_query"
+  },
+  {
+    "query": "What did I spend on groceries?",
+    "intent": "transaction_query"
+  },
+  {
+    "query": "Find my Swiggy payments",
+    "intent": "transaction_query"
+  },
+  {
+    "query": "Create a budget for me",
+    "intent": "budget_creation"
+  },
+  {
+    "query": "Help me set spending limits",
+    "intent": "budget_creation"
+  },
+  {
+    "query": "I need a monthly budget plan",
+    "intent": "budget_creation"
+  },
+  {
+    "query": "How can I save more money?",
+    "intent": "savings_strategy"
+  },
+  {
+    "query": "Tips to increase my savings",
+    "intent": "savings_strategy"
+  },
+  {
+    "query": "Where can I cut my expenses?",
+    "intent": "savings_strategy"
+  },
+  {
+    "query": "What are home loan interest rates?",
+    "intent": "loan_inquiry"
+  },
+  {
+    "query": "Should I take a personal loan?",
+    "intent": "loan_inquiry"
+  },
+  {
+    "query": "Compare education loan options",
+    "intent": "loan_inquiry"
+  },
+  {
+    "query": "What is SIP?",
+    "intent": "general_question"
+  },
+  {
+    "query": "Explain compound interest",
+    "intent": "general_question"
+  },
+  {
+    "query": "What is a credit score?",
+    "intent": "general_question"
+  }
+]

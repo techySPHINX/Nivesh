@@ -1,0 +1,92 @@
+# ML Model Performance Alerts
+# Monitors model server performance, errors, and latency
+
+groups:
+  - name: ml_performance
+    interval: 1m
+    rules:
+      # High error rate
+      - alert: HighPredictionErrors
+        expr: rate(ml_prediction_errors_total[5m]) > 0.05
+        for: 5m
+        labels:
+          severity: critical
+          component: ml
+          team: ml-ops
+        annotations:
+          summary: "High error rate on {{ $labels.model_name }}"
+          description: "Model {{ $labels.model_name }} error rate {{ $value }}/sec exceeds threshold 0.05/sec"
+          runbook_url: "https://github.com/nivesh/docs/runbooks/high-errors"
+          action_required: "Check model logs, verify input data quality"
+
+      # High latency
+      - alert: HighPredictionLatency
+        expr: histogram_quantile(0.95, rate(ml_prediction_latency_seconds_bucket[5m])) > 1.0
+        for: 5m
+        labels:
+          severity: warning
+          component: ml
+          team: ml-ops
+        annotations:
+          summary: "High latency on {{ $labels.model_name }}"
+          description: "Model {{ $labels.model_name }} P95 latency {{ $value }}s exceeds 1s SLA"
+          runbook_url: "https://github.com/nivesh/docs/runbooks/high-latency"
+          action_required: "Scale model server, check CPU/memory, optimize model"
+
+      # Very high latency (critical)
+      - alert: CriticalPredictionLatency
+        expr: histogram_quantile(0.95, rate(ml_prediction_latency_seconds_bucket[5m])) > 5.0
+        for: 2m
+        labels:
+          severity: critical
+          component: ml
+          team: ml-ops
+        annotations:
+          summary: "CRITICAL latency on {{ $labels.model_name }}"
+          description: "Model {{ $labels.model_name }} P95 latency {{ $value }}s exceeds critical threshold 5s"
+          runbook_url: "https://github.com/nivesh/docs/runbooks/high-latency"
+          action_required: "IMMEDIATE: Check for model hang, restart service if needed"
+
+      # Low request volume (possible outage)
+      - alert: LowPredictionVolume
+        expr: rate(ml_predictions_total[10m]) < 0.01
+        for: 15m
+        labels:
+          severity: warning
+          component: ml
+          team: ml-ops
+        annotations:
+          summary: "Low prediction volume on {{ $labels.model_name }}"
+          description: "Model {{ $labels.model_name }} receiving very low traffic: {{ $value }}/sec"
+          runbook_url: "https://github.com/nivesh/docs/runbooks/low-traffic"
+          action_required: "Check if service is down, verify routing"
+
+      # No requests at all
+      - alert: NoPredictionRequests
+        expr: sum(rate(ml_predictions_total[15m])) by (model_name) == 0
+        for: 20m
+        labels:
+          severity: critical
+          component: ml
+          team: ml-ops
+        annotations:
+          summary: "No prediction requests for {{ $labels.model_name }}"
+          description: "Model {{ $labels.model_name }} has received zero requests in 15 minutes"
+          runbook_url: "https://github.com/nivesh/docs/runbooks/zero-traffic"
+          action_required: "Check service health, verify backend integration"
+
+      # High cache miss rate
+      - alert: HighCacheMissRate
+        expr: |
+          rate(ml_cache_misses_total[5m]) / 
+          (rate(ml_cache_hits_total[5m]) + rate(ml_cache_misses_total[5m])) > 0.8
+        for: 10m
+        labels:
+          severity: warning
+          component: ml
+          team: ml-ops
+        annotations:
+          summary: "High cache miss rate for {{ $labels.model_name }}"
+          description: "Cache miss rate {{ $value }} exceeds 80% - performance degradation possible"
+          runbook_url: "https://github.com/nivesh/docs/runbooks/cache-performance"
+          action_required: "Review cache TTL settings, check query patterns"
