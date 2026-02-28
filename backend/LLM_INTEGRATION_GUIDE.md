@@ -2,7 +2,7 @@
 
 ## Overview
 
-This guide covers the complete implementation of Gemini Pro LLM integration with advanced features including structured output, function calling, streaming responses, prompt management, A/B testing, and safety guardrails.
+This guide covers the complete implementation of Local LLM (Ollama) integration with advanced features including structured output, function calling, streaming responses, prompt management, A/B testing, and safety guardrails.
 
 ## 🚀 Quick Start
 
@@ -24,11 +24,11 @@ New dependencies added:
 Add to your `.env` file:
 
 ```env
-# Gemini API Configuration
-GEMINI_API_KEY=your_gemini_api_key_here
-GEMINI_MODEL=gemini-1.5-pro
-GEMINI_TEMPERATURE=0.3
-GEMINI_MAX_TOKENS=8192
+# Ollama API Configuration
+LLM_OLLAMA_BASE_URL=http://localhost:11434
+LLM_PRIMARY_MODEL=llama3:8b-instruct-q4_K_M
+LLM_TEMPERATURE=0.3
+LLM_MAX_TOKENS=4096
 
 # Frontend URL for WebSocket CORS
 FRONTEND_URL=http://localhost:3000
@@ -58,9 +58,9 @@ pnpm dev
 backend/src/
 ├── core/
 │   └── integrations/
-│       └── gemini/
-│           ├── gemini.service.ts          # Enhanced with streaming, function calling
-│           └── gemini.module.ts
+│       └── ollama/
+│           ├── llm.service.ts          # Enhanced with streaming, function calling
+│           └── llm.module.ts
 │
 └── modules/
     └── ai-reasoning/
@@ -85,9 +85,9 @@ backend/src/
 
 ## 🔧 Core Features Implementation
 
-### 1. Enhanced Gemini Service
+### 1. Enhanced LLM Service
 
-**Location:** `core/integrations/gemini/gemini.service.ts`
+**Location:** `core/integrations/llm/llm.service.ts`
 
 **Features:**
 - ✅ Structured JSON output with Zod schema validation
@@ -110,20 +110,20 @@ const investmentSchema = z.object({
   confidence: z.number(),
 });
 
-const result = await geminiService.generateStructuredOutput(
+const result = await llmService.generateStructuredOutput(
   'Recommend investments for ₹50,000',
   investmentSchema,
 );
 
 // Function Calling
 const tools = functionRegistry.getAllFunctions();
-const response = await geminiService.generateWithFunctionCalling(
+const response = await llmService.generateWithFunctionCalling(
   'Calculate EMI for ₹1000000 at 8.5% for 20 years',
   tools,
 );
 
 // Streaming
-const stream = geminiService.generateContentStream(prompt);
+const stream = llmService.generateContentStream(prompt);
 for await (const chunk of stream) {
   console.log(chunk.text);
 }
@@ -503,8 +503,8 @@ GROUP BY promptId;
 ```typescript
 // Estimate cost per execution
 const tokenCost = {
-  'gemini-1.5-pro': { input: 0.0025, output: 0.01 }, // per 1K tokens
-  'gemini-1.5-flash': { input: 0.00025, output: 0.001 },
+  'llama3:8b-instruct-q4_K_M': { input: 0.0025, output: 0.01 }, // per 1K tokens
+  'mistral:7b-instruct-q4_K_M': { input: 0.00025, output: 0.001 },
 };
 
 const calculateCost = (promptTokens, outputTokens, model) => {
@@ -606,7 +606,7 @@ private readonly harmfulTerms = [
 ```
 
 **3. High Latency**
-- Use `gemini-1.5-flash` for simple queries
+- Use `mistral:7b-instruct-q4_K_M` for simple queries
 - Implement prompt caching (3-hour TTL)
 - Reduce `maxOutputTokens`
 
@@ -647,7 +647,7 @@ if (similar.length > 0) {
 ```typescript
 // Use Flash for simple queries
 const isSimple = query.length < 100 && !query.includes('analyze');
-const model = isSimple ? 'gemini-1.5-flash' : 'gemini-1.5-pro';
+const model = isSimple ? 'mistral:7b-instruct-q4_K_M' : 'llama3:8b-instruct-q4_K_M';
 ```
 
 ## 🔐 Security Best Practices

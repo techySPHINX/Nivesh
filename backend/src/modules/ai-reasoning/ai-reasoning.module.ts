@@ -12,7 +12,7 @@ import { CqrsModule } from '@nestjs/cqrs';
 import { RAGPipelineModule } from '../rag-pipeline/rag-pipeline.module';
 
 // Core Integrations
-import { GeminiModule } from '../../core/integrations/gemini/gemini.module';
+import { LLMModule } from '../../core/integrations/llm/llm.module';
 
 // Domain Services
 import { FinancialContextBuilderService } from './domain/services/context-builder.service';
@@ -21,7 +21,7 @@ import { FunctionRegistry } from './domain/services/function-registry.service';
 import { FunctionExecutorService } from './domain/services/function-executor.service';
 
 // Infrastructure Services
-import { GeminiReasoningService } from './infrastructure/services/gemini-reasoning.service';
+import { LLMReasoningService } from './infrastructure/services/llm-reasoning.service';
 import { PromptTemplateService } from './infrastructure/services/prompt-template.service';
 import { PromptManagementService } from './infrastructure/services/prompt-management.service';
 import { SafetyGuardrailsService } from './infrastructure/services/safety-guardrails.service';
@@ -74,7 +74,7 @@ const DomainServices = [
 ];
 
 const InfrastructureServices = [
-  GeminiReasoningService,
+  LLMReasoningService,
   PromptTemplateService,
   PromptManagementService,
   SafetyGuardrailsService,
@@ -117,7 +117,7 @@ const Gateways = [
   imports: [
     CqrsModule,
     RAGPipelineModule, // Import RAG capabilities
-    GeminiModule, // Import Gemini integration
+    LLMModule, // Import Local LLM integration (LLaMA-3 / Mistral-7B)
   ],
   controllers: [
     ReasoningController,
@@ -145,7 +145,7 @@ const Gateways = [
   exports: [
     FinancialContextBuilderService,
     DecisionEngineService,
-    GeminiReasoningService,
+    LLMReasoningService,
     PromptManagementService,
     FunctionRegistry,
     FunctionExecutorService,

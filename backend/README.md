@@ -160,8 +160,9 @@ KAFKA_BROKERS=localhost:29092
 JWT_SECRET=your-secret-key
 FIREBASE_PROJECT_ID=your-project-id
 
-# AI
-GEMINI_API_KEY=your-api-key
+# AI - Local LLM (no API key needed!)
+LLM_OLLAMA_BASE_URL=http://localhost:11434
+LLM_PRIMARY_MODEL=llama3:8b-instruct-q4_K_M
 ```
 
 ## 📊 API Documentation
@@ -220,7 +221,7 @@ docker-compose down -v
 - **Databases**: PostgreSQL, Neo4j, MongoDB, Redis, ClickHouse
 - **Messaging**: Apache Kafka
 - **ORM**: Prisma
-- **AI/ML**: Google Gemini Pro, Vertex AI
+- **AI/ML**: LLaMA-3-8B, Mistral-7B (local via Ollama)
 
 ## 📚 Documentation
 

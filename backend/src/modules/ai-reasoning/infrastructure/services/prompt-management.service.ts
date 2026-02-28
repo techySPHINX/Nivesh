@@ -157,7 +157,7 @@ export class PromptManagementService {
         topP: dto.topP ?? 0.9,
         topK: dto.topK ?? 40,
         maxTokens: dto.maxTokens ?? 2048,
-        model: dto.model ?? 'gemini-1.5-pro',
+        model: dto.model ?? 'llama3:8b-instruct-q4_K_M',
         status: 'draft',
         createdBy: dto.createdBy,
       },

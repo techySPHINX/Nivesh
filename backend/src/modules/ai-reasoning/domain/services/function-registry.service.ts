@@ -1,5 +1,14 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { FunctionDeclaration } from '@google/generative-ai';
+
+/**
+ * Function declaration interface for LLM function calling.
+ * Compatible with Ollama/OpenAI-style tool definitions.
+ */
+export interface FunctionDeclaration {
+  name: string;
+  description: string;
+  parameters: Record<string, any>;
+}
 
 /**
  * Financial Functions Registry
@@ -14,7 +23,7 @@ export class FunctionRegistry {
   private readonly logger = new Logger(FunctionRegistry.name);
 
   /**
-   * Get all registered functions for Gemini
+   * Get all registered functions for local LLM function calling
    */
   getAllFunctions(): FunctionDeclaration[] {
     return [

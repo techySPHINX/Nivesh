@@ -388,7 +388,7 @@ describe('LLM Integration E2E Tests', () => {
     });
 
     it('should handle retry on rate limit (429)', async () => {
-      // This test requires mocking Gemini API to return 429
+      // This test requires mocking local LLM (Ollama) to return 429
       // For now, we just verify the service has retry logic
       expect(true).toBe(true);
     });

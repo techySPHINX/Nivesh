@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { GeminiService, StreamChunk } from '../../../../core/integrations/gemini/gemini.service';
+import { LLMService, StreamChunk } from '../../../../core/integrations/llm/llm.service';
 
 export interface StreamOptions {
   userId: string;
@@ -12,7 +12,7 @@ export interface StreamOptions {
  * Streaming Response Service
  * 
  * Handles:
- * - Real-time streaming from Gemini
+ * - Real-time streaming from local LLM (LLaMA-3 / Mistral-7B)
  * - Sentence-based chunking for smooth UX
  * - Buffer management and error recovery
  */
@@ -20,17 +20,17 @@ export interface StreamOptions {
 export class StreamingResponseService {
   private readonly logger = new Logger(StreamingResponseService.name);
 
-  constructor(private readonly geminiService: GeminiService) {}
+  constructor(private readonly llmService: LLMService) {}
 
   /**
-   * Stream Gemini response with sentence-based chunking
+   * Stream LLM response with sentence-based chunking
    */
   async *streamResponse(
     prompt: string,
     config?: any,
   ): AsyncGenerator<string, void, unknown> {
     try {
-      const stream = this.geminiService.generateContentStream(prompt, config);
+      const stream = this.llmService.generateContentStream(prompt, config);
 
       let buffer = '';
       let chunkCount = 0;

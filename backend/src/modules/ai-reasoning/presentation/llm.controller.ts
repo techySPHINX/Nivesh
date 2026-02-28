@@ -10,7 +10,7 @@ import {
   Logger,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
-import { GeminiService } from '../../../core/integrations/gemini/gemini.service';
+import { LLMService } from '../../../core/integrations/llm/llm.service';
 import { PromptManagementService, CreatePromptDto } from '../infrastructure/services/prompt-management.service';
 import { SafetyGuardrailsService } from '../infrastructure/services/safety-guardrails.service';
 import { FunctionExecutorService } from '../domain/services/function-executor.service';
@@ -73,7 +73,7 @@ export class LLMController {
   private readonly logger = new Logger(LLMController.name);
 
   constructor(
-    private readonly geminiService: GeminiService,
+    private readonly llmService: LLMService,
     private readonly promptMgmt: PromptManagementService,
     private readonly safetyService: SafetyGuardrailsService,
     private readonly functionExecutor: FunctionExecutorService,
@@ -113,7 +113,7 @@ export class LLMController {
       );
 
       // Generate response
-      const response = await this.geminiService.generateText(
+      const response = await this.llmService.generateText(
         dto.query,
         {
           model: promptConfig.model,
@@ -154,7 +154,7 @@ export class LLMController {
       // Convert plain object to Zod schema
       const zodSchema = z.object(dto.schema);
 
-      const result = await this.geminiService.generateStructuredOutput(
+      const result = await this.llmService.generateStructuredOutput(
         dto.query,
         zodSchema,
       );
@@ -178,7 +178,7 @@ export class LLMController {
     try {
       const tools = this.functionRegistry.getAllFunctions();
 
-      const result = await this.geminiService.generateWithFunctionCalling(
+      const result = await this.llmService.generateWithFunctionCalling(
         dto.query,
         tools,
       );

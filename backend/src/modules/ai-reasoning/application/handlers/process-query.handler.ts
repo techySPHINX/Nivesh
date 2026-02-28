@@ -3,7 +3,7 @@ import { Inject, Logger } from '@nestjs/common';
 import { ProcessQueryCommand } from '../commands/process-query.command';
 import { FinancialContextBuilderService } from '../../domain/services/context-builder.service';
 import { DecisionEngineService } from '../../domain/services/decision-engine.service';
-import { GeminiReasoningService } from '../../infrastructure/services/gemini-reasoning.service';
+import { LLMReasoningService } from '../../infrastructure/services/llm-reasoning.service';
 import { PromptTemplateService } from '../../infrastructure/services/prompt-template.service';
 import { Decision, ConfidenceLevel } from '../../domain/value-objects/decision.vo';
 import {
@@ -35,7 +35,7 @@ export class ProcessQueryHandler implements ICommandHandler<ProcessQueryCommand>
   constructor(
     private readonly contextBuilder: FinancialContextBuilderService,
     private readonly decisionEngine: DecisionEngineService,
-    private readonly geminiService: GeminiReasoningService,
+    private readonly llmService: LLMReasoningService,
     private readonly promptService: PromptTemplateService,
     private readonly semanticRetriever: SemanticRetrieverService,
     private readonly ragContextBuilder: RAGContextBuilder,
@@ -192,8 +192,8 @@ export class ProcessQueryHandler implements ICommandHandler<ProcessQueryCommand>
     // Get system prompt
     const systemPrompt = this.promptService.getSystemPrompt();
 
-    // Call Gemini API
-    const response = await this.geminiService.generateResponse({
+    // Call Local LLM (LLaMA-3 / Mistral-7B via Ollama)
+    const response = await this.llmService.generateResponse({
       systemPrompt,
       userPrompt: finalPrompt,
       temperature: 0.7,
@@ -207,13 +207,13 @@ export class ProcessQueryHandler implements ICommandHandler<ProcessQueryCommand>
     }
 
     // Validate response
-    const validation = this.geminiService.validateResponse(response.content);
+    const validation = this.llmService.validateResponse(response.content);
     if (!validation.valid) {
       throw new Error(`Invalid AI response: ${validation.reason}`);
     }
 
     // Check for financial warnings
-    const hasWarnings = this.geminiService.hasFinancialWarnings(response.content);
+    const hasWarnings = this.llmService.hasFinancialWarnings(response.content);
 
     // Parse AI response into Decision structure
     const decision = Decision.createFromAI({
