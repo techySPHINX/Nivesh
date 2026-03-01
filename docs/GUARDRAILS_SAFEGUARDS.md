@@ -72,7 +72,7 @@ _"It's better to refuse than to give wrong advice."_
                   │ PASS
                   ▼
         ┌─────────────────────────────┐
-        │      LLM (Gemini Pro)        │
+        │      LLM (LLaMA-3-8B-Instruct)        │
         │  + System Prompt Rules       │
         └─────────┬───────────────────┘
                   │

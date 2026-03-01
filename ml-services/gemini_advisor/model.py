@@ -1,78 +1,87 @@
 """
-Fine-tuned Gemini Pro Integration
+Local LLM Financial Advisor
 
-Integrates Google's Gemini Pro model for Indian financial advisory.
+Integration with local LLM models (LLaMA-3-8B-Instruct and Mistral-7B-Instruct)
+via Ollama for Indian financial advisory.
+
 Supports:
 - Financial advice generation with Indian context
 - Contextual responses using RAG
-- Safety filters for financial recommendations
+- Dual model support (primary + fallback)
 - Response caching
 - Token usage tracking
+- 100% free & local - no API keys needed
 """
 
 import json
 import logging
+import os
 from pathlib import Path
 from typing import Dict, List, Optional
 
-import google.generativeai as genai
-from google.generativeai.types import HarmCategory, HarmBlockThreshold
+import requests
 
 logger = logging.getLogger(__name__)
 
 
-class GeminiFinancialAdvisor:
-    """Fine-tuned Gemini Pro for Indian financial advisory."""
+class LocalFinancialAdvisor:
+    """Local LLM-powered financial advisor for Indian personal finance.
+    
+    Uses LLaMA-3-8B-Instruct (primary) or Mistral-7B-Instruct (fallback)
+    running locally via Ollama. Quantized to 4-bit (Q4_K_M) to fit 8GB VRAM.
+    """
+    
+    # Model presets
+    MODELS = {
+        'llama3': 'llama3:8b-instruct-q4_K_M',
+        'mistral': 'mistral:7b-instruct-q4_K_M',
+    }
     
     def __init__(
         self,
-        api_key: str,
-        model_name: str = "gemini-pro",
+        ollama_base_url: str = None,
+        primary_model: str = None,
+        fallback_model: str = None,
         temperature: float = 0.7,
-        max_tokens: int = 1024
+        max_tokens: int = 1024,
     ):
         """
-        Initialize Gemini advisor.
+        Initialize local financial advisor.
         
         Args:
-            api_key: Google API key
-            model_name: Model identifier (gemini-pro or fine-tuned model ID)
+            ollama_base_url: Ollama server URL (default: http://localhost:11434)
+            primary_model: Primary model name (default: llama3:8b-instruct-q4_K_M)
+            fallback_model: Fallback model name (default: mistral:7b-instruct-q4_K_M)
             temperature: Sampling temperature (0-1)
             max_tokens: Maximum response tokens
         """
-        self.api_key = api_key
-        self.model_name = model_name
+        self.ollama_base_url = ollama_base_url or os.getenv(
+            'LLM_OLLAMA_BASE_URL', 'http://localhost:11434'
+        )
+        self.primary_model = primary_model or os.getenv(
+            'LLM_PRIMARY_MODEL', self.MODELS['llama3']
+        )
+        self.fallback_model = fallback_model or os.getenv(
+            'LLM_FALLBACK_MODEL', self.MODELS['mistral']
+        )
+        self.active_model = self.primary_model
         self.temperature = temperature
         self.max_tokens = max_tokens
-        
-        # Configure Gemini
-        genai.configure(api_key=api_key)
-        
-        # Initialize model
-        self.model = genai.GenerativeModel(model_name)
         
         # System instruction for financial context
         self.system_instruction = """You are a knowledgeable financial advisor specializing in Indian personal finance. 
 You provide advice on budgeting, investments, savings, loans, credit, and financial planning tailored to the Indian context.
 
 Key guidelines:
-- Use Indian currency (₹) and financial terms
-- Reference Indian financial instruments (PPF, EPF, NPS, mutual funds, fixed deposits)
-- Consider Indian tax laws and regulations
+- Use Indian currency (INR / ₹) and financial terms
+- Reference Indian financial instruments (PPF, EPF, NPS, mutual funds, fixed deposits, ELSS)
+- Consider Indian tax laws and regulations (Section 80C, 80D, HRA, etc.)
 - Be conservative with investment recommendations
 - Always include risk warnings
-- Suggest diversification
+- Suggest diversification across equity, debt, and gold
 - Never guarantee returns or outcomes
-- Recommend consulting certified financial planners for complex situations
+- Recommend consulting SEBI-registered financial planners for complex situations
 """
-        
-        # Safety settings
-        self.safety_settings = {
-            HarmCategory.HARM_CATEGORY_HATE_SPEECH: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
-            HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
-            HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
-            HarmCategory.HARM_CATEGORY_HARASSMENT: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
-        }
         
         self.conversation_history = []
         self.usage_stats = {
@@ -81,6 +90,95 @@ Key guidelines:
             'total_tokens': 0,
         }
         
+        # Check connectivity
+        self._check_ollama_health()
+    
+    def _check_ollama_health(self) -> bool:
+        """Check if Ollama server is available and models are loaded."""
+        try:
+            response = requests.get(f"{self.ollama_base_url}/api/tags", timeout=5)
+            if response.status_code == 200:
+                data = response.json()
+                available = [m['name'] for m in data.get('models', [])]
+                logger.info(f"Ollama connected. Available models: {available}")
+                
+                if any(m.startswith('llama3') for m in available):
+                    self.active_model = self.primary_model
+                    logger.info(f"Primary model active: {self.primary_model}")
+                elif any(m.startswith('mistral') for m in available):
+                    self.active_model = self.fallback_model
+                    logger.info(f"Fallback model active: {self.fallback_model}")
+                else:
+                    logger.warning(
+                        "No LLaMA-3 or Mistral models found. "
+                        "Run: ollama pull llama3:8b-instruct-q4_K_M"
+                    )
+                return True
+            return False
+        except requests.ConnectionError:
+            logger.warning(
+                f"Ollama not available at {self.ollama_base_url}. "
+                "Ensure Ollama is running: https://ollama.ai"
+            )
+            return False
+        except Exception as e:
+            logger.warning(f"Ollama health check failed: {e}")
+            return False
+    
+    def _call_ollama(
+        self,
+        messages: List[Dict[str, str]],
+        model: str = None,
+        temperature: float = None,
+        max_tokens: int = None,
+    ) -> Dict:
+        """
+        Make a request to the Ollama chat API.
+        
+        Args:
+            messages: List of message dicts with 'role' and 'content'
+            model: Model to use (defaults to active_model)
+            temperature: Temperature override
+            max_tokens: Max tokens override
+            
+        Returns:
+            Response dict from Ollama
+        """
+        payload = {
+            'model': model or self.active_model,
+            'messages': messages,
+            'stream': False,
+            'options': {
+                'temperature': temperature or self.temperature,
+                'num_predict': max_tokens or self.max_tokens,
+                'top_p': 0.9,
+                'top_k': 40,
+            }
+        }
+        
+        try:
+            response = requests.post(
+                f"{self.ollama_base_url}/api/chat",
+                json=payload,
+                timeout=120,
+            )
+            response.raise_for_status()
+            return response.json()
+        except requests.exceptions.RequestException as e:
+            if (model or self.active_model) == self.primary_model:
+                logger.warning(
+                    f"Primary model failed ({e}). Trying fallback: {self.fallback_model}"
+                )
+                payload['model'] = self.fallback_model
+                response = requests.post(
+                    f"{self.ollama_base_url}/api/chat",
+                    json=payload,
+                    timeout=120,
+                )
+                response.raise_for_status()
+                return response.json()
+            raise
+    
     def generate_response(
         self,
         query: str,
@@ -98,53 +196,56 @@ Key guidelines:
         Returns:
             Response with advice and metadata
         """
-        # Build enriched prompt
         prompt = self._build_prompt(query, context, user_profile)
         
+        messages = [
+            {'role': 'system', 'content': self.system_instruction},
+            {'role': 'user', 'content': prompt},
+        ]
+        
         try:
-            # Generate response
-            response = self.model.generate_content(
-                prompt,
-                generation_config={
-                    'temperature': self.temperature,
-                    'max_output_tokens': self.max_tokens,
-                },
-                safety_settings=self.safety_settings
-            )
+            result = self._call_ollama(messages)
             
-            # Extract text
-            if not response.candidates:
+            text = result.get('message', {}).get('content', '')
+            
+            if not text:
                 return {
-                    'response': "I couldn't generate a response due to safety filters. Please rephrase your question.",
+                    'response': "I couldn't generate a response. Please rephrase your question.",
                     'blocked': True,
-                    'finish_reason': 'SAFETY'
+                    'finish_reason': 'EMPTY'
                 }
             
-            text = response.text
-            finish_reason = response.candidates[0].finish_reason.name if response.candidates else 'UNKNOWN'
-            
-            # Update stats
+            prompt_tokens = result.get('prompt_eval_count', 0)
+            completion_tokens = result.get('eval_count', 0)
             self.usage_stats['total_prompts'] += 1
             self.usage_stats['total_completions'] += 1
-            # Note: Gemini API doesn't provide token counts in response
+            self.usage_stats['total_tokens'] += prompt_tokens + completion_tokens
             
-            # Add to conversation history
             self.conversation_history.append({
                 'query': query,
                 'response': text
             })
             
-            logger.info(f"Generated response ({len(text)} chars)")
+            logger.info(
+                f"Generated response ({len(text)} chars, "
+                f"~{prompt_tokens + completion_tokens} tokens, "
+                f"model: {result.get('model', self.active_model)})"
+            )
             
             return {
                 'response': text,
                 'blocked': False,
-                'finish_reason': finish_reason,
-                'model': self.model_name,
+                'finish_reason': 'stop' if result.get('done') else 'length',
+                'model': result.get('model', self.active_model),
+                'tokens': {
+                    'prompt': prompt_tokens,
+                    'completion': completion_tokens,
+                    'total': prompt_tokens + completion_tokens,
+                }
             }
             
         except Exception as e:
-            logger.error(f"Gemini generation failed: {e}")
+            logger.error(f"LLM generation failed: {e}")
             return {
                 'response': "I encountered an error. Please try again.",
                 'error': str(e),
@@ -158,23 +259,19 @@ Key guidelines:
         user_profile: Optional[Dict] = None
     ) -> str:
         """Build enriched prompt with context and profile."""
-        parts = [self.system_instruction]
+        parts = []
         
-        # Add user profile context
         if user_profile:
             profile_text = self._format_user_profile(user_profile)
-            parts.append(f"\n## User Financial Profile:\n{profile_text}")
+            parts.append(f"## User Financial Profile:\n{profile_text}")
         
-        # Add RAG context
         if context:
-            parts.append(f"\n## Relevant Information:\n{context}")
+            parts.append(f"## Relevant Information:\n{context}")
         
-        # Add query
-        parts.append(f"\n## User Question:\n{query}")
-        
+        parts.append(f"## User Question:\n{query}")
         parts.append("\n## Your Financial Advice:")
         
-        return "\n".join(parts)
+        return "\n\n".join(parts)
     
     def _format_user_profile(self, profile: Dict) -> str:
         """Format user profile for prompt."""
@@ -213,10 +310,9 @@ Key guidelines:
         Returns:
             Response with advice
         """
-        # Combine documents into context
         context = "\n\n".join([
             f"Document {i+1}:\n{doc}"
-            for i, doc in enumerate(documents[:3])  # Top 3 docs
+            for i, doc in enumerate(documents[:3])
         ])
         
         return self.generate_response(query, context, user_profile)
@@ -226,19 +322,9 @@ Key guidelines:
         message: str,
         user_profile: Optional[Dict] = None
     ) -> Dict:
-        """
-        Continue conversation with context from history.
-        
-        Args:
-            message: User's message
-            user_profile: User profile
-            
-        Returns:
-            Response
-        """
-        # Build conversation context
+        """Continue conversation with context from history."""
         if len(self.conversation_history) > 0:
-            recent_history = self.conversation_history[-3:]  # Last 3 turns
+            recent_history = self.conversation_history[-3:]
             context = "\n".join([
                 f"User: {turn['query']}\nAdvisor: {turn['response']}"
                 for turn in recent_history
@@ -254,41 +340,45 @@ Key guidelines:
         logger.info("Conversation history cleared")
     
     def get_usage_stats(self) -> Dict:
-        """Get API usage statistics."""
+        """Get usage statistics."""
         return self.usage_stats.copy()
     
+    def get_active_model(self) -> str:
+        """Get the currently active model name."""
+        return self.active_model
+    
+    def switch_model(self, model_key: str):
+        """Switch active model. Use 'llama3' or 'mistral'."""
+        if model_key in self.MODELS:
+            self.active_model = self.MODELS[model_key]
+            logger.info(f"Switched to model: {self.active_model}")
+        else:
+            logger.warning(f"Unknown model key: {model_key}. Use 'llama3' or 'mistral'.")
+    
     def save_conversation(self, path: str):
-        """
-        Save conversation history to file.
-        
-        Args:
-            path: File path to save conversation
-        """
+        """Save conversation history to file."""
         with open(path, 'w') as f:
             json.dump(self.conversation_history, f, indent=2, ensure_ascii=False)
-        
         logger.info(f"Conversation saved to {path}")
     
     @classmethod
-    def load_conversation(cls, path: str, api_key: str) -> 'GeminiFinancialAdvisor':
-        """
-        Load conversation history from file.
-        
-        Args:
-            path: File path to load conversation
-            api_key: Google API key
-            
-        Returns:
-            GeminiFinancialAdvisor with loaded history
-        """
-        advisor = cls(api_key=api_key)
-        
+    def load_conversation(
+        cls,
+        path: str,
+        ollama_base_url: str = None,
+    ) -> 'LocalFinancialAdvisor':
+        """Load conversation history from file."""
+        advisor = cls(ollama_base_url=ollama_base_url)
         with open(path, 'r') as f:
             advisor.conversation_history = json.load(f)
-        
         logger.info(f"Loaded {len(advisor.conversation_history)} conversation turns")
-        
         return advisor
+
+
+# ==========================================
+# Backward compatibility aliases
+# ==========================================
+GeminiFinancialAdvisor = LocalFinancialAdvisor
 
 
 def create_fine_tuning_dataset(
@@ -296,15 +386,12 @@ def create_fine_tuning_dataset(
     output_path: str
 ) -> None:
     """
-    Create fine-tuning dataset for Gemini from conversations.
+    Create fine-tuning dataset from conversations.
     
-    Args:
-        conversations: List of {"query": ..., "response": ...} dicts
-        output_path: Path to save dataset
-        
-    Note:
-        Gemini fine-tuning requires specific format. This creates a JSONL file
-        with instruction-input-output format.
+    Can be used with:
+    - Ollama's Modelfile for custom models
+    - HuggingFace transformers for LoRA fine-tuning
+    - llama.cpp for GGUF training
     """
     dataset = []
     
@@ -315,7 +402,6 @@ def create_fine_tuning_dataset(
             "output": conv['response']
         })
     
-    # Save as JSONL
     with open(output_path, 'w', encoding='utf-8') as f:
         for item in dataset:
             f.write(json.dumps(item, ensure_ascii=False) + '\n')
@@ -324,27 +410,18 @@ def create_fine_tuning_dataset(
 
 
 def evaluate_responses(
-    advisor: GeminiFinancialAdvisor,
+    advisor: LocalFinancialAdvisor,
     test_queries: List[str],
     reference_responses: Optional[List[str]] = None
 ) -> Dict:
-    """
-    Evaluate response quality.
-    
-    Args:
-        advisor: GeminiFinancialAdvisor instance
-        test_queries: List of test questions
-        reference_responses: Optional reference answers
-        
-    Returns:
-        Evaluation metrics
-    """
+    """Evaluate response quality."""
     results = {
         'total_queries': len(test_queries),
         'successful_responses': 0,
         'blocked_responses': 0,
         'errors': 0,
         'avg_response_length': 0,
+        'model_used': advisor.get_active_model(),
     }
     
     response_lengths = []
@@ -363,7 +440,7 @@ def evaluate_responses(
     if response_lengths:
         results['avg_response_length'] = sum(response_lengths) / len(response_lengths)
     
-    results['success_rate'] = results['successful_responses'] / results['total_queries']
+    results['success_rate'] = results['successful_responses'] / max(results['total_queries'], 1)
     
     logger.info(f"Evaluation complete: {results['success_rate']:.2%} success rate")
     

@@ -102,8 +102,10 @@ FIREBASE_CLIENT_EMAIL=your-service-account@project.iam.gserviceaccount.com
 JWT_SECRET=your-super-secret-jwt-key-change-this-in-production
 JWT_EXPIRATION=7d
 
-# Google Gemini API
-GEMINI_API_KEY=your-gemini-api-key
+# Local LLM via Ollama (no API key needed!)
+LLM_OLLAMA_BASE_URL=http://localhost:11434
+LLM_PRIMARY_MODEL=llama3:8b-instruct-q4_K_M
+LLM_FALLBACK_MODEL=mistral:7b-instruct-q4_K_M
 
 # Server
 PORT=3000

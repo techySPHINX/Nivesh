@@ -2,7 +2,7 @@ import { Tool } from '../types/agent.types';
 
 /**
  * LLM Response Generation Tool
- * Integrates with Gemini AI for natural language generation.
+ * Integrates with local LLM (LLaMA-3-8B / Mistral-7B via Ollama) for natural language generation.
  *
  * Use Cases:
  * - Synthesizing multi-agent results into cohesive narrative
@@ -39,10 +39,10 @@ interface LLMGenerationResult {
 }
 
 /**
- * Mock Gemini Service
- * TODO: Replace with actual Gemini AI integration
+ * Mock Local LLM Service
+ * TODO: Replace with actual Ollama-backed LLM service injection
  */
-class MockGeminiService {
+class MockLocalLLMService {
   async generateContent(
     prompt: string,
     options: {
@@ -52,8 +52,8 @@ class MockGeminiService {
     },
   ): Promise<any> {
     // This is a mock implementation
-    // In production, replace with actual Gemini API call:
-    // return await this.geminiClient.generateContent({ prompt, ...options });
+    // In production, replace with actual Ollama LLM call:
+    // return await this.llmService.generateText(prompt, options);
 
     // Generate mock response based on prompt keywords
     let mockResponse = '';
@@ -104,18 +104,18 @@ Your current investment portfolio shows a 65% equity allocation, which is slight
     return {
       text: mockResponse,
       tokensUsed: Math.floor(mockResponse.split(' ').length * 1.3), // Rough estimate
-      model: 'gemini-pro',
+      model: 'llama3:8b-instruct-q4_K_M',
       finishReason: 'STOP',
     };
   }
 }
 
-const mockGeminiService = new MockGeminiService();
+const mockLocalLLMService = new MockLocalLLMService();
 
 export const generateLLMResponseTool: Tool = {
   name: 'generate_llm_response',
   description:
-    'Generate natural language responses using Gemini AI for synthesizing financial insights and advice',
+    'Generate natural language responses using local LLM (LLaMA-3/Mistral-7B) for synthesizing financial insights and advice',
   schema: {
     type: 'object',
     properties: {
@@ -173,9 +173,9 @@ export const generateLLMResponseTool: Tool = {
     }
 
     try {
-      // Call Gemini AI
-      // TODO: Replace with actual Gemini integration
-      const result = await mockGeminiService.generateContent(prompt, {
+      // Call Local LLM
+      // TODO: Replace with actual Ollama LLM integration
+      const result = await mockLocalLLMService.generateContent(prompt, {
         maxTokens,
         temperature,
         systemPrompt,

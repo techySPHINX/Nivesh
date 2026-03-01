@@ -21,7 +21,7 @@
 
 - [ ] **Environment Configuration Cleanup**
   - [ ] Create `.env.example` in backend with all required variables
-  - [ ] Document required API keys (GEMINI_API_KEY, DATABASE_URL, etc.)
+  - [ ] Document required configuration (LLM_OLLAMA_BASE_URL, DATABASE_URL, etc.)
   - [ ] Create `.env.example` for ml-services folder
   - [ ] Add `.env` files to `.gitignore` if not already
 

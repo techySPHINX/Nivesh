@@ -9,7 +9,7 @@ flowchart TB
   NORM --> FS[(Feature Store / Firestore)]
 
   API --> ORCH[AI Orchestrator]
-  ORCH --> LLM[Gemini LLM: Intent + Reasoning + Explanation]
+  ORCH --> LLM[Local LLM: Intent + Reasoning + Explanation]
   ORCH --> TOOLS[Tool Router]
 
   TOOLS --> SIM[Deterministic Finance Engine (Simulations)]
@@ -39,7 +39,7 @@ sequenceDiagram
   participant User
   participant UI as Chat UI
   participant Orchestrator
-  participant Gemini as Gemini LLM
+  participant Local LLM as Local LLM
   participant Tools as Tool Router
   participant Fin as Finance Engine
   participant FS as Feature Store
@@ -50,15 +50,15 @@ sequenceDiagram
   Orchestrator->>FS: Fetch user context (income, spends, loans, net worth)
   FS-->>Orchestrator: Structured context
 
-  Orchestrator->>Gemini: Prompt(query + context + guardrails)
-  Gemini-->>Orchestrator: Intent JSON + missing params + tool plan
+  Orchestrator->>Local LLM: Prompt(query + context + guardrails)
+  Local LLM-->>Orchestrator: Intent JSON + missing params + tool plan
 
   alt Missing details
     Orchestrator->>UI: Ask clarifying question
     User->>UI: tenure/down payment info
     UI->>Orchestrator: User answers
-    Orchestrator->>Gemini: Updated context
-    Gemini-->>Orchestrator: Final tool plan
+    Orchestrator->>Local LLM: Updated context
+    Local LLM-->>Orchestrator: Final tool plan
   end
 
   Orchestrator->>Tools: Execute simulation tools
@@ -66,8 +66,8 @@ sequenceDiagram
   Fin-->>Tools: EMI range + impact + risk score
   Tools-->>Orchestrator: Computed results
 
-  Orchestrator->>Gemini: Generate explanation + tradeoffs + steps
-  Gemini-->>Orchestrator: Plain-language response
+  Orchestrator->>Local LLM: Generate explanation + tradeoffs + steps
+  Local LLM-->>Orchestrator: Plain-language response
 
   Orchestrator->>Resp: Build charts + action CTAs
   Resp-->>UI: Response (text + chart + actions)
@@ -129,7 +129,7 @@ flowchart TB
   SCORE --> DEC{Is action needed?}
   DEC -->|No| LOG[Log only]
   DEC -->|Yes| ALERT[Generate Alert + Recommendation]
-  ALERT --> GEM[Gemini: Natural language explanation]
+  ALERT --> GEM[Local LLM: Natural language explanation]
   GEM --> UI[Push/Inbox Alert in App]
 
 6) Simulation & Projection Engine (Deterministic + Monte Carlo)
@@ -137,13 +137,13 @@ flowchart TB
 This ensures trust and removes hallucination risk.
 
 flowchart TB
-  Q[User Question: goal/loan/retirement] --> PARSE[Gemini -> structured parameters]
+  Q[User Question: goal/loan/retirement] --> PARSE[Local LLM -> structured parameters]
   PARSE --> DATA[Fetch financial context from FS]
   DATA --> DET[Deterministic Engine: cashflow/EMI/goal math]
   DET --> MC[Monte Carlo Simulation: return uncertainty]
   MC --> OUT[Outcomes: P50/P75/P90 + risk bands]
   OUT --> VIS[Charts Builder]
-  VIS --> EXP[Gemini Explanation Layer: assumptions + tradeoffs]
+  VIS --> EXP[LLM Explanation Layer: assumptions + tradeoffs]
   EXP --> UI[Final Output]
 
 7) Investment Strategy Advisor (Allocation + Rebalancing)
@@ -157,7 +157,7 @@ flowchart TB
   CURR --> GAP[Gap Detection: drift vs target]
   OPT --> REBAL[Rebalancing Plan]
   GAP --> REBAL
-  REBAL --> EXP[Gemini: Explain why + risks + alternatives]
+  REBAL --> EXP[Local LLM: Explain why + risks + alternatives]
   EXP --> UI[Recommendations + Action buttons]
 
 8) Personalization / “Next Best Action” Engine

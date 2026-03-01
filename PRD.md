@@ -348,7 +348,7 @@ _(A decision = user asks question → receives simulation + explanation → comp
 ### Stack Overview
 
 - **Fi MCP server:** secure structured financial data ingestion
-- **Gemini Pro:** reasoning + response generation
+- **LLaMA-3-8B-Instruct:** reasoning + response generation
 - **Vertex AI (optional):** anomaly detection models, evaluation pipelines
 - **Firestore:** user profile, conversation memory, goal settings
 - **Firebase Auth:** authentication and identity

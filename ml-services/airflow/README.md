@@ -10,7 +10,7 @@ Apache Airflow manages automated retraining pipelines for all 6 ML models:
 - **Spending Predictor** (Prophet)
 - **Anomaly Detector** (Isolation Forest)
 - **Credit Risk Scorer** (XGBoost)
-- **Gemini Advisor** (API-based, no retraining needed)
+- **LLM Advisor** (Ollama-based local models, no retraining needed)
 
 ## Architecture
 

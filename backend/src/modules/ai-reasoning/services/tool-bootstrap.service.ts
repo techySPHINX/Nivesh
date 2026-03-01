@@ -19,7 +19,7 @@ import {
  * 3. calculate_returns - Investment return projections
  * 4. run_monte_carlo_simulation - Probabilistic outcome modeling
  * 5. query_financial_graph - Neo4j graph queries
- * 6. generate_llm_response - Gemini AI integration
+ * 6. generate_llm_response - Local LLM integration (LLaMA-3 / Mistral-7B)
  *
  * This service ensures all tools are available when agents start executing.
  *

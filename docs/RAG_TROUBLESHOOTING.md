@@ -47,7 +47,7 @@ curl http://localhost:6333/collections
 
 **A. Start Qdrant**
 ```bash
-cd C:\Users\tesseractS\Desktop\Nivesh
+cd /path/to/Nivesh
 docker-compose up -d qdrant
 ```
 
@@ -629,7 +629,7 @@ docker-compose restart qdrant redis backend
   imports: [
     RedisModule,        // Required
     DatabaseModule,     // Required
-    IntegrationsModule  // For Gemini (optional)
+    IntegrationsModule  // For Local LLM (optional)
   ]
 })
 ```

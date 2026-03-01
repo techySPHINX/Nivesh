@@ -2,7 +2,7 @@
 
 > **Comprehensive guide to LLM prompts, graph reasoning, and compliance for Nivesh - Your AI Financial Strategist**
 
-[![Gemini](https://img.shields.io/badge/LLM-Gemini%20Pro-4285F4.svg)](https://ai.google.dev/)
+[![Local LLM](https://img.shields.io/badge/LLM-Local LLM%20Pro-4285F4.svg)](https://ai.google.dev/)
 [![DistilBERT](https://img.shields.io/badge/NER-DistilBERT-orange.svg)](https://huggingface.co/distilbert-base-uncased)
 [![PRD](https://img.shields.io/badge/docs-PRD-orange.svg)](../PRD.md)
 
@@ -23,7 +23,7 @@
 
 Nivesh uses a **hybrid AI architecture** combining:
 
-1. **LLM (Gemini Pro 1.5)** - Natural language understanding and generation
+1. **LLM (LLaMA-3-8B-Instruct (Ollama))** - Natural language understanding and generation
 2. **Graph reasoning (Neo4j)** - Financial relationship analysis
 3. **Deterministic logic** - Rule-based safety checks
 4. **Retrieval-augmented generation (RAG)** - Context from user's financial graph
@@ -35,7 +35,7 @@ User Query → Chat UI → Orchestrator
                             ↓
                     Fetch Context (Feature Store)
                             ↓
-                    Gemini LLM (Intent + Tool Plan)
+                    Local LLM (Intent + Tool Plan)
                             ↓
                 ┌───────────┴──────────┐
                 ↓                      ↓
@@ -44,7 +44,7 @@ User Query → Chat UI → Orchestrator
         Ask Clarifying Q      Finance Engine
                 ↓              (EMI, Cashflow)
                 ↓                      ↓
-        User Answers → Gemini Explanation
+        User Answers → LLM Explanation
                                        ↓
                             Response Builder
                             (Charts + Actions)
@@ -477,7 +477,7 @@ urgent expenses? We can take this one step at a time.
 
 ### Pre-LLM Filters
 
-Before sending to Gemini, check:
+Before sending to Local LLM, check:
 
 ```python
 def pre_llm_filter(user_query: str) -> bool:
@@ -500,7 +500,7 @@ def pre_llm_filter(user_query: str) -> bool:
 
 ### Post-LLM Filters
 
-After Gemini responds, check:
+After Local LLM responds, check:
 
 ```python
 def post_llm_filter(llm_response: str) -> str:
@@ -560,7 +560,7 @@ risk_score = risk_model.predict(user_data)
 ### Step 5: LLM Generation
 
 ```python
-recommendation = gemini.generate(
+recommendation = llm.generate(
     prompt=INVESTMENT_ADVICE_PROMPT,
     context={
         "risk_level": "moderate",

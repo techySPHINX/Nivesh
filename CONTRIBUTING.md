@@ -63,15 +63,15 @@ Enhancement suggestions are tracked as GitHub issues. When creating an enhanceme
 
 ```bash
 # Fork and clone the repository
-git clone https://github.com/YOUR_USERNAME/nivesh-platform.git
-cd nivesh-platform
+git clone https://github.com/YOUR_USERNAME/Nivesh.git
+cd Nivesh
 
 # Install backend dependencies
-cd apps/backend-nest
+cd backend
 npm install
 
-# Install AI engine dependencies
-cd ../ai-engine
+# Install ML services dependencies
+cd ../ml-services
 pip install -r requirements.txt
 
 # Set up environment variables
@@ -251,11 +251,11 @@ Fixes #456
 
 ```bash
 # Backend
-cd apps/backend-nest
+cd backend
 npm run test
 
-# AI Engine
-cd apps/ai-engine
+# ML Services
+cd ml-services
 pytest
 ```
 

@@ -4,7 +4,7 @@
 
 [![License](https://img.shields.io/badge/license-Proprietary-red.svg)](LICENSE)
 [![Tech Stack](https://img.shields.io/badge/stack-open%20source-green.svg)](docs/TECH_STACK.md)
-[![Status](https://img.shields.io/badge/status-In%20Development-yellow.svg)](docs/DOCUMENTATION_UPDATE_SUMMARY.md)
+[![Status](https://img.shields.io/badge/status-In%20Development-yellow.svg)](TODO.md)
 [![Documentation](https://img.shields.io/badge/docs-complete-brightgreen.svg)](docs/)
 
 ## ⚠️ IMPORTANT LEGAL NOTICE
@@ -66,19 +66,19 @@ Output → Conversational, Visual, Voice-First Insights
 
 **New to Nivesh?** Get started in under 10 minutes:
 
-👉 **[QUICK_START.md](QUICK_START.md)** - Follow this guide to:
+👉 **[SETUP.md](SETUP.md)** - Follow this guide to:
 
-- Install prerequisites (Node.js, Docker, GCP SDK)
-- Start all services (Postgres, Neo4j, Kafka, MongoDB, Redis, ClickHouse)
+- Install prerequisites (Node.js, Docker)
+- Start all services (Postgres, Neo4j, Redis)
 - Run database migrations
 - Make your first API call
 - Troubleshoot common issues
 
 **After setup, dive deeper:**
 
-- **Architecture & Decisions** → [DOCUMENTATION_INDEX.md](DOCUMENTATION_INDEX.md)
-- **Development Procedures** → [DEVELOPMENT_GUIDE.md](DEVELOPMENT_GUIDE.md)
-- **Module Implementation** → [MODULE_IMPLEMENTATION_GUIDE.md](MODULE_IMPLEMENTATION_GUIDE.md)
+- **Architecture & Design** → [docs/Architecture.md](docs/Architecture.md)
+- **Tech Stack Details** → [docs/TECH_STACK.md](docs/TECH_STACK.md)
+- **Database Design** → [docs/DATABASE_STRATERGY.md](docs/DATABASE_STRATERGY.md)
 
 ---
 
@@ -164,8 +164,8 @@ Output → Conversational, Visual, Voice-First Insights
 │   │   AI Orchestrator    │            │   MongoDB     │        │
 │   │                      │            │  (Chat Logs)  │        │
 │   │  ┌───────────────┐   │            └───────────────┘        │
-│   │  │  Gemini LLM   │   │                    │                │
-│   │  │(Intent+Reason)│   │                    ↓                │
+│   │  │ Local LLM     │   │                    │                │
+│   │  │(LLaMA3/Mistr) │   │                    ↓                │
 │   │  └───────┬───────┘   │            ┌───────────────┐        │
 │   │          │            │            │  ClickHouse   │        │
 │   │          ↓            │            │  (Analytics)  │        │
@@ -201,7 +201,7 @@ Output → Conversational, Visual, Voice-First Insights
 | Design Decision               | Rationale                                                                              | Technology Choice                         |
 | ----------------------------- | -------------------------------------------------------------------------------------- | ----------------------------------------- |
 | **Graph-First Feature Store** | Financial reasoning requires relationship traversal ("How does X affect Y?")           | Neo4j for complex graph queries           |
-| **Hybrid AI (LLM + Logic)**   | LLMs explain, deterministic code calculates - avoids hallucination in finance          | Gemini Pro 1.5 + NumPy/SciPy              |
+| **Hybrid AI (LLM + Logic)**   | LLMs explain, deterministic code calculates - avoids hallucination in finance          | LLaMA-3-8B + Mistral-7B (local) + NumPy/SciPy |
 | **Tool Router Pattern**       | Specialized models (categorization, anomaly, risk) are better than one LLM             | FastAPI microservices architecture        |
 | **Event-Driven Pipeline**     | Real-time sync from transactions → enrichment → graph without blocking API             | Kafka for async data flow                 |
 | **Polyglot Persistence**      | Each data type in optimal DB (relations in Postgres, graphs in Neo4j, docs in MongoDB) | PostgreSQL + Neo4j + MongoDB + ClickHouse |
@@ -235,8 +235,9 @@ Output → Conversational, Visual, Voice-First Insights
 
 | Technology                                             | Purpose                      | Why                                      | Where Used                                     |
 | ------------------------------------------------------ | ---------------------------- | ---------------------------------------- | ---------------------------------------------- |
-| [Gemini Pro 1.5](https://ai.google.dev/)               | Primary LLM                  | Financial reasoning, intent detection    | Natural language Q&A, explanation generation   |
-| [Ollama](https://ollama.ai/) (Mistral 7B)              | Open-source LLM backup       | Privacy mode, offline inference          | Self-hosted deployments                        |
+| [LLaMA-3-8B-Instruct](https://ollama.ai/)              | Primary LLM (Local)          | Best finance reasoning, fits 8GB VRAM    | Natural language Q&A, explanation generation   |
+| [Mistral-7B-Instruct](https://ollama.ai/)              | Fallback LLM (Local)         | Fast, concise financial reasoning        | Backup model, numerical explanations           |
+| [Ollama](https://ollama.ai/)                            | Local LLM Runtime            | 100% free, local, GPU-accelerated        | Serves both LLaMA-3 and Mistral models         |
 | [XGBoost](https://xgboost.readthedocs.io/)             | Risk scoring, categorization | Explainable, fast, production-ready      | Transaction categorization, risk profiling     |
 | [Prophet](https://facebook.github.io/prophet/)         | Time-series forecasting      | Handles seasonality, missing data        | Income growth, expense trends, inflation       |
 | [IsolationForest](https://scikit-learn.org/)           | Anomaly detection            | Unsupervised, works with high dimensions | Fraud detection, unusual spending alerts       |
@@ -281,7 +282,8 @@ Output → Conversational, Visual, Voice-First Insights
 ✅ **Cloud-Agnostic** - Deploy on AWS, GCP, Azure, or on-premise  
 ✅ **Production-Grade** - Battle-tested at scale by industry leaders  
 ✅ **Compliance-Ready** - GDPR, RBI, SEBI audit requirements built-in  
-✅ **Free Tiers Available** - Firebase Auth, Gemini API, Firestore free quotas
+✅ **Free Tiers Available** - Firebase Auth, Local LLMs (free), Firestore free quotas
+✅ **100% Local AI** - LLaMA-3 & Mistral-7B run locally via Ollama, no API costs
 
 > **All technologies chosen are either free/open-source or have generous free tiers for MVP phase**
 
@@ -312,7 +314,7 @@ nivesh/
 │   │       │   ├── anomaly/                   # Anomaly Detection (IsolationForest)
 │   │       │   ├── risk/                      # Risk Profiling (XGBoost)
 │   │       │   └── personalization/           # Recommendation Engine (Ranker)
-│   │       ├── llm/                           # Gemini LLM Integration
+│   │       ├── llm/                           # Local LLM Integration (LLaMA-3/Mistral-7B via Ollama)
 │   │       ├── enrichment/                    # Data Enrichment Layer
 │   │       └── response_builder/              # Charts + Actions Generator
 │   │
@@ -368,7 +370,7 @@ nivesh/
 | **Data Normalization**     | `apps/ai-engine/src/enrichment/`            | Python Pandas + Kafka   |
 | **Feature Store (Neo4j)**  | `apps/backend-nest/src/modules/graph/`      | Neo4j Bolt Driver       |
 | **AI Orchestrator**        | `apps/ai-engine/src/orchestrator/`          | FastAPI + LangChain     |
-| **Gemini LLM**             | `apps/ai-engine/src/llm/gemini_client.py`   | Gemini Pro 1.5 API      |
+| **Local LLM**              | `apps/ai-engine/src/llm/llm_client.py`      | LLaMA-3-8B / Mistral-7B via Ollama |
 | **Tool Router**            | `apps/ai-engine/src/tools/router.py`        | FastAPI Router          |
 | **Finance Engine**         | `apps/ai-engine/src/tools/simulation/`      | NumPy + SciPy           |
 | **Txn Categorization**     | `apps/ai-engine/src/tools/categorization/`  | XGBoost + BERT          |
@@ -396,12 +398,12 @@ nivesh/
    • Query: MATCH (u:User {id: $userId})-[:EARNS]->(income)
    • Fetch: Current income, expenses, existing EMIs, net worth
    ↓
-5. Orchestrator → Gemini LLM
+5. Orchestrator → Local LLM (LLaMA-3-8B via Ollama)
    • Prompt: "User asks: 'Can I afford ₹50L loan?'"
    • Context: {income: ₹80K/mo, expenses: ₹45K/mo, existing_emi: ₹8K/mo}
    • Request: Extract intent + missing parameters
    ↓
-6. Gemini Response:
+6. LLM Response:
    {
      "intent": "HOUSE_AFFORDABILITY",
      "missing_params": ["loan_tenure", "interest_rate", "down_payment"],
@@ -426,11 +428,11 @@ nivesh/
       "recommended_action": "Increase income OR reduce loan amount"
     }
     ↓
-12. Orchestrator → Gemini LLM (Explanation)
+12. Orchestrator → Local LLM (Explanation)
     • Prompt: "Explain why ₹50L loan is not affordable"
     • Context: {emi: ₹34,500, surplus: -₹7,500}
     ↓
-13. Gemini Response:
+13. LLM Response:
     "Based on your ₹80K monthly income and ₹45K expenses, a ₹50L loan
      would result in a ₹34,500 EMI, leaving you ₹7,500 short each month.
 
@@ -467,9 +469,9 @@ nivesh/
 | **1-2**   | Next.js + Firebase Auth             | Secure authentication, session management             |
 | **3**     | Kong API Gateway                    | Rate limiting, JWT validation, routing                |
 | **4**     | Neo4j Cypher Queries                | Fast relationship traversal for user context          |
-| **5-6**   | Gemini Pro 1.5 (LLM)                | Intent detection, parameter extraction                |
+| **5-6**   | LLaMA-3-8B-Instruct (Local LLM)     | Intent detection, parameter extraction                |
 | **9-10**  | Python NumPy/SciPy (Finance Engine) | Deterministic EMI calculation (no hallucination risk) |
-| **12-13** | Gemini Pro 1.5 (Explanation)        | Natural language explanation with alternatives        |
+| **12-13** | LLaMA-3 / Mistral-7B (Explanation)  | Natural language explanation with alternatives        |
 | **14**    | Jinja2 + Plotly                     | Response formatting with charts                       |
 | **16**    | MongoDB (Audit Log)                 | Store decision trace for explainability/compliance    |
 
@@ -558,9 +560,10 @@ MONGODB_URI=mongodb://localhost:27017/nivesh_conversations
 REDIS_URL=redis://localhost:6379
 CLICKHOUSE_URL=http://localhost:8123
 
-# AI Services
-GEMINI_API_KEY=your_gemini_api_key_here
-OPENAI_API_KEY=your_openai_backup_key  # Optional backup
+# AI Services - Local LLM (no API keys needed!)
+LLM_OLLAMA_BASE_URL=http://localhost:11434
+LLM_PRIMARY_MODEL=llama3:8b-instruct-q4_K_M
+LLM_FALLBACK_MODEL=mistral:7b-instruct-q4_K_M
 
 # Kafka Configuration
 KAFKA_BROKERS=localhost:9092
@@ -620,9 +623,6 @@ Comprehensive documentation is available in the [/docs](docs/) directory:
 | Document                                                      | Description                                       | What You'll Learn                                        |
 | ------------------------------------------------------------- | ------------------------------------------------- | -------------------------------------------------------- |
 | **[PRD.md](PRD.md)**                                          | Product Requirements Document                     | Vision, user personas, value proposition, roadmap        |
-| **[REQUIREMENTS.md](REQUIREMENTS.md)**                        | Lean Canvas - Business Model                      | Problem, solution, revenue streams, key metrics          |
-| **[NIVESH.md](NIVESH.md)**                                    | Technical Vision Document                         | System design, HLD, LLD, AI architecture                 |
-| **[Mermaid codes.md](Mermaid%20codes.md)**                    | **Approved Architecture Diagrams**                | **All 8 Mermaid flow diagrams (stakeholder approved)**   |
 | **[TECH_STACK.md](docs/TECH_STACK.md)**                       | Complete Technology Stack                         | Every technology, why we use it, where it's used         |
 | **[STRUCTURE.md](docs/STRUCTURE.md)**                         | Monorepo Structure                                | Folder organization, code-to-architecture mapping        |
 | **[DATABASE_STRATERGY.md](docs/DATABASE_STRATERGY.md)**       | Polyglot Persistence Architecture                 | Database schemas, graph modeling, data flow              |
@@ -638,11 +638,7 @@ Comprehensive documentation is available in the [/docs](docs/) directory:
 - ✅ Continuously updated with implementation progress
 - ✅ Cleaned up - removed duplicate and obsolete files
 
-**Documentation Cleanup Completed:**
-- ❌ Removed: `TechnicalRequirements.md` (duplicate of TECHNICAL_REQUIREMENTS.md)
-- ❌ Removed: `DOCUMENTATION_STATUS.md` (replaced by DOCUMENTATION_UPDATE_SUMMARY.md)
-- ❌ Removed: `PROGRESS_REPORT.md` (replaced by DOCUMENTATION_UPDATE_SUMMARY.md)
-- ❌ Removed: `FINAL_COMPLETION_REPORT.md` (replaced by DOCUMENTATION_UPDATE_SUMMARY.md)
+
 
 ---
 
@@ -795,7 +791,9 @@ This software is licensed under a **Proprietary Software License Agreement**.
 
 - **Open Source Community** for amazing tools
 - **Neo4j** for graph database technology
-- **Google** for Gemini Pro API
+- **Meta AI** for LLaMA-3 open-source LLM
+- **Mistral AI** for Mistral-7B open-source LLM
+- **Ollama** for local LLM runtime
 - **Apache Foundation** for Kafka
 - **CNCF** for cloud-native technologies
 
@@ -818,14 +816,13 @@ This software is licensed under a **Proprietary Software License Agreement**.
 | Need to understand...        | Read this file                                              |
 | ---------------------------- | ----------------------------------------------------------- |
 | **Overall vision**           | [PRD.md](PRD.md) - Product Requirements                     |
-| **Business model**           | [REQUIREMENTS.md](REQUIREMENTS.md) - Lean Canvas            |
-| **Architecture diagrams**    | [Mermaid codes.md](Mermaid%20codes.md) - Approved diagrams  |
+| **Architecture overview**    | [docs/Architecture.md](docs/Architecture.md)                |
 | **All technologies**         | [docs/TECH_STACK.md](docs/TECH_STACK.md)                    |
 | **Code organization**        | [docs/STRUCTURE.md](docs/STRUCTURE.md)                      |
 | **Database design**          | [docs/DATABASE_STRATERGY.md](docs/DATABASE_STRATERGY.md)    |
 | **Docker setup**             | [docs/CONTAINERIZATION.md](docs/CONTAINERIZATION.md)        |
 | **AI/LLM integration**       | [docs/LLM_GUIDE.md](docs/LLM_GUIDE.md)                      |
-| **What was updated**         | [docs/DOCUMENTATION_UPDATE_SUMMARY.md](docs/DOCUMENTATION_UPDATE_SUMMARY.md) |
+| **Project progress**         | [TODO.md](TODO.md)                                          |
 
 ### Quick Commands
 
@@ -859,10 +856,10 @@ open http://localhost:8000/docs
 | Frontend  | React Native, Next.js             | ✅       |
 | Backend   | NestJS, FastAPI, Kong             | ✅       |
 | Databases | PostgreSQL, Neo4j, MongoDB, Redis | ✅       |
-| AI/ML     | Gemini Pro, XGBoost, Prophet      | ✅\*     |
+| AI/ML     | LLaMA-3, Mistral-7B, XGBoost, Prophet | ✅       |
 | DevOps    | Docker, Kubernetes, Prometheus    | ✅       |
 
-\*Gemini has generous free tier
+\*All AI models run locally via Ollama — 100% free, no API costs
 
 ---
 

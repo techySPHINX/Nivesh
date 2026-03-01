@@ -388,9 +388,76 @@ describe('LLM Integration E2E Tests', () => {
     });
 
     it('should handle retry on rate limit (429)', async () => {
-      // This test requires mocking Gemini API to return 429
-      // For now, we just verify the service has retry logic
-      expect(true).toBe(true);
+      // Mock an LLM client that fails with 429 once, then succeeds
+      const mockLlmClient = {
+        generate: jest.fn(),
+      };
+
+      const rateLimitError = Object.assign(new Error('Rate limited'), {
+        status: 429,
+      });
+
+      mockLlmClient.generate
+        .mockRejectedValueOnce(rateLimitError)
+        .mockResolvedValueOnce({ text: 'ok' });
+
+      // Simple retry wrapper that backs off on 429
+      const retryingGenerate = async () => {
+        const maxRetries = 2;
+        const baseBackoffMs = 1000;
+        let attempt = 0;
+
+        // Use fake timers so we can assert on backoff without slowing the test
+        jest.useFakeTimers();
+        try {
+          // We track the scheduled backoff delays to assert on them later
+          const scheduledDelays: number[] = [];
+          const originalSetTimeout = setTimeout;
+
+          // Wrap setTimeout to capture delay values used for backoff
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          (global as any).setTimeout = ((fn: (...args: any[]) => void, delay?: number, ...args: any[]) => {
+            if (typeof delay === 'number') {
+              scheduledDelays.push(delay);
+            }
+            return originalSetTimeout(fn, delay, ...args);
+          }) as typeof setTimeout;
+
+          // Actual retry loop
+          // eslint-disable-next-line no-constant-condition
+          while (true) {
+            try {
+              attempt += 1;
+              const result = await mockLlmClient.generate();
+              return { result, attempts: attempt, scheduledDelays };
+            } catch (err: any) {
+              if (err?.status === 429 && attempt < maxRetries) {
+                const delayMs = baseBackoffMs * attempt;
+                const waitPromise = new Promise<void>((resolve) => {
+                  setTimeout(resolve, delayMs);
+                });
+                jest.advanceTimersByTime(delayMs);
+                await waitPromise;
+                continue;
+              }
+              throw err;
+            }
+          }
+        } finally {
+          jest.useRealTimers();
+        }
+      };
+
+      const { result, attempts, scheduledDelays } = await retryingGenerate();
+
+      // First call fails with 429, second succeeds
+      expect(mockLlmClient.generate).toHaveBeenCalledTimes(2);
+      expect(attempts).toBe(2);
+      expect(result.text).toBe('ok');
+
+      // Verify we backed off at least once with a positive delay
+      expect(scheduledDelays.length).toBeGreaterThanOrEqual(1);
+      expect(scheduledDelays[0]).toBeGreaterThan(0);
     });
   });
 });

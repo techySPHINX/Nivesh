@@ -191,7 +191,7 @@ EXPERIMENTS = {
     "spending_predictor": "spending_prediction",
     "anomaly_detector": "anomaly_detection",
     "credit_risk": "credit_risk_scoring",
-    "gemini_tuning": "gemini_fine_tuning"
+    "gemini_tuning": "local_llm_fine_tuning"
 }
 
 

@@ -272,7 +272,7 @@ Answer:
 `;
 
 // 5. Generate with LLM
-const response = await geminiService.generate(prompt);
+const response = await llmService.generate(prompt);
 ```
 
 ### 3. Re-ranking Algorithm
@@ -359,8 +359,8 @@ const prompt = this.ragContextBuilder.buildPromptWithContext(
   retrievedContext
 );
 
-// Generate with Gemini
-const response = await this.geminiService.generate(prompt);
+// Generate with Local LLM
+const response = await this.llmService.generate(prompt);
 
 // Index conversation
 await this.vectorIndexer.indexConversation({

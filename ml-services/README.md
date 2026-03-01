@@ -11,7 +11,7 @@ ml-services/
 ├── spending_predictor/     # Spending forecasting (Prophet)
 ├── anomaly_detector/       # Transaction anomaly detection (Isolation Forest)
 ├── credit_risk/            # Credit risk scoring (XGBoost)
-├── gemini_tuning/          # Fine-tuned Gemini Pro
+├── gemini_advisor/          # Local LLM Financial Advisor (LLaMA-3 / Mistral-7B via Ollama)
 ├── feature_store/          # Feature engineering and Redis store
 ├── model_server/           # FastAPI serving layer
 ├── monitoring/             # Drift detection and monitoring
@@ -52,11 +52,13 @@ ml-services/
 - **AUC Target:** >0.85
 - **Endpoint:** `POST /predict/credit_risk`
 
-### 6. Fine-tuned Gemini Pro
+### 6. Local LLM Financial Advisor
 - **Purpose:** Domain-specific financial advisor
-- **Base Model:** Gemini 1.5 Pro
+- **Primary Model:** LLaMA-3-8B-Instruct (Q4_K_M quantized, fits 8GB VRAM)
+- **Fallback Model:** Mistral-7B-Instruct (Q4_K_M quantized)
+- **Runtime:** Ollama (100% local, free, no API keys)
 - **Training Data:** Indian financial advice corpus
-- **Endpoint:** `POST /api/v1/gemini/advice`
+- **Endpoint:** `POST /api/v1/llm/advice`
 
 ## MLOps Components
 

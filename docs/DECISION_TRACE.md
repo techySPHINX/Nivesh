@@ -105,7 +105,7 @@ AI must provide:
                    ▼
 ┌─────────────────────────────────────────────────────┐
 │ 6. LLM GENERATION                                   │
-│    Model: Gemini Pro 1.5                            │
+│    Model: LLaMA-3-8B-Instruct (Ollama)                            │
 │    Prompt: INVESTMENT_ADVICE_PROMPT                 │
 │    Temperature: 0.3 (conservative)                  │
 └──────────────────┬──────────────────────────────────┘
@@ -296,7 +296,7 @@ This ID appears in:
   "timestamp": "2026-01-15T10:30:01.200Z",
   "step": "llm_generation",
   "data": {
-    "model": "gemini-pro-1.5",
+    "model": "llama3:8b-instruct-q4_K_M",
     "prompt_template": "INVESTMENT_ADVICE_PROMPT",
     "prompt_variables": {
       "user_age": 30,
@@ -393,7 +393,7 @@ This ID appears in:
   ],
   "reasoning": {
     "rules_applied": ["rule_47", "rule_12"],
-    "model_used": "gemini-pro-1.5",
+    "model_used": "llama3:8b-instruct-q4_K_M",
     "deterministic_logic": true
   },
   "alternatives_considered": [

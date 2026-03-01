@@ -48,6 +48,15 @@ tmp/
 temp/
 *.tmp
 
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+*.egg
+.venv/
+venv/
+
 # OS
 Thumbs.db
 .DS_Store

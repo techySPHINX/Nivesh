@@ -422,9 +422,10 @@ services:
       MLFLOW_TRACKING_URI: http://mlflow:5000
       ML_API_URL: http://ml-api:8000
 
-      # AI Services
-      GEMINI_API_KEY: ${GEMINI_API_KEY}
-      GEMINI_MODEL: gemini-1.5-pro
+      # AI Services - Local LLM via Ollama
+      LLM_OLLAMA_BASE_URL: http://ollama:11434
+      LLM_PRIMARY_MODEL: llama3:8b-instruct-q4_K_M
+      LLM_FALLBACK_MODEL: mistral:7b-instruct-q4_K_M
 
       # Firebase
       FIREBASE_PROJECT_ID: ${FIREBASE_PROJECT_ID}
@@ -444,9 +445,36 @@ services:
       - kafka
       - qdrant
       - ml-api
+      - ollama
     networks:
       - nivesh-network
     command: npm run dev
+
+  # ==========================================
+  # Local LLM Server (Ollama)
+  # Serves LLaMA-3-8B-Instruct & Mistral-7B-Instruct
+  # ==========================================
+  ollama:
+    image: ollama/ollama:latest
+    container_name: nivesh-ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    networks:
+      - nivesh-network
+    # Native Compose GPU support (requires Docker Engine ≥ 19.03 + nvidia-container-runtime).
+    # If 'gpus' is not supported by your Compose version, use the device_requests form instead:
+    #   device_requests:
+    #     - driver: nvidia
+    #       count: 1
+    #       capabilities: [gpu]
+    gpus: 1
+    restart: unless-stopped
+    # Pull models on first start (runs in background)
+    # After container is up, run:
+    #   docker exec nivesh-ollama ollama pull llama3:8b-instruct-q4_K_M
+    #   docker exec nivesh-ollama ollama pull mistral:7b-instruct-q4_K_M
 
 # ==========================================
 # Volumes
@@ -468,6 +496,7 @@ volumes:
   grafana_data:
   airflow_postgres_data:
   airflow_logs:
+  ollama_data:
 
 # ==========================================
 # Networks

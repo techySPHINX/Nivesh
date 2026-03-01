@@ -72,7 +72,7 @@ The Nivesh RAG (Retrieval-Augmented Generation) Pipeline is a production-grade s
                              │
                              ▼
 ┌─────────────────────────────────────────────────────────────────────────┐
-│                    GEMINI PRO (LLM)                                     │
+│                    Local LLM (Ollama)                                     │
 │         "Based on your ₹2L monthly income and ₹50k expenses...         │
 │          [1] Recent transaction shows ₹1.5L savings capacity           │
 │          [2] RBI guidelines recommend 40% EMI-to-income ratio..."       │
@@ -204,7 +204,7 @@ Format with citations:
     [2] FAQ: Car loan eligibility criteria (Source: Bank Policy)
     ...
     ↓
-Enriched Prompt → Gemini Pro → Grounded Response
+Enriched Prompt → LLaMA-3-8B-Instruct → Grounded Response
 ```
 
 ## Vector Collections
@@ -438,8 +438,8 @@ const prompt = this.ragContextBuilder.buildPromptWithContext(
   retrievedContext
 );
 
-// Generate with Gemini
-const response = await this.geminiService.generate(prompt);
+// Generate with Local LLM
+const response = await this.llmService.generate(prompt);
 
 // Index conversation
 await this.vectorIndexer.indexConversation({

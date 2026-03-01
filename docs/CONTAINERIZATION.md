@@ -262,7 +262,7 @@ services:
   # Application Services
   ai-engine:
     build:
-      context: ./apps/ai-engine
+      context: ./ml-services
       dockerfile: Dockerfile
     container_name: nivesh-ai
     env_file:
@@ -276,12 +276,12 @@ services:
     ports:
       - "8000:8000"
     volumes:
-      - ./apps/ai-engine:/app
+      - ./ml-services:/app
       - ./data/models:/app/models
 
   backend:
     build:
-      context: ./apps/backend-nest
+      context: ./backend
       dockerfile: Dockerfile
     container_name: nivesh-backend
     env_file:
@@ -297,7 +297,7 @@ services:
     ports:
       - "3001:3000"
     volumes:
-      - ./apps/backend-nest:/app
+      - ./backend:/app
       - /app/node_modules
 
   frontend:
@@ -422,7 +422,7 @@ REDIS_URL=redis://redis:6379
 KAFKA_BROKERS=kafka:9092
 
 # AI Services
-GEMINI_API_KEY=your_gemini_api_key
+LLM_OLLAMA_BASE_URL=http://localhost:11434
 OPENAI_API_KEY=your_openai_api_key
 
 # Auth
@@ -458,8 +458,8 @@ MINIO_SECRET_KEY=nivesh123
 
 ```bash
 # Clone repository
-git clone https://github.com/your-org/nivesh-platform.git
-cd nivesh-platform
+git clone https://github.com/techySPHINX/Nivesh.git
+cd Nivesh
 
 # Create environment file
 cp .env.example .env

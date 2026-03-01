@@ -1,10 +1,10 @@
 import { Module, Global } from '@nestjs/common';
 import { FirebaseModule } from './firebase/firebase.module';
-import { GeminiModule } from './gemini/gemini.module';
+import { LLMModule } from './llm/llm.module';
 
 @Global()
 @Module({
-  imports: [FirebaseModule, GeminiModule],
-  exports: [FirebaseModule, GeminiModule],
+  imports: [FirebaseModule, LLMModule],
+  exports: [FirebaseModule, LLMModule],
 })
 export class IntegrationsModule { }

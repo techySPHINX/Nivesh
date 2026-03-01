@@ -180,14 +180,14 @@ python train.py --data-path ../data/loan_applications.csv
 - Target AUC-ROC: >0.85
 - Fairness metrics validated
 
-### 6. Fine-tuned Gemini Pro
+### 6. Fine-tuned LLaMA-3-8B-Instruct
 
 **Purpose:** Domain-specific financial advisor
 
 **Fine-tuning:**
 
 ```bash
-cd ml-services/gemini_tuning
+cd ml-services/local_llm_fine_tuning
 python tune.py --data-path ../data/financial_advice.jsonl
 ```
 

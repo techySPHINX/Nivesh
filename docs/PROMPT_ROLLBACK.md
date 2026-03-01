@@ -321,7 +321,7 @@ CREATE TABLE model_registry (
 
 ```sql
 INSERT INTO model_registry VALUES
-('gemini_pro_1_5', 'Gemini Pro', '1.5', 'google', 'https://generativelanguage.googleapis.com/v1/models/gemini-pro', 0.3, 0.9, 500, 'active', NOW(), 850, 0.001),
+('llama3_8b_instruct', 'LLaMA-3-8B-Instruct', 'Q4_K_M', 'meta/ollama', 'http://localhost:11434/api/chat', 0.3, 0.9, 500, 'active', NOW(), 850, 0.0),
 ('gpt4_turbo', 'GPT-4 Turbo', '2024-04-09', 'openai', 'https://api.openai.com/v1/chat/completions', 0.3, 0.9, 500, 'backup', NOW(), 1200, 0.01);
 ```
 
@@ -410,7 +410,7 @@ ADD COLUMN model_version VARCHAR(100);
 
 -- Link decision to prompt version
 INSERT INTO decision_traces (..., prompt_version, model_version) VALUES
-(..., 'investment_advice_v2_1_0', 'gemini_pro_1_5');
+(..., 'investment_advice_v2_1_0', 'llama3_8b_instruct');
 ```
 
 **Benefits:**

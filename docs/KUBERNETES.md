@@ -2,6 +2,8 @@
 
 > **Production-grade Kubernetes deployment for Nivesh - Your AI Financial Strategist**
 
+> **⚠️ PLANNED — NOT YET IMPLEMENTED.** This document describes the target Kubernetes architecture for Phase 2 (V1). The project currently uses Docker Compose for local development. None of the manifests, Helm charts, or HPA configs below exist in the repository yet.
+
 [![Kubernetes](https://img.shields.io/badge/orchestration-Kubernetes-326CE5.svg)](https://kubernetes.io/)
 [![Helm](https://img.shields.io/badge/package-Helm-0F1689.svg)](https://helm.sh/)
 [![PRD](https://img.shields.io/badge/docs-PRD-orange.svg)](../PRD.md)
@@ -267,11 +269,11 @@ spec:
           ports:
             - containerPort: 8000
           env:
-            - name: GEMINI_API_KEY
+            - name: LLM_OLLAMA_BASE_URL
               valueFrom:
                 secretKeyRef:
                   name: nivesh-secrets
-                  key: GEMINI_API_KEY
+                  key: LLM_OLLAMA_BASE_URL
           resources:
             requests:
               memory: "2Gi"

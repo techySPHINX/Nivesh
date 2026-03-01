@@ -87,9 +87,10 @@ class MLConfig(BaseSettings):
     drift_alert_threshold: float = Field(
         default=0.3, env="DRIFT_ALERT_THRESHOLD")
 
-    # Google AI (Gemini)
-    google_api_key: str = Field(default=None, env="GOOGLE_API_KEY")
-    gemini_model: str = Field(default="gemini-1.5-pro", env="GEMINI_MODEL")
+    # Local LLM (Ollama)
+    llm_ollama_base_url: str = Field(default="http://localhost:11434", env="LLM_OLLAMA_BASE_URL")
+    llm_primary_model: str = Field(default="llama3:8b-instruct-q4_K_M", env="LLM_PRIMARY_MODEL")
+    llm_fallback_model: str = Field(default="mistral:7b-instruct-q4_K_M", env="LLM_FALLBACK_MODEL")
 
     # Logging
     log_level: str = Field(default="INFO", env="LOG_LEVEL")

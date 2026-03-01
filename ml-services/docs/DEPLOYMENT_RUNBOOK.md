@@ -693,7 +693,9 @@ curl -u admin:admin http://localhost:3001/api/dashboards/uid/ml-overview
 | `REDIS_HOST` | Redis hostname | `localhost` |
 | `DATABASE_URL` | PostgreSQL connection | `postgresql://...` |
 | `MODEL_STORAGE_BACKEND` | Storage type | `local`, `s3`, `gcs` |
-| `GOOGLE_API_KEY` | Gemini API key | `AIza...` |
+| `LLM_OLLAMA_BASE_URL` | Base URL for Ollama LLM service | `http://localhost:11434` |
+| `LLM_PRIMARY_MODEL` | Primary LLM model name | `llama3.1:8b` |
+| `LLM_FALLBACK_MODEL` | Fallback LLM model name (used if primary fails) | `llama3:8b` |
 
 ### SLO/SLA Targets
 

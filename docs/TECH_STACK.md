@@ -66,7 +66,7 @@ User Query → API Gateway → AI Orchestrator
                               ↓
                     ┌─────────┴─────────┐
                     ↓                   ↓
-              Gemini LLM           Tool Router
+              Local LLM           Tool Router
            (Intent + Reason)          ↓
                     ↓         ┌────────┴────────┐
                     ↓         ↓                 ↓
@@ -83,7 +83,7 @@ User Query → API Gateway → AI Orchestrator
 | Layer                       | Technology                                                   | Purpose                                  | Where Used in Architecture                                   |
 | --------------------------- | ------------------------------------------------------------ | ---------------------------------------- | ------------------------------------------------------------ |
 | **AI Orchestrator**         | [LangChain](https://langchain.com/) + FastAPI                | Coordinates LLM + Tools                  | Central routing layer between API Gateway and AI services    |
-| **LLM (Primary)**           | [Gemini Pro 1.5](https://ai.google.dev/)                     | Intent detection, reasoning, explanation | Conversational layer, natural language understanding         |
+| **LLM (Primary)**           | [LLaMA-3-8B-Instruct (Ollama)](https://ai.google.dev/)                     | Intent detection, reasoning, explanation | Conversational layer, natural language understanding         |
 | **LLM (Fallback)**          | [Ollama](https://ollama.ai/) (Mistral 7B)                    | Open-source local inference backup       | Privacy-focused deployments, offline mode                    |
 | **Tool Router**             | Custom FastAPI Service                                       | Routes to specialized tools              | Directs queries to Simulation/Categorization/Anomaly engines |
 | **Finance Engine**          | Python NumPy + SciPy                                         | Deterministic calculations               | EMI, cashflow, goal projections, Monte Carlo simulations     |
@@ -251,7 +251,7 @@ User (App/Web/Voice) → Frontend UI
 
 | Model             | Purpose                                             | License          |
 | ----------------- | --------------------------------------------------- | ---------------- |
-| **Gemini Pro**    | Financial reasoning, natural language understanding | Google API Terms |
+| **LLaMA-3-8B-Instruct**    | Financial reasoning, natural language understanding | Open Source License |
 | **GPT-3.5 Turbo** | Backup explanation generation                       | OpenAI API Terms |
 
 ### Custom ML Models
@@ -343,7 +343,7 @@ For MVP and initial testing, the following minimal stack can run on a **single V
 ```yaml
 Frontend: React Native (Mobile) / Next.js (Web)
 Backend: NestJS
-AI Engine: FastAPI + Gemini Pro
+AI Engine: FastAPI + LLaMA-3-8B-Instruct
 Databases:
   - PostgreSQL (relational)
   - Neo4j (graph)
@@ -375,7 +375,7 @@ Paid robo-advisor APIs
 
 **Why These Choices Support Nivesh's Mission:**
 
-- **Gemini Pro:** Free tier supports MVP phase; strong reasoning for financial advice
+- **LLaMA-3-8B-Instruct:** Free tier supports MVP phase; strong reasoning for financial advice
 - **Neo4j:** Essential for graph reasoning (e.g., "How does this expense affect my retirement goal?")
 - **Kafka:** Event-driven architecture enables real-time alerts and updates
 - **PostgreSQL:** ACID compliance ensures financial transaction integrity
@@ -388,7 +388,7 @@ Paid robo-advisor APIs
 
 ### MVP Phase (8-10 weeks)
 
-- **Stack:** PostgreSQL + Neo4j + Gemini Pro + NestJS + FastAPI
+- **Stack:** PostgreSQL + Neo4j + LLaMA-3-8B-Instruct + NestJS + FastAPI
 - **Deployment:** Docker Compose on single VM
 - **Users:** Internal testing + 50-100 beta users
 - **Focus:** Core conversations, simulations, explainability

@@ -67,7 +67,7 @@ ml-services/
 ├── anomaly_detector/    # Isolation Forest for anomaly detection
 ├── credit_risk_scorer/  # XGBoost for credit risk
 ├── spending_predictor/  # Prophet for spending forecasting
-├── gemini_advisor/      # Gemini Pro integration
+├── gemini_advisor/      # LLaMA-3-8B-Instruct integration
 │
 ├── drift_detection/     # ✅ NEW: __init__.py added
 ├── model_server/        # ✅ NEW: __init__.py added
@@ -153,7 +153,7 @@ REDIS_HOST=localhost
 REDIS_PORT=6379
 REDIS_PASSWORD=your_password
 
-# Google AI (for Gemini)
+# Google AI (for Local LLM)
 GOOGLE_API_KEY=your_api_key_here
 ```
 
