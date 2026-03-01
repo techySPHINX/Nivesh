@@ -5,10 +5,10 @@
  * via Ollama for the AI reasoning pipeline.
  *
  * Features:
- * - Automatic retry with exponential backoff
- * - Fallback between primary (LLaMA-3) and secondary (Mistral-7B) models
- * - Token usage tracking
- * - Error handling and fallbacks
+ * - Retry with exponential backoff delegated to LLMService.executeWithRetry
+ * - Automatic model fallback (primary → fallback) is handled by LLMService
+ * - Token usage estimation
+ * - Error handling and structured response wrapping
  * - Request/response logging
  */
 import { Injectable, Logger } from '@nestjs/common';
@@ -36,7 +36,10 @@ export class LLMReasoningService {
   constructor(private readonly llmService: LLMService) {}
 
   /**
-   * Send a request to local LLM with retry logic
+   * Send a request to the local LLM.
+   *
+   * Retry/backoff and primary→fallback model switching are handled internally
+   * by `LLMService` (via `executeWithRetry` in `callOllama`).
    */
   async generateResponse(request: LLMReasoningRequest): Promise<LLMReasoningResponse> {
     this.logger.debug(`Generating AI response with temperature: ${request.temperature || 0.7}`);
