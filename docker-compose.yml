@@ -463,13 +463,13 @@ services:
       - ollama_data:/root/.ollama
     networks:
       - nivesh-network
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: 1
-              capabilities: [gpu]
+    # Native Compose GPU support (requires Docker Engine ≥ 19.03 + nvidia-container-runtime).
+    # If 'gpus' is not supported by your Compose version, use the device_requests form instead:
+    #   device_requests:
+    #     - driver: nvidia
+    #       count: 1
+    #       capabilities: [gpu]
+    gpus: 1
     restart: unless-stopped
     # Pull models on first start (runs in background)
     # After container is up, run:
