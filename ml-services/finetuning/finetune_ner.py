@@ -202,9 +202,9 @@ def train_ner_model(
 
 
 def finetune_ner(
-    config: NERFinetuneConfig = None,
-    data_path: str = None,
-    output_dir: str = None,
+    config: Optional[NERFinetuneConfig] = None,
+    data_path: Optional[str] = None,
+    output_dir: Optional[str] = None,
     run_hpo: bool = True,
     n_trials: int = 15,
 ) -> Dict:

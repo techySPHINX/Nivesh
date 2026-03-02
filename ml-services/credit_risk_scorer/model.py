@@ -223,6 +223,8 @@ class CreditRiskScorer:
         
         # Prepare eval set if provided
         eval_sets = []
+        X_val_scaled = None
+        y_val: Optional[pd.Series] = None
         if eval_set:
             X_val, y_val = eval_set
             X_val_scaled = self.scaler.transform(X_val)
@@ -240,10 +242,13 @@ class CreditRiskScorer:
             self.model.fit(X_scaled, y)
         
         # Get feature importances
-        self.feature_importances_ = dict(zip(
-            self.feature_names,
-            self.model.feature_importances_
-        ))
+        if self.feature_names is not None:
+            self.feature_importances_ = dict(zip(
+                self.feature_names,
+                self.model.feature_importances_
+            ))
+        else:
+            self.feature_importances_ = {}
         
         # Evaluate on training set
         y_pred = self.model.predict(X_scaled)
@@ -260,7 +265,7 @@ class CreditRiskScorer:
         metrics['precision_at_80_recall'] = float(precision[recall >= 0.8][0]) if any(recall >= 0.8) else 0
         
         # Add validation metrics if available
-        if eval_set:
+        if eval_set is not None and X_val_scaled is not None and y_val is not None:
             y_val_pred = self.model.predict(X_val_scaled)
             y_val_proba = self.model.predict_proba(X_val_scaled)[:, 1]
             
@@ -311,10 +316,11 @@ class CreditRiskScorer:
                 df[col] = self.label_encoders[col].transform(df[col].astype(str))
         
         # Ensure all features present
+        if self.feature_names is None:
+            raise ValueError("Model feature names not set. Train the model first.")
         for feat in self.feature_names:
             if feat not in df.columns:
                 df[feat] = 0
-        
         X = df[self.feature_names].fillna(0)
         X_scaled = self.scaler.transform(X)
         
@@ -386,9 +392,8 @@ class CreditRiskScorer:
         Returns:
             Fairness metrics by group
         """
-        if not self.model:
-            raise ValueError("Model not trained yet")
-        
+        if not self.model or not self.scaler:
+            raise ValueError("Model or scaler not trained yet")
         X_scaled = self.scaler.transform(X)
         y_pred = self.model.predict(X_scaled)
         y_proba = self.model.predict_proba(X_scaled)[:, 1]

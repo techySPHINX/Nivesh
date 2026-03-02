@@ -5,7 +5,7 @@ Provides comprehensive health status for backend integration
 
 from fastapi import APIRouter, Response, status
 from pydantic import BaseModel
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Any
 import redis
 import mlflow
 import logging
@@ -32,7 +32,7 @@ class HealthResponse(BaseModel):
     timestamp: str
     version: str
     services: List[ServiceStatus]
-    system: Dict[str, any]
+    system: Dict[str, Any]
 
 
 class ReadinessResponse(BaseModel):

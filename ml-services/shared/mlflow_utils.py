@@ -11,10 +11,11 @@ from shared.logger import get_logger
 logger = get_logger(__name__)
 
 
-def init_mlflow():
+def init_mlflow(tracking_uri: Optional[str] = None):
     """Initialize MLflow tracking"""
-    mlflow.set_tracking_uri(config.mlflow_tracking_uri)
-    logger.info(f"MLflow tracking URI set to: {config.mlflow_tracking_uri}")
+    uri = tracking_uri or config.mlflow_tracking_uri
+    mlflow.set_tracking_uri(uri)
+    logger.info(f"MLflow tracking URI set to: {uri}")
 
 
 def get_client() -> MlflowClient:
@@ -65,7 +66,7 @@ def log_model_metrics(metrics: Dict[str, float]):
         mlflow.log_metric(key, value)
 
 
-def log_model_artifact(artifact_path: str, artifact_name: str = None):
+def log_model_artifact(artifact_path: str, artifact_name: Optional[str] = None):
     """Log model artifact"""
     mlflow.log_artifact(artifact_path, artifact_name)
 

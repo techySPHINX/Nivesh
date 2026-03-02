@@ -14,7 +14,7 @@ import logging
 import os
 import sys
 from pathlib import Path
-from typing import Dict, List, Tuple
+from typing import Dict, List, Optional, Tuple
 
 import numpy as np
 import pandas as pd
@@ -121,9 +121,9 @@ def engineer_features(df: pd.DataFrame) -> Tuple[pd.DataFrame, List[str]]:
 
 
 def finetune_anomaly_detector(
-    config: AnomalyFinetuneConfig = None,
-    data_path: str = None,
-    output_dir: str = None,
+    config: Optional[AnomalyFinetuneConfig] = None,
+    data_path: Optional[str] = None,
+    output_dir: Optional[str] = None,
     run_hpo: bool = True,
     n_trials: int = 50,
 ) -> Dict:
@@ -137,8 +137,8 @@ def finetune_anomaly_detector(
     df = load_transaction_data(data_path)
     df_feat, feature_cols = engineer_features(df)
     
-    X = df_feat[feature_cols].values
-    y = df_feat["is_anomaly"].values
+    X = np.array(df_feat[feature_cols].values)
+    y = np.array(df_feat["is_anomaly"].values)
     
     # Scale
     scaler = StandardScaler()
@@ -189,7 +189,7 @@ def finetune_anomaly_detector(
                 f1 = f1_score(y_val, preds_binary, zero_division=0)
                 f1_scores.append(f1)
             
-            return np.mean(f1_scores)
+            return float(np.mean(f1_scores))
         
         study = optuna.create_study(direction="maximize")
         study.optimize(objective, n_trials=n_trials, show_progress_bar=True)
@@ -246,11 +246,11 @@ def finetune_anomaly_detector(
             ap = 0.0
         
         mlflow.log_metrics({
-            "precision": precision,
-            "recall": recall,
-            "f1": f1,
-            "auc_roc": auc,
-            "average_precision": ap,
+            "precision": float(precision),
+            "recall": float(recall),
+            "f1": float(f1),
+            "auc_roc": float(auc),
+            "average_precision": float(ap),
         })
         
         logger.info(f"Precision: {precision:.4f}, Recall: {recall:.4f}, "
@@ -283,13 +283,14 @@ def finetune_anomaly_detector(
             and auc >= thresholds.anomaly_auc
         )
         
+        active_run = mlflow.active_run()
         result = {
             "model_path": model_path,
             "test_metrics": {"precision": precision, "recall": recall, "f1": f1, "auc": auc},
             "best_hpo_params": best_params,
             "quality_gate_passed": passed,
             "feature_names": feature_cols,
-            "mlflow_run_id": mlflow.active_run().info.run_id,
+            "mlflow_run_id": active_run.info.run_id if active_run else None,
         }
         
         if passed:

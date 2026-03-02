@@ -1475,7 +1475,7 @@ def generate_llm_data(config: DataGenConfig) -> List[Dict]:
 # Master Generator
 # ============================================================
 
-def generate_all_synthetic_data(config: DataGenConfig = None) -> Dict[str, str]:
+def generate_all_synthetic_data(config: Optional[DataGenConfig] = None) -> Dict[str, str]:
     """
     Generate all synthetic datasets and save to disk.
     

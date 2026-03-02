@@ -74,7 +74,7 @@ def get_indian_holidays() -> pd.DataFrame:
     return holidays
 
 
-def prepare_spending_data(data_path: str, category: str = None) -> pd.DataFrame:
+def prepare_spending_data(data_path: str, category: Optional[str] = None) -> pd.DataFrame:
     """Prepare transaction data for Prophet format."""
     with open(data_path, "r") as f:
         data = json.load(f)
@@ -104,12 +104,12 @@ def prepare_spending_data(data_path: str, category: str = None) -> pd.DataFrame:
 
 
 def finetune_spending_predictor(
-    config: SpendingFinetuneConfig = None,
-    data_path: str = None,
-    output_dir: str = None,
+    config: Optional[SpendingFinetuneConfig] = None,
+    data_path: Optional[str] = None,
+    output_dir: Optional[str] = None,
     run_hpo: bool = True,
     n_trials: int = 30,
-    categories: list = None,
+    categories: Optional[list] = None,
 ) -> Dict:
     """Full fine-tuning pipeline for Spending Predictor."""
     config = config or SpendingFinetuneConfig()
@@ -168,6 +168,8 @@ def finetune_spending_predictor(
                         initial=config.cross_validation_initial,
                     )
                     perf = performance_metrics(cv_results)
+                    if perf is None:
+                        return 1.0
                     mape = perf["mape"].mean()
                     return mape
                 except Exception as e:
@@ -216,6 +218,8 @@ def finetune_spending_predictor(
                     initial=config.cross_validation_initial,
                 )
                 perf = performance_metrics(cv_results)
+                if perf is None:
+                    raise ValueError("performance_metrics returned None")
                 
                 mape = perf["mape"].mean()
                 rmse = perf["rmse"].mean()

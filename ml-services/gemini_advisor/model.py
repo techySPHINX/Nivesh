@@ -39,9 +39,9 @@ class LocalFinancialAdvisor:
     
     def __init__(
         self,
-        ollama_base_url: str = None,
-        primary_model: str = None,
-        fallback_model: str = None,
+        ollama_base_url: Optional[str] = None,
+        primary_model: Optional[str] = None,
+        fallback_model: Optional[str] = None,
         temperature: float = 0.7,
         max_tokens: int = 1024,
     ):
@@ -128,9 +128,9 @@ Key guidelines:
     def _call_ollama(
         self,
         messages: List[Dict[str, str]],
-        model: str = None,
-        temperature: float = None,
-        max_tokens: int = None,
+        model: Optional[str] = None,
+        temperature: Optional[float] = None,
+        max_tokens: Optional[int] = None,
     ) -> Dict:
         """
         Make a request to the Ollama chat API.
@@ -365,7 +365,7 @@ Key guidelines:
     def load_conversation(
         cls,
         path: str,
-        ollama_base_url: str = None,
+        ollama_base_url: Optional[str] = None,
     ) -> 'LocalFinancialAdvisor':
         """Load conversation history from file."""
         advisor = cls(ollama_base_url=ollama_base_url)

@@ -97,9 +97,9 @@ def load_and_split_data(
 
 
 def finetune_intent_classifier(
-    config: IntentFinetuneConfig = None,
-    data_path: str = None,
-    output_dir: str = None,
+    config: Optional[IntentFinetuneConfig] = None,
+    data_path: Optional[str] = None,
+    output_dir: Optional[str] = None,
     run_hpo: bool = True,
     n_trials: int = 20,
 ) -> Dict:

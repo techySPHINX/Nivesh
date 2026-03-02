@@ -6,7 +6,7 @@ data generation settings, and evaluation thresholds.
 """
 
 from dataclasses import dataclass, field
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Union
 from pathlib import Path
 
 
@@ -132,8 +132,8 @@ class SpendingFinetuneConfig:
     seasonality_prior_scale_range: tuple = (0.01, 10.0)
     holidays_prior_scale_range: tuple = (0.01, 10.0)
     seasonality_mode: str = "multiplicative"
-    yearly_seasonality: int = 10
-    weekly_seasonality: int = 3
+    yearly_seasonality: Union[bool, str, int] = 10
+    weekly_seasonality: Union[bool, str, int] = 3
     monthly_fourier_order: int = 5
     cross_validation_horizon: str = "30 days"
     cross_validation_period: str = "15 days"

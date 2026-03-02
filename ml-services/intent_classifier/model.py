@@ -3,6 +3,13 @@ Intent Classification Model
 
 Fine-tuned DistilBERT for classifying user financial queries
 """
+import sys
+import os
+
+# Add parent directory to path
+sys.path.insert(0, os.path.abspath(
+    os.path.join(os.path.dirname(__file__), '..')))
+
 from shared.mlflow_utils import create_experiment, log_model_params, log_model_metrics
 from shared import config, get_logger, INTENT_LABELS
 import torch
@@ -21,14 +28,7 @@ import mlflow
 import mlflow.pytorch
 import numpy as np
 import json
-import os
-from typing import Dict, Any, List, Tuple
-import sys
-import os
-
-# Add parent directory to path
-sys.path.insert(0, os.path.abspath(
-    os.path.join(os.path.dirname(__file__), '..')))
+from typing import Dict, Any, List, Optional, Tuple, Union
 
 
 logger = get_logger(__name__)
@@ -39,8 +39,8 @@ class IntentClassifier:
 
     def __init__(
         self,
-        model_name: str = None,
-        num_labels: int = None
+        model_name: Optional[str] = None,
+        num_labels: Optional[int] = None
     ):
         """
         Initialize intent classifier
@@ -51,8 +51,8 @@ class IntentClassifier:
         """
         self.model_name = model_name or config.intent_model_name
         self.num_labels = num_labels or len(INTENT_LABELS)
-        self.tokenizer = None
-        self.model = None
+        self.tokenizer: Optional[DistilBertTokenizer] = None
+        self.model: Optional[DistilBertForSequenceClassification] = None
         self.label_to_id = {label: idx for idx,
                             label in enumerate(INTENT_LABELS)}
         self.id_to_label = {idx: label for label,
@@ -118,6 +118,7 @@ class IntentClassifier:
 
         # Tokenize
         def tokenize_data(queries, labels):
+            assert self.tokenizer is not None, "Tokenizer not loaded"
             encodings = self.tokenizer(
                 queries,
                 truncation=True,
@@ -155,9 +156,9 @@ class IntentClassifier:
         train_dataset: Dataset,
         val_dataset: Dataset,
         output_dir: str = './models/intent_classifier',
-        epochs: int = None,
-        batch_size: int = None,
-        learning_rate: float = None
+        epochs: Optional[int] = None,
+        batch_size: Optional[int] = None,
+        learning_rate: Optional[float] = None
     ) -> Dict[str, Any]:
         """
         Train the intent classification model
@@ -195,15 +196,16 @@ class IntentClassifier:
             logging_dir=f'{output_dir}/logs',
             logging_steps=10,
             save_total_limit=3,
-            report_to='none'  # We'll use MLflow
+            report_to='none'  # type: ignore[arg-type]  # We'll use MLflow
         )
 
         # Trainer
+        assert self.model is not None, "Model not loaded. Call load_model() first."
         trainer = Trainer(
-            model=self.model,
+            model=self.model,  # type: ignore[arg-type]
             args=training_args,
-            train_dataset=train_dataset,
-            eval_dataset=val_dataset,
+            train_dataset=train_dataset,  # type: ignore[arg-type]
+            eval_dataset=val_dataset,  # type: ignore[arg-type]
             compute_metrics=self.compute_metrics,
             callbacks=[EarlyStoppingCallback(early_stopping_patience=3)]
         )
@@ -216,6 +218,7 @@ class IntentClassifier:
 
         # Save model
         trainer.save_model(output_dir)
+        assert self.tokenizer is not None
         self.tokenizer.save_pretrained(output_dir)
 
         logger.info(f"Training completed. Metrics: {eval_metrics}")
@@ -240,30 +243,31 @@ class IntentClassifier:
         logger.info("Evaluating model on test set")
 
         # Create trainer for evaluation
+        assert self.model is not None, "Model not loaded. Call load_model() first."
         trainer = Trainer(
-            model=self.model,
+            model=self.model,  # type: ignore[arg-type]
             compute_metrics=self.compute_metrics
         )
 
         # Predict
-        predictions = trainer.predict(test_dataset)
+        predictions = trainer.predict(test_dataset)  # type: ignore[arg-type]
         pred_labels = np.argmax(predictions.predictions, axis=1)
         true_labels = predictions.label_ids
 
         # Metrics
-        accuracy = accuracy_score(true_labels, pred_labels)
-        f1 = f1_score(true_labels, pred_labels, average='weighted')
+        accuracy = accuracy_score(true_labels, pred_labels)  # type: ignore[arg-type]
+        f1 = f1_score(true_labels, pred_labels, average='weighted')  # type: ignore[arg-type]
 
         # Classification report
         report = classification_report(
-            true_labels,
+            true_labels,  # type: ignore[arg-type]
             pred_labels,
             target_names=INTENT_LABELS,
             output_dict=True
         )
 
         # Confusion matrix
-        cm = confusion_matrix(true_labels, pred_labels)
+        cm = confusion_matrix(true_labels, pred_labels)  # type: ignore[arg-type]
 
         results = {
             'accuracy': accuracy,
@@ -324,7 +328,7 @@ class IntentClassifier:
 
         # Predict
         with torch.no_grad():
-            outputs = self.model(**inputs)
+            outputs = self.model(**inputs)  # type: ignore[misc]
             logits = outputs.logits
             probs = torch.softmax(logits, dim=-1)
 
@@ -333,12 +337,12 @@ class IntentClassifier:
             probs, k=min(3, self.num_labels), dim=-1)
 
         results = {
-            'intent': self.id_to_label[top_indices[0][0].item()],
+            'intent': self.id_to_label[int(top_indices[0][0].item())],
             'confidence': float(top_probs[0][0]),
             'query_length': len(query),
             'alternatives': [
                 {
-                    'intent': self.id_to_label[idx.item()],
+                    'intent': self.id_to_label[int(idx.item())],
                     'confidence': float(prob)
                 }
                 for idx, prob in zip(top_indices[0], top_probs[0])
@@ -357,6 +361,7 @@ class IntentClassifier:
         logger.info(f"Exporting model to ONNX: {output_path}")
 
         # Dummy input
+        assert self.tokenizer is not None, "Tokenizer not loaded"
         dummy_input = self.tokenizer(
             "Example query",
             truncation=True,
@@ -366,8 +371,9 @@ class IntentClassifier:
         )
 
         # Export
+        assert self.model is not None, "Model not loaded"
         torch.onnx.export(
-            self.model,
+            self.model,  # type: ignore[arg-type]
             (dummy_input['input_ids'], dummy_input['attention_mask']),
             output_path,
             input_names=['input_ids', 'attention_mask'],

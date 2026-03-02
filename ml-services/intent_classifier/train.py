@@ -1,6 +1,14 @@
 """
 Training script for Intent Classification model
 """
+import os
+import sys
+import argparse
+
+# Add parent directory to path for imports
+sys.path.insert(0, os.path.abspath(
+    os.path.join(os.path.dirname(__file__), '..')))
+
 from shared.mlflow_utils import (
     create_experiment,
     log_model_params,
@@ -9,14 +17,7 @@ from shared.mlflow_utils import (
 )
 from shared import config, get_logger
 from intent_classifier.model import IntentClassifier
-import os
-import sys
-import argparse
 import mlflow
-
-# Add parent directory to path for imports
-sys.path.insert(0, os.path.abspath(
-    os.path.join(os.path.dirname(__file__), '..')))
 
 
 logger = get_logger(__name__)
