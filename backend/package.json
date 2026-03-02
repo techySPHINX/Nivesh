@@ -2,7 +2,7 @@
   "name": "@nivesh/backend",
   "version": "1.0.0",
   "description": "Nivesh Backend - AI-Native Financial Reasoning Platform",
-  "author": "Prateek",
+  "author": "Jagan",
   "private": true,
   "license": "MIT",
   "scripts": {
@@ -118,13 +118,26 @@
       "^.+\\.(t|j)s$": "ts-jest"
     },
     "collectCoverageFrom": [
-      "**/*.(t|j)s"
+      "**/*.(t|j)s",
+      "!**/node_modules/**",
+      "!**/test/**",
+      "!**/*.module.ts",
+      "!main.ts",
+      "!tracing.ts"
     ],
     "coverageDirectory": "../coverage",
     "testEnvironment": "node",
     "moduleNameMapper": {
       "^@core/(.*)$": "<rootDir>/core/$1",
       "^@modules/(.*)$": "<rootDir>/modules/$1"
+    },
+    "coverageThreshold": {
+      "global": {
+        "branches": 50,
+        "functions": 50,
+        "lines": 50,
+        "statements": 50
+      }
     }
   }
 }
