@@ -398,6 +398,41 @@ services:
       retries: 5
 
   # ==========================================
+  # Centralized Log Aggregation (Loki + Promtail)
+  # ==========================================
+
+  loki:
+    image: grafana/loki:2.9.3
+    container_name: nivesh-loki
+    command: -config.file=/etc/loki/loki.yml
+    ports:
+      - "3100:3100"
+    volumes:
+      - ./monitoring/loki/loki.yml:/etc/loki/loki.yml:ro
+      - loki_data:/loki
+    networks:
+      - nivesh-network
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:3100/ready"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  promtail:
+    image: grafana/promtail:2.9.3
+    container_name: nivesh-promtail
+    command: -config.file=/etc/promtail/promtail.yml
+    volumes:
+      - ./monitoring/promtail/promtail.yml:/etc/promtail/promtail.yml:ro
+      - /var/log:/var/log:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+    depends_on:
+      loki:
+        condition: service_healthy
+    networks:
+      - nivesh-network
+
+  # ==========================================
   # Apache Airflow for ML Training Pipelines
   # ==========================================
 
@@ -618,6 +653,7 @@ volumes:
   airflow_postgres_data:
   airflow_logs:
   ollama_data:
+  loki_data:
 
 # ==========================================
 # Networks
