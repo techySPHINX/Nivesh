@@ -19,6 +19,7 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./scripts/docker/init-mlflow-db.sh:/docker-entrypoint-initdb.d/init-mlflow-db.sh:ro
     networks:
       - nivesh-network
     healthcheck:
@@ -192,11 +193,20 @@ services:
   mlflow:
     image: ghcr.io/mlflow/mlflow:v2.10.0
     container_name: nivesh-mlflow
-    command: mlflow server --host 0.0.0.0 --port 5000 --backend-store-uri sqlite:///mlflow.db --default-artifact-root /mlflow/artifacts
+    command: >
+      mlflow server
+      --host 0.0.0.0
+      --port 5000
+      --backend-store-uri postgresql://nivesh_user:nivesh_password@postgres:5432/mlflow
+      --default-artifact-root /mlflow/artifacts
+      --serve-artifacts
     ports:
       - "5000:5000"
     volumes:
       - mlflow_data:/mlflow
+    depends_on:
+      postgres:
+        condition: service_healthy
     networks:
       - nivesh-network
     healthcheck:
