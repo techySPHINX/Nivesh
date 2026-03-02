@@ -64,6 +64,7 @@ async function bootstrap() {
       .addTag('goals', 'Goal planning and tracking')
       .addTag('alerts', 'Smart alerts and notifications')
       .addTag('analytics', 'Analytics and insights')
+      .addTag('rag-pipeline', 'RAG vector indexing and semantic retrieval')
       .addBearerAuth()
       .build();
 

@@ -16,6 +16,7 @@ import { UserModule } from './modules/user/user.module';
 import { FinancialDataModule } from './modules/financial-data/financial-data.module';
 import { GoalManagementModule } from './modules/goal-management/goal-management.module';
 import { BudgetManagementModule } from './modules/budget-management/budget-management.module';
+import { RAGPipelineModule } from './modules/rag-pipeline/rag-pipeline.module';
 import { AiReasoningModule } from './modules/ai-reasoning/ai-reasoning.module';
 import { KnowledgeGraphModule } from './modules/knowledge-graph/knowledge-graph.module';
 
@@ -59,6 +60,7 @@ import { HealthController } from './health.controller';
     FinancialDataModule,
     GoalManagementModule,
     BudgetManagementModule,
+    RAGPipelineModule,
     AiReasoningModule,
     KnowledgeGraphModule,
   ],
