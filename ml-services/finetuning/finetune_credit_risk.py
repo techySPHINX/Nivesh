@@ -101,7 +101,7 @@ def prepare_features(
     for col in categorical_cols:
         if col in df.columns:
             le = LabelEncoder()
-            df[col + "_encoded"] = le.fit_transform(df[col].astype(str))
+            df[col + "_encoded"] = le.fit_transform(df[col].astype(str)).tolist()  # type: ignore[assignment]
             label_encoders[col] = le
     
     # Define feature columns
@@ -182,9 +182,9 @@ def validate_fairness(
 
 
 def finetune_credit_risk(
-    config: CreditRiskFinetuneConfig = None,
-    data_path: str = None,
-    output_dir: str = None,
+    config: Optional[CreditRiskFinetuneConfig] = None,
+    data_path: Optional[str] = None,
+    output_dir: Optional[str] = None,
     run_hpo: bool = True,
     n_trials: int = 100,
 ) -> Dict:
@@ -199,17 +199,17 @@ def finetune_credit_risk(
     df = engineer_credit_features(df)
     
     X, feature_cols, label_encoders = prepare_features(df)
-    y = df["default"].values
+    y = np.array(df["default"].values)
     
     # Handle class imbalance
-    n_positive = y.sum()
+    n_positive = int(y.sum())
     n_negative = len(y) - n_positive
     scale_pos_weight = n_negative / max(n_positive, 1) if config.scale_pos_weight_auto else 1.0
     logger.info(f"scale_pos_weight: {scale_pos_weight:.2f}")
     
     # Train/test split
     X_train, X_test, y_train, y_test = train_test_split(
-        X, y, test_size=0.2, stratify=y, random_state=42
+        X, y, test_size=0.2, stratify=y, random_state=42  # type: ignore[arg-type]
     )
     df_test = df.iloc[X_test.index]
     
@@ -266,7 +266,7 @@ def finetune_credit_risk(
                     auc = 0.5
                 auc_scores.append(auc)
             
-            return np.mean(auc_scores)
+            return float(np.mean(auc_scores))
         
         study = optuna.create_study(direction="maximize")
         study.optimize(objective, n_trials=n_trials, show_progress_bar=True)
@@ -313,8 +313,8 @@ def finetune_credit_risk(
         accuracy = accuracy_score(y_test, preds_binary)
         
         mlflow.log_metrics({
-            "test_auc": auc, "test_f1": f1, "test_precision": precision,
-            "test_recall": recall, "test_accuracy": accuracy,
+            "test_auc": float(auc), "test_f1": float(f1), "test_precision": float(precision),
+            "test_recall": float(recall), "test_accuracy": float(accuracy),
         })
         
         logger.info(f"AUC: {auc:.4f}, F1: {f1:.4f}, Precision: {precision:.4f}, Recall: {recall:.4f}")
@@ -358,6 +358,7 @@ def finetune_credit_risk(
         thresholds = EvalThresholds()
         passed = auc >= thresholds.credit_risk_auc and f1 >= thresholds.credit_risk_f1
         
+        active_run = mlflow.active_run()
         result = {
             "model_path": model_path,
             "test_metrics": {"auc": auc, "f1": f1, "precision": precision, "recall": recall},
@@ -365,7 +366,7 @@ def finetune_credit_risk(
             "quality_gate_passed": passed,
             "feature_importance": dict(importance_sorted[:20]),
             "fairness_report": fairness,
-            "mlflow_run_id": mlflow.active_run().info.run_id,
+            "mlflow_run_id": active_run.info.run_id if active_run else None,
         }
         
         if passed:

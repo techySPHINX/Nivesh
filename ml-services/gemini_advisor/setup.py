@@ -15,6 +15,7 @@ import logging
 import sys
 import os
 from pathlib import Path
+from typing import Optional
 
 # Add parent directory to path
 sys.path.append(str(Path(__file__).parent.parent))
@@ -34,7 +35,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
-def test_advisor(ollama_url: str = None):
+def test_advisor(ollama_url: Optional[str] = None):
     """Test local LLM advisor with sample queries."""
     logger.info("=" * 80)
     logger.info("Testing Local LLM Financial Advisor")

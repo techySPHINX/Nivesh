@@ -48,7 +48,7 @@ class TestInputValidator:
     def test_validate_text_not_string(self):
         """Test non-string input rejection"""
         with pytest.raises(ValueError, match="must be a string"):
-            InputValidator.validate_text(123)
+            InputValidator.validate_text(123)  # type: ignore[arg-type]
 
     def test_validate_text_null_bytes(self):
         """Test null byte removal"""
@@ -91,7 +91,7 @@ class TestInputValidator:
     def test_validate_numeric_not_number(self):
         """Test non-numeric input"""
         with pytest.raises(ValueError, match="must be a number"):
-            InputValidator.validate_numeric("abc", "amount")
+            InputValidator.validate_numeric("abc", "amount")  # type: ignore[arg-type]
 
     def test_validate_dict_valid(self):
         """Test valid dictionary"""
@@ -109,7 +109,7 @@ class TestInputValidator:
     def test_validate_dict_not_dict(self):
         """Test non-dictionary input"""
         with pytest.raises(ValueError, match="must be a dictionary"):
-            InputValidator.validate_dict("not a dict")
+            InputValidator.validate_dict("not a dict")  # type: ignore[arg-type]
 
 
 class TestRateLimiter:

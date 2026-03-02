@@ -318,8 +318,8 @@ def sanitize_log_data(data: dict) -> dict:
     return sanitized
 
 
-# Exception classes
-class ValidationError(Exception):
+# Exception classes (use shared.exceptions.ValidationError for cross-module compatibility)
+class InputValidationError(Exception):
     """Input validation error"""
     pass
 

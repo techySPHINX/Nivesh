@@ -2,7 +2,7 @@
 Shared configuration for ML services
 """
 import os
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 from pydantic_settings import BaseSettings
 from pydantic import Field
 
@@ -24,7 +24,7 @@ class MLConfig(BaseSettings):
     redis_host: str = Field(default="localhost", env="REDIS_HOST")
     redis_port: int = Field(default=6379, env="REDIS_PORT")
     redis_db: int = Field(default=0, env="REDIS_DB")
-    redis_password: str = Field(default=None, env="REDIS_PASSWORD")
+    redis_password: Optional[str] = Field(default=None, env="REDIS_PASSWORD")
     feature_ttl_seconds: int = Field(
         default=3600, env="FEATURE_TTL_SECONDS")  # 1 hour
 
@@ -39,8 +39,8 @@ class MLConfig(BaseSettings):
         default="local", env="MODEL_STORAGE_BACKEND")  # local, s3, gcs
     model_storage_path: str = Field(
         default="./models", env="MODEL_STORAGE_PATH")
-    s3_bucket: str = Field(default=None, env="S3_BUCKET")
-    gcs_bucket: str = Field(default=None, env="GCS_BUCKET")
+    s3_bucket: Optional[str] = Field(default=None, env="S3_BUCKET")
+    gcs_bucket: Optional[str] = Field(default=None, env="GCS_BUCKET")
 
     # Model Server
     model_server_host: str = Field(default="0.0.0.0", env="MODEL_SERVER_HOST")

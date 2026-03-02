@@ -1,11 +1,6 @@
 """
 Feature Builders - Functions to compute features from raw data
 """
-from shared import get_logger, FEATURE_SCHEMAS
-import pandas as pd
-import numpy as np
-from typing import Dict, Any, Optional
-from datetime import datetime, timedelta
 import sys
 import os
 
@@ -13,13 +8,19 @@ import os
 sys.path.insert(0, os.path.abspath(
     os.path.join(os.path.dirname(__file__), '..')))
 
+from shared import get_logger, FEATURE_SCHEMAS
+import pandas as pd
+import numpy as np
+from typing import Dict, Any, Optional
+from datetime import datetime, timedelta
+
 
 logger = get_logger(__name__)
 
 
 def build_user_financial_features(
     user_id: str,
-    db_connection: Any = None
+    db_connection: Optional[Any] = None
 ) -> Dict[str, Any]:
     """
     Build financial profile features for a user
@@ -180,7 +181,7 @@ def build_transaction_features(
 def build_spending_pattern_features(
     user_id: str,
     category: str,
-    db_connection: Any = None,
+    db_connection: Optional[Any] = None,
     lookback_days: int = 90
 ) -> Dict[str, Any]:
     """
@@ -256,7 +257,7 @@ def build_spending_pattern_features(
 
 def build_credit_risk_features(
     user_id: str,
-    db_connection: Any = None
+    db_connection: Optional[Any] = None
 ) -> Dict[str, Any]:
     """
     Build credit risk features for a user

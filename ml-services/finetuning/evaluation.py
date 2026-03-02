@@ -29,7 +29,7 @@ logger = logging.getLogger(__name__)
 class ModelEvaluator:
     """Evaluate fine-tuned models against quality thresholds."""
 
-    def __init__(self, thresholds: EvalThresholds = None):
+    def __init__(self, thresholds: Optional[EvalThresholds] = None):
         self.thresholds = thresholds or EvalThresholds()
         self.results = {}
 
@@ -170,9 +170,9 @@ class ModelEvaluator:
 
     def evaluate_llm_advisor(
         self,
-        train_loss: float = None,
-        eval_loss: float = None,
-        test_responses: List[Dict] = None,
+        train_loss: Optional[float] = None,
+        eval_loss: Optional[float] = None,
+        test_responses: Optional[List[Dict]] = None,
     ) -> Dict:
         """Evaluate LLM advisor quality."""
         # Basic loss check

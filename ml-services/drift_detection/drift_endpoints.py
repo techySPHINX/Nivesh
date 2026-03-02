@@ -15,7 +15,7 @@ from fastapi import APIRouter, HTTPException, BackgroundTasks
 from pydantic import BaseModel
 import pandas as pd
 
-from drift_monitor import DriftMonitor
+from drift_detection.drift_monitor import DriftMonitor
 
 router = APIRouter(prefix="/monitoring", tags=["monitoring"])
 

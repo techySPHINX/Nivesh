@@ -6,8 +6,15 @@ Version: 2.0.0
 Last Updated: January 27, 2026
 """
 
+import sys
+import logging
+from pathlib import Path
+
+# Add parent directory to path for imports
+sys.path.append(str(Path(__file__).parent.parent))
+
 from model_server.health import router as health_router
-from shared.logger import setup_logger
+from shared.logger import get_logger as setup_logger
 from shared.config import MLConfig
 from shared.security import verify_api_key, check_rate_limit, InputValidator
 from shared.exceptions import (
@@ -34,12 +41,6 @@ import hashlib
 import time
 from prometheus_client import Counter, Histogram, generate_latest, CONTENT_TYPE_LATEST
 from fastapi.responses import Response
-import logging
-import sys
-from pathlib import Path
-
-# Add parent directory to path for imports
-sys.path.append(str(Path(__file__).parent.parent))
 
 
 # Configure logging
@@ -57,7 +58,7 @@ app = FastAPI(
 )
 
 # CORS middleware
-cors_origins = config.cors_origins if hasattr(
+cors_origins = config.cors_origins if hasattr( # type: ignore
     config, 'cors_origins') else ["*"]
 app.add_middleware(
     CORSMiddleware,
@@ -332,9 +333,9 @@ async def predict_intent(
                 min_length=3,
                 max_length=512
             )
-        except ValidationError as e:
+        except (ValidationError, ValueError) as e:
             track_invalid_input(model_name, "invalid_query")
-            raise
+            raise HTTPException(status_code=400, detail=str(e))
 
         # Check cache
         cache_key = generate_cache_key(model_name, query)
@@ -377,7 +378,7 @@ async def predict_intent(
 
         return IntentClassificationResponse(**response)
 
-    except ValidationError as e:
+    except (ValidationError, ValueError) as e:
         logger.warning(f"Invalid input for intent classification: {e}")
         raise HTTPException(status_code=400, detail=str(e))
     except ModelNotLoadedError as e:
@@ -645,7 +646,7 @@ async def clear_cache():
 sys.path.insert(0, str(Path(__file__).parent.parent / 'drift_detection'))
 
 try:
-    from drift_endpoints import router as drift_router
+    from drift_detection.drift_endpoints import router as drift_router
     app.include_router(drift_router)
     logger.info("Drift detection endpoints registered")
 except Exception as e:

@@ -3,6 +3,13 @@ Feature Store - Redis-backed feature storage for fast inference
 
 Stores precomputed features with configurable TTL
 """
+import sys
+import os
+
+# Add parent directory to path
+sys.path.insert(0, os.path.abspath(
+    os.path.join(os.path.dirname(__file__), '..')))
+
 from shared import config, get_logger
 import redis
 import json
@@ -10,12 +17,6 @@ from typing import Dict, Any, Optional, List
 from datetime import datetime, timedelta
 import pandas as pd
 import numpy as np
-import sys
-import os
-
-# Add parent directory to path
-sys.path.insert(0, os.path.abspath(
-    os.path.join(os.path.dirname(__file__), '..')))
 
 
 logger = get_logger(__name__)
@@ -26,10 +27,10 @@ class FeatureStore:
 
     def __init__(
         self,
-        host: str = None,
-        port: int = None,
-        db: int = None,
-        password: str = None
+        host: Optional[str] = None,
+        port: Optional[int] = None,
+        db: Optional[int] = None,
+        password: Optional[str] = None
     ):
         """
         Initialize feature store

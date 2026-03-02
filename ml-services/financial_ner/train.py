@@ -1,17 +1,18 @@
 """
 Training script for Financial NER model
 """
-from shared.mlflow_utils import create_experiment, log_model_params, log_model_metrics
-from shared import get_logger
-from financial_ner.model import FinancialNER
 import os
 import sys
 import argparse
-import mlflow
 
 # Add parent directory to path
 sys.path.insert(0, os.path.abspath(
     os.path.join(os.path.dirname(__file__), '..')))
+
+from shared.mlflow_utils import create_experiment, log_model_params, log_model_metrics
+from shared import get_logger
+from financial_ner.model import FinancialNER
+import mlflow
 
 
 logger = get_logger(__name__)

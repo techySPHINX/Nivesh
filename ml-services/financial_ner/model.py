@@ -3,23 +3,25 @@ Financial NER (Named Entity Recognition) Model
 
 SpaCy-based NER for extracting financial entities
 """
-from shared.mlflow_utils import create_experiment, log_model_params, log_model_metrics
-from shared import config, get_logger, NER_ENTITY_TYPES
-import spacy
-from spacy.training import Example
-from spacy.util import minibatch, compounding
-import json
-import random
-from typing import List, Dict, Any, Tuple
-import mlflow
-import mlflow.spacy
-from pathlib import Path
 import sys
 import os
+from pathlib import Path
 
 # Add parent directory to path
 sys.path.insert(0, os.path.abspath(
     os.path.join(os.path.dirname(__file__), '..')))
+
+from shared.mlflow_utils import create_experiment, log_model_params, log_model_metrics
+from shared import config, get_logger, NER_ENTITY_TYPES
+import spacy
+from spacy.training import Example
+from spacy.util import minibatch
+from thinc.schedules import compounding
+import json
+import random
+from typing import List, Dict, Any, Optional, Tuple
+import mlflow
+import mlflow.spacy
 
 
 logger = get_logger(__name__)
@@ -28,7 +30,7 @@ logger = get_logger(__name__)
 class FinancialNER:
     """Financial Named Entity Recognition model"""
 
-    def __init__(self, model_name: str = None):
+    def __init__(self, model_name: Optional[str] = None):
         """
         Initialize Financial NER
 
@@ -36,7 +38,7 @@ class FinancialNER:
             model_name: Base SpaCy model name (defaults to config)
         """
         self.model_name = model_name or config.ner_model_name
-        self.nlp = None
+        self.nlp: Optional[spacy.language.Language] = None
         self.entity_types = NER_ENTITY_TYPES
 
         logger.info(
@@ -55,12 +57,12 @@ class FinancialNER:
 
         # Add entity labels
         for entity_type in self.entity_types:
-            ner.add_label(entity_type)
+            ner.add_label(entity_type)  # type: ignore[union-attr]
 
         logger.info(
             f"Created blank model with {len(self.entity_types)} entity types")
 
-    def load_model(self, model_path: str = None):
+    def load_model(self, model_path: Optional[str] = None):
         """Load pre-trained SpaCy model"""
         if model_path:
             logger.info(f"Loading model from {model_path}")
@@ -126,6 +128,8 @@ class FinancialNER:
 
         if self.nlp is None:
             self.create_blank_model()
+
+        assert self.nlp is not None, "NLP model must be initialized before training"
 
         # Get NER component
         ner = self.nlp.get_pipe("ner")

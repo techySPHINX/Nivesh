@@ -105,9 +105,9 @@ def format_chat_template(system: str, user: str, assistant: str = "") -> str:
 
 
 def finetune_llm(
-    config: LLMFinetuneConfig = None,
-    data_path: str = None,
-    output_dir: str = None,
+    config: Optional[LLMFinetuneConfig] = None,
+    data_path: Optional[str] = None,
+    output_dir: Optional[str] = None,
 ) -> Dict:
     """
     Full QLoRA fine-tuning pipeline for LLM.
@@ -131,16 +131,24 @@ def finetune_llm(
             AutoModelForCausalLM, AutoTokenizer,
             TrainingArguments, BitsAndBytesConfig
         )
-        from peft import (
-            LoraConfig, get_peft_model, prepare_model_for_kbit_training,
-            PeftModel
-        )
         from trl import SFTTrainer
         from datasets import Dataset
     except ImportError as e:
         logger.error(
             f"Missing dependency: {e}\n"
             "Install with: pip install torch transformers peft trl bitsandbytes datasets"
+        )
+        return {"error": str(e), "quality_gate_passed": False}
+    
+    try:
+        from peft import (
+            LoraConfig, get_peft_model, prepare_model_for_kbit_training,
+            PeftModel
+        )
+    except ImportError as e:
+        logger.error(
+            f"Missing dependency: {e}\n"
+            "Install with: pip install peft"
         )
         return {"error": str(e), "quality_gate_passed": False}
     
@@ -465,7 +473,7 @@ PARAMETER stop "<|end_of_text|>"
 
 
 def create_ollama_model_from_adapter(
-    adapter_path: str = None,
+    adapter_path: Optional[str] = None,
     model_name: str = "nivesh-advisor",
 ):
     """
