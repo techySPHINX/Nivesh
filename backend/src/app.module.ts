@@ -18,6 +18,10 @@ import { GoalManagementModule } from './modules/goal-management/goal-management.
 import { BudgetManagementModule } from './modules/budget-management/budget-management.module';
 import { AiReasoningModule } from './modules/ai-reasoning/ai-reasoning.module';
 import { KnowledgeGraphModule } from './modules/knowledge-graph/knowledge-graph.module';
+import { PaymentModule } from './modules/payment/payment.module';
+import { SimulationsModule } from './modules/simulations/simulations.module';
+import { AlertsModule } from './modules/alerts/alerts.module';
+import { AnalyticsModule } from './modules/analytics/analytics.module';
 
 // Controllers
 import { HealthController } from './health.controller';
@@ -61,6 +65,10 @@ import { HealthController } from './health.controller';
     BudgetManagementModule,
     AiReasoningModule,
     KnowledgeGraphModule,
+    PaymentModule,
+    SimulationsModule,
+    AlertsModule,
+    AnalyticsModule,
   ],
   controllers: [HealthController],
   providers: [],
