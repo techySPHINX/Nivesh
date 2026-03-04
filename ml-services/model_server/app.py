@@ -333,7 +333,7 @@ async def predict_intent(
                 min_length=3,
                 max_length=512
             )
-        except ValidationError as e:
+        except (ValidationError, ValueError) as e:
             track_invalid_input(model_name, "invalid_query")
             raise HTTPException(status_code=400, detail=str(e))
 
@@ -378,7 +378,7 @@ async def predict_intent(
 
         return IntentClassificationResponse(**response)
 
-    except ValidationError as e:
+    except (ValidationError, ValueError) as e:
         logger.warning(f"Invalid input for intent classification: {e}")
         raise HTTPException(status_code=400, detail=str(e))
     except ModelNotLoadedError as e:

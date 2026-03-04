@@ -318,6 +318,6 @@ def sanitize_log_data(data: dict) -> dict:
     return sanitized
 
 
-# Exception classes removed — use shared.exceptions.ValidationError,
-# shared.exceptions.AuthenticationError, and shared.exceptions.RateLimitError
+# Exception classes removed — use the appropriate exceptions from
+# shared.exceptions (for example, shared.exceptions.ValidationError)
 # for cross-module compatibility instead of defining duplicates here.

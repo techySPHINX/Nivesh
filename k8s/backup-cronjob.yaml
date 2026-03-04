@@ -22,8 +22,9 @@ spec:
             component: backup
         spec:
           restartPolicy: OnFailure
-          # Run backups sequentially via initContainers so a single failure
-          # does not block the remaining databases.
+          # Run database backups sequentially via initContainers.
+          # Note: if any initContainer backup fails, the job fails and later
+          # backups (including the Redis main container) will not run.
           initContainers:
             # PostgreSQL backup (runs first)
             - name: postgres-backup
