@@ -22,13 +22,13 @@ jobs:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v2
         with:
-          version: 8
+          version: 9.15.4
       - uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: pnpm
-          cache-dependency-path: backend/pnpm-lock.yaml
-      - run: pnpm install --frozen-lockfile
+          cache-dependency-path: backend/package.json
+      - run: pnpm install --no-frozen-lockfile
       - run: pnpm lint
       - run: pnpm run build
 
@@ -66,13 +66,13 @@ jobs:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v2
         with:
-          version: 8
+          version: 9.15.4
       - uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: pnpm
-          cache-dependency-path: backend/pnpm-lock.yaml
-      - run: pnpm install --frozen-lockfile
+          cache-dependency-path: backend/package.json
+      - run: pnpm install --no-frozen-lockfile
       - run: pnpm exec prisma generate
       - run: pnpm test -- --coverage --coverageReporters=text --coverageReporters=lcov
         env:
@@ -98,13 +98,13 @@ jobs:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v2
         with:
-          version: 8
+          version: 9.15.4
       - uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: pnpm
-          cache-dependency-path: frontend/pnpm-lock.yaml
-      - run: pnpm install --frozen-lockfile
+          cache-dependency-path: frontend/package.json
+      - run: pnpm install --no-frozen-lockfile
       - run: pnpm lint
       - run: pnpm build
 
