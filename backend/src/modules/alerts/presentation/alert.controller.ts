@@ -132,7 +132,7 @@ export class AlertController {
   @ApiResponse({ status: 200, description: 'Alert marked as read', type: AlertResponseDto })
   async markRead(
     @Param('alertId', ParseUUIDPipe) alertId: string,
-    @Query('userId') userId: string,
+    @Query('userId') userId: string, // TODO: Replace with @Req() user identity from auth guard to prevent IDOR
   ): Promise<AlertResponseDto> {
     return this.commandBus.execute(new MarkAlertReadCommand(alertId, userId));
   }
@@ -142,7 +142,7 @@ export class AlertController {
   @ApiResponse({ status: 200, description: 'Alert dismissed', type: AlertResponseDto })
   async dismiss(
     @Param('alertId', ParseUUIDPipe) alertId: string,
-    @Query('userId') userId: string,
+    @Query('userId') userId: string, // TODO: Replace with @Req() user identity from auth guard to prevent IDOR
   ): Promise<AlertResponseDto> {
     return this.commandBus.execute(new DismissAlertCommand(alertId, userId));
   }

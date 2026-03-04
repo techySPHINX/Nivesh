@@ -3,8 +3,8 @@ import { Logger } from '@nestjs/common';
 import { GetNetWorthHistoryQuery } from '../get-net-worth-history.query';
 import { NetWorthHistoryResponseDto } from '../../dto/analytics-response.dto';
 import { ClickhouseService } from '../../../../core/database/clickhouse/clickhouse.service';
-import { PrismaService } from '../../../../core/database/prisma.service';
-import { TimeGranularity, NetWorthPoint } from '../../../analytics/domain/entities/analytics.entity';
+import { PrismaService } from '../../../../core/database/postgres/prisma.service';
+import { TimeGranularity, NetWorthPoint } from '../../../domain/entities/analytics.entity';
 
 @QueryHandler(GetNetWorthHistoryQuery)
 export class GetNetWorthHistoryHandler implements IQueryHandler<GetNetWorthHistoryQuery> {

@@ -3,8 +3,8 @@ import { Logger } from '@nestjs/common';
 import { GetCategoryBreakdownQuery } from '../get-category-breakdown.query';
 import { CategoryBreakdownResponseDto } from '../../dto/analytics-response.dto';
 import { ClickhouseService } from '../../../../core/database/clickhouse/clickhouse.service';
-import { PrismaService } from '../../../../core/database/prisma.service';
-import { CategoryBreakdown } from '../../../analytics/domain/entities/analytics.entity';
+import { PrismaService } from '../../../../core/database/postgres/prisma.service';
+import { CategoryBreakdown } from '../../../domain/entities/analytics.entity';
 
 @QueryHandler(GetCategoryBreakdownQuery)
 export class GetCategoryBreakdownHandler implements IQueryHandler<GetCategoryBreakdownQuery> {

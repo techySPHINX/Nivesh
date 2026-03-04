@@ -3,8 +3,8 @@ import { Logger } from '@nestjs/common';
 import { GetSpendingTrendsQuery } from '../get-spending-trends.query';
 import { SpendingTrendsResponseDto } from '../../dto/analytics-response.dto';
 import { ClickhouseService } from '../../../../core/database/clickhouse/clickhouse.service';
-import { PrismaService } from '../../../../core/database/prisma.service';
-import { TimeGranularity, SpendingTrendPoint } from '../../../analytics/domain/entities/analytics.entity';
+import { PrismaService } from '../../../../core/database/postgres/prisma.service';
+import { TimeGranularity, SpendingTrendPoint } from '../../../domain/entities/analytics.entity';
 
 @QueryHandler(GetSpendingTrendsQuery)
 export class GetSpendingTrendsHandler implements IQueryHandler<GetSpendingTrendsQuery> {
