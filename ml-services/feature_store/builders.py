@@ -8,9 +8,8 @@ import os
 sys.path.insert(0, os.path.abspath(
     os.path.join(os.path.dirname(__file__), '..')))
 
-from shared import get_logger, FEATURE_SCHEMAS
+from shared import get_logger
 import pandas as pd
-import numpy as np
 from typing import Dict, Any, Optional
 from datetime import datetime, timedelta
 

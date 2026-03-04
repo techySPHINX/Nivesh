@@ -9,8 +9,7 @@ predict flow, input validation, output format).
 import sys
 import os
 import pytest
-import numpy as np
-from unittest.mock import patch, MagicMock, PropertyMock
+from unittest.mock import MagicMock
 
 # Ensure ml-services root on path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
@@ -47,8 +46,8 @@ def _mock_softmax(logits, dim=-1):
 
 _mock_torch.softmax = _mock_softmax
 
-from intent_classifier.model import IntentClassifier
-from shared.config import INTENT_LABELS
+from intent_classifier.model import IntentClassifier  # noqa: E402
+from shared.config import INTENT_LABELS  # noqa: E402
 
 
 # =============================================

@@ -23,7 +23,6 @@ from spacy.util import minibatch, compounding
 import mlflow
 import mlflow.spacy
 import optuna
-import numpy as np
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 

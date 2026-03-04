@@ -14,15 +14,12 @@ import json
 import logging
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
-from datetime import datetime, timedelta
 
 import pandas as pd
 import numpy as np
 from sklearn.ensemble import IsolationForest
 from sklearn.preprocessing import StandardScaler
-from sklearn.metrics import classification_report, confusion_matrix, roc_auc_score
-import mlflow
-import mlflow.sklearn
+from sklearn.metrics import roc_auc_score
 import joblib
 
 logger = logging.getLogger(__name__)

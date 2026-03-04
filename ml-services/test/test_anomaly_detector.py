@@ -12,7 +12,6 @@ import os
 import pytest
 import numpy as np
 import pandas as pd
-from unittest.mock import patch, MagicMock
 from datetime import datetime, timedelta
 
 # Ensure the ml-services root is on sys.path

@@ -336,7 +336,6 @@ def finetune_intent_classifier(
 
 def _export_onnx(model, tokenizer, config, output_dir):
     """Export fine-tuned model to ONNX for fast inference."""
-    import onnx
     from torch.onnx import export as onnx_export
 
     model.eval()

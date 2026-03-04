@@ -9,13 +9,10 @@ Test Coverage:
 """
 
 import pytest
-import time
-from datetime import datetime
 from shared.monitoring import (
     PredictionTracker, ModelHealthMonitor,
     track_cache_access, track_invalid_input,
-    get_prediction_tracker, health_monitor,
-    prediction_total, prediction_latency
+    get_prediction_tracker, prediction_total, prediction_latency
 )
 
 
@@ -114,7 +111,7 @@ class TestModelHealthMonitor:
         monitor.register_model("test_model")
 
         assert "test_model" in monitor.model_states
-        assert monitor.model_states["test_model"]["loaded"] == False
+        assert not monitor.model_states["test_model"]["loaded"]
         assert monitor.model_states["test_model"]["prediction_count"] == 0
 
     def test_record_load_success(self):
@@ -122,7 +119,7 @@ class TestModelHealthMonitor:
         monitor = ModelHealthMonitor()
         monitor.record_load("test_model", success=True, load_time=1.5)
 
-        assert monitor.model_states["test_model"]["loaded"] == True
+        assert monitor.model_states["test_model"]["loaded"]
         assert monitor.model_states["test_model"]["load_time"] == 1.5
 
     def test_record_load_failure(self):
@@ -130,7 +127,7 @@ class TestModelHealthMonitor:
         monitor = ModelHealthMonitor()
         monitor.record_load("test_model", success=False, load_time=0)
 
-        assert monitor.model_states["test_model"]["loaded"] == False
+        assert not monitor.model_states["test_model"]["loaded"]
 
     def test_record_prediction(self):
         """Test recording predictions"""
@@ -168,7 +165,7 @@ class TestModelHealthMonitor:
         health = monitor.get_health_status("test_model")
 
         assert health["status"] == "healthy"
-        assert health["loaded"] == True
+        assert health["loaded"]
         assert health["error_rate"] == 0.0
         assert health["prediction_count"] == 10
 
@@ -210,7 +207,7 @@ class TestModelHealthMonitor:
         health = monitor.get_health_status("test_model")
 
         assert health["status"] == "not_loaded"
-        assert health["loaded"] == False
+        assert not health["loaded"]
 
     def test_get_health_status_unknown(self):
         """Test health status for unknown model"""
@@ -231,8 +228,8 @@ class TestModelHealthMonitor:
 
         assert "model1" in all_health
         assert "model2" in all_health
-        assert all_health["model1"]["loaded"] == True
-        assert all_health["model2"]["loaded"] == False
+        assert all_health["model1"]["loaded"]
+        assert not all_health["model2"]["loaded"]
 
 
 class TestTrackingFunctions:

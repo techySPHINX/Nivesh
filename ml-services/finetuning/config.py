@@ -6,7 +6,7 @@ data generation settings, and evaluation thresholds.
 """
 
 from dataclasses import dataclass, field
-from typing import Dict, List, Optional, Union
+from typing import List, Union
 from pathlib import Path
 
 

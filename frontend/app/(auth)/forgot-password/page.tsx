@@ -21,8 +21,8 @@ export default function ForgotPasswordPage() {
       await sendPasswordReset(email);
       setSuccess(true);
       setEmail('');
-    } catch (err: any) {
-      setError(err.message || 'Failed to send reset email');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to send reset email');
     } finally {
       setLoading(false);
     }
@@ -36,7 +36,7 @@ export default function ForgotPasswordPage() {
           <h1 className="text-4xl font-bold text-gray-900 mb-2">Nivesh</h1>
           <h2 className="text-2xl font-semibold text-gray-700">Reset Password</h2>
           <p className="mt-2 text-sm text-gray-600">
-            Enter your email and we'll send you a link to reset your password
+            Enter your email and we&apos;ll send you a link to reset your password
           </p>
         </div>
 

@@ -12,8 +12,7 @@ sys.path.insert(0, os.path.abspath(
 from shared.mlflow_utils import (
     create_experiment,
     log_model_params,
-    log_model_metrics,
-    register_model
+    log_model_metrics
 )
 from shared import config, get_logger
 from intent_classifier.model import IntentClassifier

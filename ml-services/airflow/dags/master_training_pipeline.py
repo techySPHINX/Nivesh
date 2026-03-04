@@ -13,7 +13,6 @@ from datetime import datetime, timedelta
 from airflow import DAG
 from airflow.operators.python import PythonOperator
 from airflow.operators.trigger_dagrun import TriggerDagRunOperator
-from airflow.sensors.external_task import ExternalTaskSensor
 import logging
 
 logger = logging.getLogger(__name__)
@@ -43,7 +42,7 @@ dag = DAG(
 def check_data_freshness(**context):
     """Check if training data is fresh enough."""
     from pathlib import Path
-    from datetime import datetime, timedelta
+    from datetime import datetime
     
     logger.info("Checking training data freshness")
     

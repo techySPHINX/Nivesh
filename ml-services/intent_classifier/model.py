@@ -10,10 +10,8 @@ import os
 sys.path.insert(0, os.path.abspath(
     os.path.join(os.path.dirname(__file__), '..')))
 
-from shared.mlflow_utils import create_experiment, log_model_params, log_model_metrics
 from shared import config, get_logger, INTENT_LABELS
 import torch
-import torch.nn as nn
 from transformers import (
     DistilBertForSequenceClassification,
     DistilBertTokenizer,
@@ -21,14 +19,12 @@ from transformers import (
     TrainingArguments,
     EarlyStoppingCallback
 )
-from datasets import Dataset, load_dataset
+from datasets import Dataset
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score, f1_score, classification_report, confusion_matrix
-import mlflow
-import mlflow.pytorch
 import numpy as np
 import json
-from typing import Dict, Any, List, Optional, Tuple, Union
+from typing import Dict, Any, Optional, Tuple
 
 
 logger = get_logger(__name__)

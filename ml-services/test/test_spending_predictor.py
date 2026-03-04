@@ -11,8 +11,8 @@ import os
 import pytest
 import numpy as np
 import pandas as pd
-from unittest.mock import patch, MagicMock, PropertyMock
-from datetime import datetime, timedelta
+from unittest.mock import patch, MagicMock
+from datetime import datetime
 
 # Ensure the ml-services root is on sys.path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))

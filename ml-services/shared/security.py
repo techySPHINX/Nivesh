@@ -10,11 +10,10 @@ Provides:
 
 import re
 import hashlib
-import secrets
 from typing import Optional, List
 from fastapi import Security, HTTPException, status, Request
 from fastapi.security import APIKeyHeader
-from pydantic import BaseModel, validator
+from pydantic import BaseModel
 import os
 import logging
 

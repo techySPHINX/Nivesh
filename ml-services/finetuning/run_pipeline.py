@@ -29,7 +29,6 @@ Usage:
 import argparse
 import json
 import logging
-import os
 import sys
 import time
 import traceback
@@ -47,9 +46,6 @@ from finetuning.config import (
     CreditRiskFinetuneConfig,
     SpendingFinetuneConfig,
     LLMFinetuneConfig,
-    EvalThresholds,
-    SYNTHETIC_DATA_DIR,
-    FINETUNED_MODELS_DIR,
     EVAL_RESULTS_DIR,
 )
 

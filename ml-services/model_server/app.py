@@ -7,7 +7,6 @@ Last Updated: January 27, 2026
 """
 
 import sys
-import logging
 from pathlib import Path
 
 # Add parent directory to path for imports
@@ -18,17 +17,16 @@ from shared.logger import get_logger as setup_logger
 from shared.config import MLConfig
 from shared.security import verify_api_key, check_rate_limit, InputValidator
 from shared.exceptions import (
-    ModelNotLoadedError, ModelPredictionError, ValidationError,
-    ExternalServiceError
+    ModelNotLoadedError, ValidationError
 )
 from shared.circuit_breaker import circuit_breaker
 from shared.retry import retry_redis, retry_mlflow
 from shared.monitoring import (
-    track_prediction, get_prediction_tracker, health_monitor,
+    get_prediction_tracker, health_monitor,
     track_cache_access, track_invalid_input
 )
 from shared.performance import (
-    LRUCache, lru_cache, RequestDeduplicator, measure_performance
+    LRUCache, RequestDeduplicator
 )
 from fastapi import FastAPI, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
@@ -460,7 +458,7 @@ async def predict_spending(request: SpendingPredictionRequest):
             # Try user-specific model first
             model = load_model(
                 f'spending_predictor_{request.user_id}', 'production')
-        except:
+        except Exception:  # noqa: BLE001
             # Fall back to general model
             model = load_model('spending_predictor', 'production')
 
@@ -525,7 +523,7 @@ async def detect_anomaly(request: AnomalyDetectionRequest):
         try:
             model = load_model(
                 f'anomaly_detector_{request.user_id}', 'production')
-        except:
+        except Exception:  # noqa: BLE001
             model = load_model('anomaly_detector', 'production')
 
         # Predict using the AnomalyDetector's predict method
@@ -683,7 +681,7 @@ async def warmup_models():
             logger.info(f"Warming up {model_name}...")
 
             # Pre-load model
-            model = load_model(model_name, "production")
+            load_model(model_name, "production")
             successful_warmups.append(model_name)
 
             logger.info(f"✅ {model_name} warmed up successfully")

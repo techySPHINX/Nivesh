@@ -8,7 +8,7 @@ Version: 1.0.0
 from typing import Dict, List, Any, Optional
 import pandas as pd
 import numpy as np
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field
 from datetime import datetime
 import logging
 
