@@ -1,5 +1,3 @@
-version: "3.9"
-
 # Nivesh - Complete Docker Infrastructure
 # All services required for Issues #1-4 implementation
 
@@ -19,6 +17,7 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./scripts/docker/init-mlflow-db.sh:/docker-entrypoint-initdb.d/init-mlflow-db.sh:ro
     networks:
       - nivesh-network
     healthcheck:
@@ -135,7 +134,8 @@ services:
     image: confluentinc/cp-kafka:7.5.0
     container_name: nivesh-kafka
     depends_on:
-      - zookeeper
+      zookeeper:
+        condition: service_started
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
@@ -143,7 +143,15 @@ services:
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
       KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+      KAFKA_DEFAULT_REPLICATION_FACTOR: 1
+      KAFKA_MIN_INSYNC_REPLICAS: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "false"
+      KAFKA_LOG_RETENTION_HOURS: 168
+      KAFKA_LOG_RETENTION_BYTES: 1073741824
+      KAFKA_LOG_SEGMENT_BYTES: 536870912
+      KAFKA_NUM_PARTITIONS: 3
+      KAFKA_MESSAGE_MAX_BYTES: 1048576
+      KAFKA_COMPRESSION_TYPE: lz4
     ports:
       - "29092:29092"
     volumes:
@@ -161,6 +169,60 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+
+  kafka-init:
+    image: confluentinc/cp-kafka:7.5.0
+    container_name: nivesh-kafka-init
+    depends_on:
+      kafka:
+        condition: service_healthy
+    networks:
+      - nivesh-network
+    entrypoint: ["/bin/bash", "-c"]
+    command:
+      - |
+        echo "==> Creating Kafka topics..."
+
+        # Domain event topics (aggregate streams)
+        kafka-topics --bootstrap-server kafka:9092 --create --if-not-exists --topic user.events        --partitions 3 --replication-factor 1
+        kafka-topics --bootstrap-server kafka:9092 --create --if-not-exists --topic account.events     --partitions 3 --replication-factor 1
+        kafka-topics --bootstrap-server kafka:9092 --create --if-not-exists --topic transaction.events --partitions 6 --replication-factor 1
+        kafka-topics --bootstrap-server kafka:9092 --create --if-not-exists --topic goal.events        --partitions 3 --replication-factor 1
+        kafka-topics --bootstrap-server kafka:9092 --create --if-not-exists --topic alert.events       --partitions 3 --replication-factor 1
+        kafka-topics --bootstrap-server kafka:9092 --create --if-not-exists --topic ai.events          --partitions 3 --replication-factor 1
+        kafka-topics --bootstrap-server kafka:9092 --create --if-not-exists --topic system.events      --partitions 3 --replication-factor 1
+
+        # Granular event topics
+        kafka-topics --bootstrap-server kafka:9092 --create --if-not-exists --topic user.created       --partitions 3 --replication-factor 1
+        kafka-topics --bootstrap-server kafka:9092 --create --if-not-exists --topic user.updated       --partitions 3 --replication-factor 1
+        kafka-topics --bootstrap-server kafka:9092 --create --if-not-exists --topic user.deleted       --partitions 3 --replication-factor 1
+        kafka-topics --bootstrap-server kafka:9092 --create --if-not-exists --topic transaction.synced   --partitions 6 --replication-factor 1
+        kafka-topics --bootstrap-server kafka:9092 --create --if-not-exists --topic transaction.created  --partitions 6 --replication-factor 1
+        kafka-topics --bootstrap-server kafka:9092 --create --if-not-exists --topic transaction.updated  --partitions 6 --replication-factor 1
+        kafka-topics --bootstrap-server kafka:9092 --create --if-not-exists --topic account.linked       --partitions 3 --replication-factor 1
+        kafka-topics --bootstrap-server kafka:9092 --create --if-not-exists --topic account.synced       --partitions 3 --replication-factor 1
+        kafka-topics --bootstrap-server kafka:9092 --create --if-not-exists --topic goal.created         --partitions 3 --replication-factor 1
+        kafka-topics --bootstrap-server kafka:9092 --create --if-not-exists --topic goal.updated         --partitions 3 --replication-factor 1
+        kafka-topics --bootstrap-server kafka:9092 --create --if-not-exists --topic goal.completed       --partitions 3 --replication-factor 1
+        kafka-topics --bootstrap-server kafka:9092 --create --if-not-exists --topic goal.at_risk         --partitions 3 --replication-factor 1
+        kafka-topics --bootstrap-server kafka:9092 --create --if-not-exists --topic net_worth.calculated --partitions 3 --replication-factor 1
+        kafka-topics --bootstrap-server kafka:9092 --create --if-not-exists --topic alert.created        --partitions 3 --replication-factor 1
+        kafka-topics --bootstrap-server kafka:9092 --create --if-not-exists --topic alert.triggered      --partitions 3 --replication-factor 1
+        kafka-topics --bootstrap-server kafka:9092 --create --if-not-exists --topic ai.query.processed             --partitions 3 --replication-factor 1
+        kafka-topics --bootstrap-server kafka:9092 --create --if-not-exists --topic ai.recommendation.generated    --partitions 3 --replication-factor 1
+        kafka-topics --bootstrap-server kafka:9092 --create --if-not-exists --topic simulation.started             --partitions 3 --replication-factor 1
+        kafka-topics --bootstrap-server kafka:9092 --create --if-not-exists --topic simulation.completed           --partitions 3 --replication-factor 1
+
+        # Dead-letter queue topics
+        kafka-topics --bootstrap-server kafka:9092 --create --if-not-exists --topic dlq.user.events        --partitions 1 --replication-factor 1
+        kafka-topics --bootstrap-server kafka:9092 --create --if-not-exists --topic dlq.transaction.events --partitions 1 --replication-factor 1
+        kafka-topics --bootstrap-server kafka:9092 --create --if-not-exists --topic dlq.goal.events        --partitions 1 --replication-factor 1
+        kafka-topics --bootstrap-server kafka:9092 --create --if-not-exists --topic dlq.ai.events          --partitions 1 --replication-factor 1
+        kafka-topics --bootstrap-server kafka:9092 --create --if-not-exists --topic dlq.alert.events       --partitions 1 --replication-factor 1
+
+        echo "==> Topic creation complete"
+        kafka-topics --bootstrap-server kafka:9092 --list
+    restart: "no"
 
   # ==========================================
   # Vector Database (Qdrant) - Issue #1
@@ -192,11 +254,20 @@ services:
   mlflow:
     image: ghcr.io/mlflow/mlflow:v2.10.0
     container_name: nivesh-mlflow
-    command: mlflow server --host 0.0.0.0 --port 5000 --backend-store-uri sqlite:///mlflow.db --default-artifact-root /mlflow/artifacts
+    command: >
+      mlflow server
+      --host 0.0.0.0
+      --port 5000
+      --backend-store-uri postgresql://nivesh_user:nivesh_password@postgres:5432/mlflow
+      --default-artifact-root /mlflow/artifacts
+      --serve-artifacts
     ports:
       - "5000:5000"
     volumes:
       - mlflow_data:/mlflow
+    depends_on:
+      postgres:
+        condition: service_healthy
     networks:
       - nivesh-network
     healthcheck:
@@ -230,6 +301,8 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    # Override production CMD with --reload for local development only
+    command: uvicorn model_server.app:app --host 0.0.0.0 --port 8000 --reload
 
   # ==========================================
   # Monitoring & Observability
@@ -247,11 +320,32 @@ services:
       - "9090:9090"
     volumes:
       - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./monitoring/alerts:/etc/prometheus/alerts:ro
       - prometheus_data:/prometheus
+    depends_on:
+      - alertmanager
     networks:
       - nivesh-network
     healthcheck:
       test: ["CMD", "wget", "--spider", "-q", "http://localhost:9090/-/healthy"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  alertmanager:
+    image: prom/alertmanager:v0.26.0
+    container_name: nivesh-alertmanager
+    command:
+      - "--config.file=/etc/alertmanager/alertmanager.yml"
+      - "--storage.path=/alertmanager"
+    ports:
+      - "9093:9093"
+    volumes:
+      - ./monitoring/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+    networks:
+      - nivesh-network
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:9093/-/healthy"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -279,6 +373,62 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+
+  # ==========================================
+  # Distributed Tracing (Jaeger)
+  # ==========================================
+
+  jaeger:
+    image: jaegertracing/all-in-one:1.53
+    container_name: nivesh-jaeger
+    environment:
+      COLLECTOR_OTLP_ENABLED: "true"
+    ports:
+      - "16686:16686"   # Jaeger UI
+      - "4317:4317"     # OTLP gRPC
+      - "4318:4318"     # OTLP HTTP
+    networks:
+      - nivesh-network
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:16686/"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ==========================================
+  # Centralized Log Aggregation (Loki + Promtail)
+  # ==========================================
+
+  loki:
+    image: grafana/loki:2.9.3
+    container_name: nivesh-loki
+    command: -config.file=/etc/loki/loki.yml
+    ports:
+      - "3100:3100"
+    volumes:
+      - ./monitoring/loki/loki.yml:/etc/loki/loki.yml:ro
+      - loki_data:/loki
+    networks:
+      - nivesh-network
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:3100/ready"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  promtail:
+    image: grafana/promtail:2.9.3
+    container_name: nivesh-promtail
+    command: -config.file=/etc/promtail/promtail.yml
+    volumes:
+      - ./monitoring/promtail/promtail.yml:/etc/promtail/promtail.yml:ro
+      - /var/log:/var/log:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+    depends_on:
+      loki:
+        condition: service_healthy
+    networks:
+      - nivesh-network
 
   # ==========================================
   # Apache Airflow for ML Training Pipelines
@@ -431,6 +581,10 @@ services:
       FIREBASE_PROJECT_ID: ${FIREBASE_PROJECT_ID}
       FIREBASE_CLIENT_EMAIL: ${FIREBASE_CLIENT_EMAIL}
       FIREBASE_PRIVATE_KEY: ${FIREBASE_PRIVATE_KEY}
+
+      # OpenTelemetry
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4318
+      OTEL_SERVICE_NAME: nivesh-backend
     ports:
       - "3000:3000"
     volumes:
@@ -503,6 +657,7 @@ volumes:
   airflow_postgres_data:
   airflow_logs:
   ollama_data:
+  loki_data:
 
 # ==========================================
 # Networks

@@ -1,0 +1,189 @@
+---
+# Default deny all ingress traffic in the nivesh namespace
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-ingress
+  namespace: nivesh
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+
+---
+# Allow ingress to backend from ingress controller and ml-api
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-backend-ingress
+  namespace: nivesh
+spec:
+  podSelector:
+    matchLabels:
+      component: backend
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: ingress-nginx
+        - podSelector:
+            matchLabels:
+              component: ml-api
+      ports:
+        - port: 3000
+          protocol: TCP
+
+---
+# Allow ingress to ml-api from ingress controller and backend
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-ml-api-ingress
+  namespace: nivesh
+spec:
+  podSelector:
+    matchLabels:
+      component: ml-api
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: ingress-nginx
+        - podSelector:
+            matchLabels:
+              component: backend
+      ports:
+        - port: 8000
+          protocol: TCP
+
+---
+# Backend egress: allow traffic to databases and kafka
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: backend-egress-databases
+  namespace: nivesh
+spec:
+  podSelector:
+    matchLabels:
+      component: backend
+  policyTypes:
+    - Egress
+  egress:
+    # DNS resolution
+    - to: []
+      ports:
+        - port: 53
+          protocol: UDP
+        - port: 53
+          protocol: TCP
+    # PostgreSQL
+    - to:
+        - podSelector:
+            matchLabels:
+              component: postgres
+      ports:
+        - port: 5432
+          protocol: TCP
+    # Redis
+    - to:
+        - podSelector:
+            matchLabels:
+              component: redis
+      ports:
+        - port: 6379
+          protocol: TCP
+    # MongoDB
+    - to:
+        - podSelector:
+            matchLabels:
+              component: mongodb
+      ports:
+        - port: 27017
+          protocol: TCP
+    # Neo4j (Bolt)
+    - to:
+        - podSelector:
+            matchLabels:
+              component: neo4j
+      ports:
+        - port: 7687
+          protocol: TCP
+    # ClickHouse (HTTP & native)
+    - to:
+        - podSelector:
+            matchLabels:
+              component: clickhouse
+      ports:
+        - port: 8123
+          protocol: TCP
+        - port: 9000
+          protocol: TCP
+    # Kafka
+    - to:
+        - podSelector:
+            matchLabels:
+              component: kafka
+      ports:
+        - port: 9092
+          protocol: TCP
+    # Qdrant
+    - to:
+        - podSelector:
+            matchLabels:
+              component: qdrant
+      ports:
+        - port: 6333
+          protocol: TCP
+        - port: 6334
+          protocol: TCP
+    # Allow traffic to ml-api
+    - to:
+        - podSelector:
+            matchLabels:
+              component: ml-api
+      ports:
+        - port: 8000
+          protocol: TCP
+
+---
+# ML-API egress: only backend and mlflow
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: ml-api-egress
+  namespace: nivesh
+spec:
+  podSelector:
+    matchLabels:
+      component: ml-api
+  policyTypes:
+    - Egress
+  egress:
+    # DNS resolution
+    - to: []
+      ports:
+        - port: 53
+          protocol: UDP
+        - port: 53
+          protocol: TCP
+    # Backend
+    - to:
+        - podSelector:
+            matchLabels:
+              component: backend
+      ports:
+        - port: 3000
+          protocol: TCP
+    # MLflow
+    - to:
+        - podSelector:
+            matchLabels:
+              component: mlflow
+      ports:
+        - port: 5000
+          protocol: TCP

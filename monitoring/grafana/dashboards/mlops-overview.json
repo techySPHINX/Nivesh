@@ -1,0 +1,89 @@
+{
+  "annotations": { "list": [] },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [],
+  "panels": [
+    {
+      "title": "Model Drift Score Over Time",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "targets": [
+        { "expr": "model_drift_score", "legendFormat": "{{model_name}}" }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": { "drawStyle": "line", "fillOpacity": 10, "thresholdsStyle": { "mode": "line" } },
+          "thresholds": { "steps": [{ "color": "green", "value": null }, { "color": "yellow", "value": 0.3 }, { "color": "red", "value": 0.5 }] }
+        }
+      }
+    },
+    {
+      "title": "Training Pipeline Status",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 6, "x": 12, "y": 0 },
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "targets": [
+        { "expr": "airflow_dag_processing_total_parse_time", "legendFormat": "parse time" }
+      ]
+    },
+    {
+      "title": "MLflow Experiments",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 6, "x": 18, "y": 0 },
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "targets": [
+        { "expr": "mlflow_experiments_total", "legendFormat": "total experiments" }
+      ]
+    },
+    {
+      "title": "Airflow DAG Success/Failure",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 4 },
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "targets": [
+        { "expr": "airflow_dagrun_duration_success_count", "legendFormat": "success" },
+        { "expr": "airflow_dagrun_duration_failed_count", "legendFormat": "failed" }
+      ],
+      "fieldConfig": {
+        "defaults": { "custom": { "drawStyle": "bars", "stacking": { "mode": "normal" } } }
+      }
+    },
+    {
+      "title": "Drifted Features Count",
+      "type": "bargauge",
+      "gridPos": { "h": 4, "w": 12, "x": 0, "y": 8 },
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "targets": [
+        { "expr": "model_drifted_features", "legendFormat": "{{model_name}}" }
+      ]
+    },
+    {
+      "title": "Dataset Drift Status",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 12, "x": 0, "y": 12 },
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "targets": [
+        { "expr": "model_dataset_drift", "legendFormat": "{{model_name}}" }
+      ],
+      "fieldConfig": {
+        "defaults": { "mappings": [{ "type": "value", "options": { "0": { "text": "No Drift", "color": "green" }, "1": { "text": "DRIFT", "color": "red" } } }] }
+      }
+    }
+  ],
+  "refresh": "30s",
+  "schemaVersion": 38,
+  "tags": ["mlops", "nivesh", "drift"],
+  "templating": {
+    "list": [
+      { "name": "DS_PROMETHEUS", "type": "datasource", "query": "prometheus", "current": { "text": "Prometheus", "value": "Prometheus" } }
+    ]
+  },
+  "time": { "from": "now-6h", "to": "now" },
+  "title": "ML Ops Overview",
+  "uid": "nivesh-mlops-overview",
+  "version": 1
+}

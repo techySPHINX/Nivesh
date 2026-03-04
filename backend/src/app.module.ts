@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, MiddlewareConsumer, NestModule } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { EventEmitterModule } from '@nestjs/event-emitter';
@@ -10,6 +10,7 @@ import { MessagingModule } from './core/messaging/messaging.module';
 import { SecurityModule } from './core/security/security.module';
 import { ObservabilityModule } from './core/observability/observability.module';
 import { IntegrationsModule } from './core/integrations/integrations.module';
+import { CorrelationIdMiddleware } from './core/observability/correlation-id.middleware';
 
 // Feature modules
 import { UserModule } from './modules/user/user.module';
@@ -75,4 +76,8 @@ import { HealthController } from './health.controller';
   controllers: [HealthController],
   providers: [],
 })
-export class AppModule { }
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(CorrelationIdMiddleware).forRoutes('*');
+  }
+}

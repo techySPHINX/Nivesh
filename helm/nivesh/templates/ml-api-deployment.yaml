@@ -1,0 +1,55 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "nivesh.fullname" . }}-ml-api
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "nivesh.labels" . | nindent 4 }}
+    app.kubernetes.io/component: ml-api
+spec:
+  {{- if not .Values.autoscaling.mlApi.enabled }}
+  replicas: {{ .Values.mlApi.replicas }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "nivesh.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: ml-api
+  template:
+    metadata:
+      labels:
+        {{- include "nivesh.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: ml-api
+    spec:
+      containers:
+        - name: ml-api
+          image: "{{ .Values.mlApi.image.repository }}:{{ .Values.mlApi.image.tag }}"
+          imagePullPolicy: {{ .Values.mlApi.image.pullPolicy }}
+          ports:
+            - containerPort: {{ .Values.mlApi.service.targetPort }}
+              protocol: TCP
+          {{- if .Values.mlApi.env }}
+          env:
+            {{- range $key, $value := .Values.mlApi.env }}
+            - name: {{ $key }}
+              value: {{ $value | quote }}
+            {{- end }}
+          {{- end }}
+          resources:
+            {{- toYaml .Values.mlApi.resources | nindent 12 }}
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: {{ .Values.mlApi.service.targetPort }}
+            initialDelaySeconds: 15
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: {{ .Values.mlApi.service.targetPort }}
+            initialDelaySeconds: 45
+            periodSeconds: 15
+            timeoutSeconds: 5
+            failureThreshold: 3
+      restartPolicy: Always

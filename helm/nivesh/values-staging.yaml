@@ -1,0 +1,11 @@
+# Staging environment overrides
+backend:
+  replicas: 2
+
+mlApi:
+  replicas: 2
+
+ingress:
+  host: staging.nivesh.example.com
+  tls:
+    enabled: true

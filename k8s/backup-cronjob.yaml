@@ -1,0 +1,125 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: nivesh-db-backup
+  namespace: nivesh
+  labels:
+    app: nivesh
+    component: backup
+spec:
+  schedule: "0 2 * * *"          # Daily at 02:00 UTC
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 2
+      activeDeadlineSeconds: 3600    # 1-hour timeout
+      template:
+        metadata:
+          labels:
+            app: nivesh
+            component: backup
+        spec:
+          restartPolicy: OnFailure
+          containers:
+            # PostgreSQL backup
+            - name: postgres-backup
+              image: postgres:16-alpine
+              command: ["/scripts/backup-postgres.sh"]
+              env:
+                - name: BACKUP_DIR
+                  value: /backups/postgres
+                - name: PGHOST
+                  value: nivesh-postgres
+                - name: PGUSER
+                  valueFrom:
+                    secretKeyRef:
+                      name: nivesh-db-credentials
+                      key: POSTGRES_USER
+                - name: PGPASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      name: nivesh-db-credentials
+                      key: POSTGRES_PASSWORD
+                - name: PGDATABASE
+                  value: nivesh_db
+                - name: RETENTION_DAYS
+                  value: "7"
+              volumeMounts:
+                - name: backup-scripts
+                  mountPath: /scripts
+                - name: backup-storage
+                  mountPath: /backups
+
+            # MongoDB backup
+            - name: mongodb-backup
+              image: mongo:7.0
+              command: ["/scripts/backup-mongodb.sh"]
+              env:
+                - name: BACKUP_DIR
+                  value: /backups/mongodb
+                - name: MONGO_HOST
+                  value: nivesh-mongodb
+                - name: MONGO_USER
+                  valueFrom:
+                    secretKeyRef:
+                      name: nivesh-db-credentials
+                      key: MONGO_USER
+                - name: MONGO_PASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      name: nivesh-db-credentials
+                      key: MONGO_PASSWORD
+                - name: RETENTION_DAYS
+                  value: "7"
+              volumeMounts:
+                - name: backup-scripts
+                  mountPath: /scripts
+                - name: backup-storage
+                  mountPath: /backups
+
+            # Redis backup
+            - name: redis-backup
+              image: redis:7-alpine
+              command: ["/scripts/backup-redis.sh"]
+              env:
+                - name: BACKUP_DIR
+                  value: /backups/redis
+                - name: REDIS_HOST
+                  value: nivesh-redis
+                - name: REDIS_PASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      name: nivesh-db-credentials
+                      key: REDIS_PASSWORD
+                - name: RETENTION_DAYS
+                  value: "7"
+              volumeMounts:
+                - name: backup-scripts
+                  mountPath: /scripts
+                - name: backup-storage
+                  mountPath: /backups
+
+          volumes:
+            - name: backup-scripts
+              configMap:
+                name: nivesh-backup-scripts
+                defaultMode: 0755
+            - name: backup-storage
+              persistentVolumeClaim:
+                claimName: nivesh-backup-pvc
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: nivesh-backup-pvc
+  namespace: nivesh
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 50Gi
+  storageClassName: standard

@@ -1,0 +1,34 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: nivesh-ingress
+  namespace: nivesh
+  labels:
+    app: nivesh
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /$1
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+        - nivesh.example.com
+      secretName: nivesh-tls
+  rules:
+    - host: nivesh.example.com
+      http:
+        paths:
+          - path: /api/(.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: backend-svc
+                port:
+                  number: 80
+          - path: /ml/(.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: ml-api-svc
+                port:
+                  number: 80

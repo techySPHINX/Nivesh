@@ -35,14 +35,24 @@ docker-compose logs -f
 ```
 
 This will start:
-- PostgreSQL (Port 5432)
-- Neo4j (Ports 7474, 7687)
-- MongoDB (Port 27017)
-- Redis (Port 6379)
-- ClickHouse (Ports 8123, 9000)
-- Kafka + Zookeeper (Port 9092)
-- Qdrant (Ports 6333, 6334)
-- Prometheus (Port 9090)
+- **PostgreSQL** (Port 5432) — primary relational database
+- **Neo4j** (Ports 7474, 7687) — knowledge graph
+- **MongoDB** (Port 27017) — conversation storage
+- **Redis** (Port 6379) — caching and sessions
+- **ClickHouse** (Ports 8123, 9000) — analytics OLAP
+- **Zookeeper** (Port 2181) — Kafka coordination
+- **Kafka** (Port 29092) — event streaming (topics auto-created by kafka-init)
+- **Qdrant** (Ports 6333, 6334) — vector database for RAG
+- **MLflow** (Port 5000) — ML experiment tracking (PostgreSQL backend)
+- **ML API** (Port 8000) — model inference server
+- **Prometheus** (Port 9090) — metrics collection
+- **Grafana** (Port 3001) — dashboards and visualization
+- **Alertmanager** (Port 9093) — alert routing
+- **Jaeger** (Port 16686) — distributed tracing
+- **Loki** (Port 3100) — centralized log aggregation
+- **Promtail** — log shipper for Loki
+- **Airflow** (Port 8080) — ML training pipeline orchestration
+- **Ollama** (Port 11434) — local LLM server
 
 ## Step 3: Backend Setup
 

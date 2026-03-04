@@ -1,3 +1,6 @@
+// Must be loaded before any other import to instrument modules
+import './tracing';
+
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe, VersioningType, Logger } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';

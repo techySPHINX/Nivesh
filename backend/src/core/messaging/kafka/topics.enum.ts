@@ -21,6 +21,27 @@ export enum KafkaTopics {
   SYSTEM_EVENTS = 'system.events',
 }
 
+// Dead-letter queue topics for failed message processing
+export enum KafkaDLQTopics {
+  DLQ_USER_EVENTS = 'dlq.user.events',
+  DLQ_TRANSACTION_EVENTS = 'dlq.transaction.events',
+  DLQ_GOAL_EVENTS = 'dlq.goal.events',
+  DLQ_AI_EVENTS = 'dlq.ai.events',
+  DLQ_ALERT_EVENTS = 'dlq.alert.events',
+}
+
+/** Maps a source topic to its dead-letter queue topic */
+export function getDLQTopic(topic: string): string | null {
+  const dlqMap: Record<string, string> = {
+    [KafkaTopics.USER_EVENTS]: KafkaDLQTopics.DLQ_USER_EVENTS,
+    [KafkaTopics.TRANSACTION_EVENTS]: KafkaDLQTopics.DLQ_TRANSACTION_EVENTS,
+    [KafkaTopics.GOAL_EVENTS]: KafkaDLQTopics.DLQ_GOAL_EVENTS,
+    [KafkaTopics.AI_EVENTS]: KafkaDLQTopics.DLQ_AI_EVENTS,
+    [KafkaTopics.ALERT_EVENTS]: KafkaDLQTopics.DLQ_ALERT_EVENTS,
+  };
+  return dlqMap[topic] ?? null;
+}
+
 // Legacy topic names for backward compatibility
 export enum KafkaTopic {
   // User events

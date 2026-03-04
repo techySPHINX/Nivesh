@@ -1,0 +1,31 @@
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: backend-pdb
+  namespace: nivesh
+  labels:
+    app: nivesh
+    component: backend
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: nivesh
+      component: backend
+
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: ml-api-pdb
+  namespace: nivesh
+  labels:
+    app: nivesh
+    component: ml-api
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: nivesh
+      component: ml-api

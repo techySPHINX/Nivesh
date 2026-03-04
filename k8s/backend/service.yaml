@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend-svc
+  namespace: nivesh
+  labels:
+    app: nivesh
+    component: backend
+spec:
+  type: ClusterIP
+  selector:
+    app: nivesh
+    component: backend
+  ports:
+    - port: 80
+      targetPort: 3000
+      protocol: TCP

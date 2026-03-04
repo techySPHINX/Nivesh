@@ -1,0 +1,118 @@
+{
+  "annotations": { "list": [] },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [],
+  "panels": [
+    {
+      "title": "Active Users (24h)",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 0 },
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "targets": [
+        { "expr": "sum(increase(http_requests_total{path=~\"/api/.*\"}[24h]))", "legendFormat": "active users" }
+      ],
+      "fieldConfig": {
+        "defaults": { "color": { "mode": "thresholds" }, "thresholds": { "steps": [{ "color": "green", "value": null }] } }
+      }
+    },
+    {
+      "title": "Transactions Per Hour",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 6, "y": 0 },
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "targets": [
+        { "expr": "sum(rate(http_requests_total{path=~\"/api/financial-data/transactions.*\"}[1h])) * 3600", "legendFormat": "transactions/hr" }
+      ],
+      "fieldConfig": {
+        "defaults": { "custom": { "drawStyle": "line", "fillOpacity": 15 } }
+      }
+    },
+    {
+      "title": "Goal Creation Rate",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 6, "x": 18, "y": 0 },
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "targets": [
+        { "expr": "sum(rate(http_requests_total{path=~\"/api/goals.*\",method=\"POST\"}[1h])) * 3600", "legendFormat": "goals/hr" }
+      ],
+      "fieldConfig": {
+        "defaults": { "custom": { "drawStyle": "bars" } }
+      }
+    },
+    {
+      "title": "AI Reasoning Queries",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "targets": [
+        { "expr": "sum(rate(http_requests_total{path=~\"/api/ai-reasoning.*\"}[5m])) * 60", "legendFormat": "queries/min" }
+      ],
+      "fieldConfig": {
+        "defaults": { "custom": { "drawStyle": "line", "fillOpacity": 10 } }
+      }
+    },
+    {
+      "title": "Credit Risk Assessments / Day",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 6, "x": 12, "y": 8 },
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "targets": [
+        { "expr": "sum(increase(ml_prediction_total{model=\"credit_risk\"}[24h]))", "legendFormat": "assessments" }
+      ],
+      "fieldConfig": {
+        "defaults": { "color": { "mode": "thresholds" }, "thresholds": { "steps": [{ "color": "blue", "value": null }] } }
+      }
+    },
+    {
+      "title": "Anomaly Detections / Day",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 6, "x": 18, "y": 8 },
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "targets": [
+        { "expr": "sum(increase(ml_prediction_total{model=\"anomaly_detector\"}[24h]))", "legendFormat": "anomalies" }
+      ],
+      "fieldConfig": {
+        "defaults": { "color": { "mode": "thresholds" }, "thresholds": { "steps": [{ "color": "orange", "value": null }, { "color": "red", "value": 100 }] } }
+      }
+    },
+    {
+      "title": "Budget Alert Rate",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 12 },
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "targets": [
+        { "expr": "sum(rate(http_requests_total{path=~\"/api/budget.*\"}[1h])) * 3600", "legendFormat": "budget events/hr" }
+      ]
+    },
+    {
+      "title": "WebSocket Active Sessions",
+      "type": "gauge",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 12 },
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "targets": [
+        { "expr": "websocket_active_connections", "legendFormat": "sessions" }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "min": 0, "max": 1000,
+          "thresholds": { "steps": [{ "color": "green", "value": null }, { "color": "yellow", "value": 500 }, { "color": "red", "value": 800 }] }
+        }
+      }
+    }
+  ],
+  "refresh": "1m",
+  "schemaVersion": 38,
+  "tags": ["business", "nivesh", "intelligence"],
+  "templating": {
+    "list": [
+      { "name": "DS_PROMETHEUS", "type": "datasource", "query": "prometheus", "current": { "text": "Prometheus", "value": "Prometheus" } }
+    ]
+  },
+  "time": { "from": "now-24h", "to": "now" },
+  "title": "Business Intelligence",
+  "uid": "nivesh-business-intelligence",
+  "version": 1
+}

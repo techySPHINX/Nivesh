@@ -1,0 +1,55 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend
+  namespace: nivesh
+  labels:
+    app: nivesh
+    component: backend
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: nivesh
+      component: backend
+  template:
+    metadata:
+      labels:
+        app: nivesh
+        component: backend
+    spec:
+      containers:
+        - name: backend
+          image: ghcr.io/techysphinx/nivesh-backend:latest
+          ports:
+            - containerPort: 3000
+              protocol: TCP
+          envFrom:
+            - configMapRef:
+                name: nivesh-backend-config
+            - secretRef:
+                name: nivesh-backend-secrets
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "250m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 3000
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 3000
+            initialDelaySeconds: 30
+            periodSeconds: 15
+            timeoutSeconds: 5
+            failureThreshold: 3
+      restartPolicy: Always

@@ -1,0 +1,14 @@
+apiVersion: v2
+name: nivesh
+description: Nivesh AI Financial Advisor Helm Chart
+type: application
+version: 0.1.0
+appVersion: "1.0.0"
+maintainers:
+  - name: techysphinx
+keywords:
+  - fintech
+  - ai
+  - financial-advisor
+  - nestjs
+  - ml

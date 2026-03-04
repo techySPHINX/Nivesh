@@ -1,0 +1,39 @@
+# Production environment overrides
+backend:
+  replicas: 3
+  resources:
+    requests:
+      memory: "512Mi"
+      cpu: "500m"
+    limits:
+      memory: "1Gi"
+      cpu: "1000m"
+
+mlApi:
+  replicas: 3
+  resources:
+    requests:
+      memory: "1Gi"
+      cpu: "1000m"
+    limits:
+      memory: "4Gi"
+      cpu: "2000m"
+
+ingress:
+  host: nivesh.example.com
+  tls:
+    enabled: true
+    secretName: nivesh-tls
+
+autoscaling:
+  backend:
+    enabled: true
+    minReplicas: 3
+    maxReplicas: 15
+    cpuTarget: 70
+    memoryTarget: 80
+  mlApi:
+    enabled: true
+    minReplicas: 3
+    maxReplicas: 12
+    cpuTarget: 75

@@ -1,0 +1,79 @@
+# Default values for nivesh
+# This is a YAML-formatted file.
+
+# -- Backend (NestJS) configuration
+backend:
+  image:
+    repository: ghcr.io/techysphinx/nivesh-backend
+    tag: latest
+    pullPolicy: IfNotPresent
+  replicas: 2
+  resources:
+    requests:
+      memory: "256Mi"
+      cpu: "250m"
+    limits:
+      memory: "512Mi"
+      cpu: "500m"
+  service:
+    type: ClusterIP
+    port: 80
+    targetPort: 3000
+  env: {}
+
+# -- ML API (Python) configuration
+mlApi:
+  image:
+    repository: ghcr.io/techysphinx/nivesh-ml-api
+    tag: latest
+    pullPolicy: IfNotPresent
+  replicas: 2
+  resources:
+    requests:
+      memory: "512Mi"
+      cpu: "500m"
+    limits:
+      memory: "2Gi"
+      cpu: "1000m"
+  service:
+    type: ClusterIP
+    port: 80
+    targetPort: 8000
+  env: {}
+
+# -- Ingress configuration
+ingress:
+  enabled: true
+  className: nginx
+  host: nivesh.example.com
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /$1
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+  tls:
+    enabled: true
+    secretName: nivesh-tls
+
+# -- Autoscaling configuration
+autoscaling:
+  backend:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 10
+    cpuTarget: 70
+    memoryTarget: 80
+  mlApi:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 8
+    cpuTarget: 75
+
+# -- Pod Disruption Budgets
+podDisruptionBudget:
+  backend:
+    minAvailable: 1
+  mlApi:
+    minAvailable: 1
+
+# -- Network policies
+networkPolicy:
+  enabled: true
