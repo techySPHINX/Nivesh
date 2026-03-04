@@ -15,11 +15,14 @@ mkdir -p "$BACKUP_DIR"
 
 echo "[$(date)] Starting Redis backup..."
 
+# Capture LASTSAVE timestamp before triggering BGSAVE
+BEFORE_SAVE=$(redis-cli -h "$REDIS_HOST" -p "$REDIS_PORT" -a "$REDIS_PASSWORD" --no-auth-warning LASTSAVE)
+
 # Trigger background save
 redis-cli -h "$REDIS_HOST" -p "$REDIS_PORT" -a "$REDIS_PASSWORD" --no-auth-warning BGSAVE
 
-# Wait for BGSAVE to complete
-while [ "$(redis-cli -h "$REDIS_HOST" -p "$REDIS_PORT" -a "$REDIS_PASSWORD" --no-auth-warning LASTSAVE)" == "$(redis-cli -h "$REDIS_HOST" -p "$REDIS_PORT" -a "$REDIS_PASSWORD" --no-auth-warning LASTSAVE)" ]; do
+# Wait for BGSAVE to complete (LASTSAVE timestamp changes)
+while [ "$(redis-cli -h "$REDIS_HOST" -p "$REDIS_PORT" -a "$REDIS_PASSWORD" --no-auth-warning LASTSAVE)" == "$BEFORE_SAVE" ]; do
   sleep 1
 done
 sleep 2

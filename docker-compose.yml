@@ -258,7 +258,7 @@ services:
       mlflow server
       --host 0.0.0.0
       --port 5000
-      --backend-store-uri postgresql://nivesh_user:nivesh_password@postgres:5432/mlflow
+      --backend-store-uri postgresql://${POSTGRES_USER:?POSTGRES_USER is required}:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}@postgres:5432/mlflow
       --default-artifact-root /mlflow/artifacts
       --serve-artifacts
     ports:
@@ -335,9 +335,20 @@ services:
   alertmanager:
     image: prom/alertmanager:v0.26.0
     container_name: nivesh-alertmanager
+    environment:
+      # These env vars are referenced in alertmanager.yml via ${...} syntax.
+      # Alertmanager does not natively expand env vars, so we template at startup.
+      SLACK_WEBHOOK_URL: ${SLACK_WEBHOOK_URL:-https://hooks.slack.com/services/PLACEHOLDER}
+      PAGERDUTY_KEY: ${PAGERDUTY_KEY:-PLACEHOLDER}
+    entrypoint: ["/bin/sh", "-c"]
     command:
-      - "--config.file=/etc/alertmanager/alertmanager.yml"
-      - "--storage.path=/alertmanager"
+      - |
+        sed -e "s|\$${SLACK_WEBHOOK_URL[^}]*}|$${SLACK_WEBHOOK_URL}|g" \
+            -e "s|\$${PAGERDUTY_KEY[^}]*}|$${PAGERDUTY_KEY}|g" \
+            /etc/alertmanager/alertmanager.yml > /tmp/alertmanager.yml
+        exec /bin/alertmanager \
+          --config.file=/tmp/alertmanager.yml \
+          --storage.path=/alertmanager
     ports:
       - "9093:9093"
     volumes:

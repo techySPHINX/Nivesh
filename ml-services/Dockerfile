@@ -35,10 +35,10 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
 
 # Run FastAPI server with Gunicorn process manager for production
 # Workers configurable via WEB_CONCURRENCY env var (default: 2)
-CMD ["gunicorn", "model_server.app:app", \
-     "--worker-class", "uvicorn.workers.UvicornWorker", \
-     "--workers", "2", \
-     "--bind", "0.0.0.0:8000", \
-     "--timeout", "120", \
-     "--keep-alive", "5", \
-     "--access-logfile", "-"]
+CMD gunicorn model_server.app:app \
+     --worker-class uvicorn.workers.UvicornWorker \
+     --workers ${WEB_CONCURRENCY:-2} \
+     --bind 0.0.0.0:8000 \
+     --timeout 120 \
+     --keep-alive 5 \
+     --access-logfile -

@@ -12,6 +12,7 @@ export class KafkaConsumerService implements OnModuleInit, OnModuleDestroy {
   private consumer: Consumer;
   private dlqProducer: Producer;
   private readonly handlers = new Map<string, (message: any) => Promise<void>>();
+  private isRunning = false;
 
   constructor(private configService: ConfigService) {}
 
@@ -58,32 +59,38 @@ export class KafkaConsumerService implements OnModuleInit, OnModuleDestroy {
     this.handlers.set(topic, handler);
     await this.consumer.subscribe({ topic, fromBeginning: false });
 
-    await this.consumer.run({
-      eachMessage: async (payload: EachMessagePayload) => {
-        const { topic, partition, message } = payload;
-        const handler = this.handlers.get(topic);
+    // consumer.run() must only be called once; subsequent subscribe() calls
+    // just register the topic + handler — the shared eachMessage dispatcher
+    // already routes by topic.
+    if (!this.isRunning) {
+      this.isRunning = true;
+      await this.consumer.run({
+        eachMessage: async (payload: EachMessagePayload) => {
+          const { topic, partition, message } = payload;
+          const handler = this.handlers.get(topic);
 
-        if (handler && message.value) {
-          let attempt = 0;
-          while (attempt < MAX_RETRIES) {
-            try {
-              const parsedMessage = JSON.parse(message.value.toString());
-              await handler(parsedMessage);
-              this.logger.debug(`Processed message from topic: ${topic}`);
-              return;
-            } catch (error) {
-              attempt++;
-              this.logger.warn(
-                `Retry ${attempt}/${MAX_RETRIES} for topic ${topic}, partition ${partition}, offset ${message.offset}`,
-              );
-              if (attempt >= MAX_RETRIES) {
-                await this.sendToDLQ(topic, message, error);
+          if (handler && message.value) {
+            let attempt = 0;
+            while (attempt < MAX_RETRIES) {
+              try {
+                const parsedMessage = JSON.parse(message.value.toString());
+                await handler(parsedMessage);
+                this.logger.debug(`Processed message from topic: ${topic}`);
+                return;
+              } catch (error) {
+                attempt++;
+                this.logger.warn(
+                  `Retry ${attempt}/${MAX_RETRIES} for topic ${topic}, partition ${partition}, offset ${message.offset}`,
+                );
+                if (attempt >= MAX_RETRIES) {
+                  await this.sendToDLQ(topic, message, error);
+                }
               }
             }
           }
-        }
-      },
-    });
+        },
+      });
+    }
 
     this.logger.log(`Subscribed to topic: ${topic}`);
   }

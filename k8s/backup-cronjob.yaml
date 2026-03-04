@@ -22,8 +22,10 @@ spec:
             component: backup
         spec:
           restartPolicy: OnFailure
-          containers:
-            # PostgreSQL backup
+          # Run backups sequentially via initContainers so a single failure
+          # does not block the remaining databases.
+          initContainers:
+            # PostgreSQL backup (runs first)
             - name: postgres-backup
               image: postgres:16-alpine
               command: ["/scripts/backup-postgres.sh"]
@@ -52,7 +54,7 @@ spec:
                 - name: backup-storage
                   mountPath: /backups
 
-            # MongoDB backup
+            # MongoDB backup (runs second)
             - name: mongodb-backup
               image: mongo:7.0
               command: ["/scripts/backup-mongodb.sh"]
@@ -79,7 +81,8 @@ spec:
                 - name: backup-storage
                   mountPath: /backups
 
-            # Redis backup
+          containers:
+            # Redis backup (runs last, as the main container)
             - name: redis-backup
               image: redis:7-alpine
               command: ["/scripts/backup-redis.sh"]
