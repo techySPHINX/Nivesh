@@ -26,6 +26,7 @@ import {
 } from '../../../domain/events/transaction.events';
 import { KafkaProducerService } from '../../../../../core/messaging/kafka/kafka.producer';
 import { KafkaTopics } from '../../../../../core/messaging/kafka/topics.enum';
+import { MlCategorizationService } from '../../../infrastructure/services/ml-categorization.service';
 
 @CommandHandler(CreateTransactionCommand)
 export class CreateTransactionHandler implements ICommandHandler<CreateTransactionCommand> {
@@ -38,6 +39,7 @@ export class CreateTransactionHandler implements ICommandHandler<CreateTransacti
     private readonly accountRepository: IAccountRepository,
     private readonly eventBus: EventBus,
     private readonly kafkaProducer: KafkaProducerService,
+    private readonly mlCategorizationService: MlCategorizationService,
   ) { }
 
   async execute(command: CreateTransactionCommand): Promise<Transaction> {
@@ -67,12 +69,23 @@ export class CreateTransactionHandler implements ICommandHandler<CreateTransacti
     }
 
     // Create transaction entity
+    // Auto-categorize via ML service if no category was supplied
+    let category = command.category;
+    if (!category?.trim()) {
+      const ml = await this.mlCategorizationService.categorizeTransaction(
+        command.description ?? command.merchantName ?? '',
+        command.amount,
+      );
+      category = ml.category;
+      this.logger.debug(`Auto-categorised to: ${category}`);
+    }
+
     const transaction = Transaction.create({
       userId: command.userId,
       accountId: command.accountId,
       type: command.type,
       amount,
-      category: command.category,
+      category,
       description: command.description,
       transactionDate: command.transactionDate,
       merchantName: command.merchantName,

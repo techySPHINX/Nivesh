@@ -7,10 +7,12 @@ import {
   Body,
   Param,
   Query,
+  Request,
   HttpCode,
   HttpStatus,
   ParseUUIDPipe,
   Logger,
+  UseGuards,
 } from '@nestjs/common';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { ApiTags, ApiOperation, ApiResponse, ApiQuery, ApiBearerAuth } from '@nestjs/swagger';
@@ -25,9 +27,11 @@ import { GetActiveAlertsQuery } from '../application/queries/get-active-alerts.q
 import { GetUserAlertsQuery } from '../application/queries/get-user-alerts.query';
 import { GetAlertRulesQuery } from '../application/queries/get-alert-rules.query';
 import { GetUnreadCountQuery } from '../application/queries/get-unread-count.query';
+import { JwtAuthGuard } from '../../../core/security/auth/guards/jwt-auth.guard';
 
 @ApiTags('alerts')
 @ApiBearerAuth()
+@UseGuards(JwtAuthGuard)
 @Controller('alerts')
 export class AlertController {
   private readonly logger = new Logger(AlertController.name);
@@ -37,16 +41,15 @@ export class AlertController {
     private readonly queryBus: QueryBus,
   ) {}
 
-  // ─── Alert Rule Endpoints ─────────────────────────────────
-
   @Post('rules')
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({ summary: 'Create a new alert rule' })
   @ApiResponse({ status: 201, description: 'Alert rule created', type: AlertRuleResponseDto })
   async createRule(
+    @Request() req,
     @Body() dto: CreateAlertRuleDto,
-    @Query('userId') userId: string,
   ): Promise<AlertRuleResponseDto> {
+    const userId = req.user.sub || req.user.userId;
     return this.commandBus.execute(new CreateAlertRuleCommand(userId, dto));
   }
 
@@ -55,9 +58,10 @@ export class AlertController {
   @ApiQuery({ name: 'activeOnly', required: false, type: Boolean })
   @ApiResponse({ status: 200, description: 'Alert rules retrieved', type: [AlertRuleResponseDto] })
   async getRules(
-    @Query('userId') userId: string,
+    @Request() req,
     @Query('activeOnly') activeOnly?: string,
   ): Promise<AlertRuleResponseDto[]> {
+    const userId = req.user.sub || req.user.userId;
     return this.queryBus.execute(
       new GetAlertRulesQuery(userId, activeOnly === 'true'),
     );
@@ -68,28 +72,30 @@ export class AlertController {
   @ApiOperation({ summary: 'Delete an alert rule' })
   @ApiResponse({ status: 204, description: 'Alert rule deleted' })
   async deleteRule(
+    @Request() req,
     @Param('ruleId', ParseUUIDPipe) ruleId: string,
-    @Query('userId') userId: string,
   ): Promise<void> {
+    const userId = req.user.sub || req.user.userId;
     return this.commandBus.execute(new DeleteAlertRuleCommand(ruleId, userId));
   }
 
   // ─── Alert Endpoints ──────────────────────────────────────
 
   @Get()
-  @ApiOperation({ summary: 'Get all alerts for a user' })
+  @ApiOperation({ summary: 'Get all alerts for the current user' })
   @ApiQuery({ name: 'page', required: false, type: Number })
   @ApiQuery({ name: 'limit', required: false, type: Number })
   @ApiQuery({ name: 'type', required: false, type: String })
   @ApiQuery({ name: 'severity', required: false, type: String })
   @ApiResponse({ status: 200, description: 'User alerts retrieved' })
   async getUserAlerts(
-    @Query('userId') userId: string,
+    @Request() req,
     @Query('page') page?: string,
     @Query('limit') limit?: string,
     @Query('type') type?: string,
     @Query('severity') severity?: string,
   ) {
+    const userId = req.user.sub || req.user.userId;
     return this.queryBus.execute(
       new GetUserAlertsQuery(
         userId,
@@ -107,10 +113,11 @@ export class AlertController {
   @ApiQuery({ name: 'limit', required: false, type: Number })
   @ApiResponse({ status: 200, description: 'Active alerts retrieved' })
   async getActiveAlerts(
-    @Query('userId') userId: string,
+    @Request() req,
     @Query('page') page?: string,
     @Query('limit') limit?: string,
   ) {
+    const userId = req.user.sub || req.user.userId;
     return this.queryBus.execute(
       new GetActiveAlertsQuery(
         userId,
@@ -123,7 +130,8 @@ export class AlertController {
   @Get('unread-count')
   @ApiOperation({ summary: 'Get count of unread alerts' })
   @ApiResponse({ status: 200, description: 'Unread count retrieved' })
-  async getUnreadCount(@Query('userId') userId: string) {
+  async getUnreadCount(@Request() req) {
+    const userId = req.user.sub || req.user.userId;
     return this.queryBus.execute(new GetUnreadCountQuery(userId));
   }
 
@@ -131,9 +139,10 @@ export class AlertController {
   @ApiOperation({ summary: 'Mark an alert as read' })
   @ApiResponse({ status: 200, description: 'Alert marked as read', type: AlertResponseDto })
   async markRead(
+    @Request() req,
     @Param('alertId', ParseUUIDPipe) alertId: string,
-    @Query('userId') userId: string, // TODO: Replace with @Req() user identity from auth guard to prevent IDOR
   ): Promise<AlertResponseDto> {
+    const userId = req.user.sub || req.user.userId;
     return this.commandBus.execute(new MarkAlertReadCommand(alertId, userId));
   }
 
@@ -141,9 +150,10 @@ export class AlertController {
   @ApiOperation({ summary: 'Dismiss an alert' })
   @ApiResponse({ status: 200, description: 'Alert dismissed', type: AlertResponseDto })
   async dismiss(
+    @Request() req,
     @Param('alertId', ParseUUIDPipe) alertId: string,
-    @Query('userId') userId: string, // TODO: Replace with @Req() user identity from auth guard to prevent IDOR
   ): Promise<AlertResponseDto> {
+    const userId = req.user.sub || req.user.userId;
     return this.commandBus.execute(new DismissAlertCommand(alertId, userId));
   }
 }
