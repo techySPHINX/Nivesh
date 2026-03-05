@@ -1,0 +1,16 @@
+# docker-compose.cpu.yml
+# =========================================================
+# CPU-only override — removes GPU reservation from Ollama.
+# Merge with primary file when no NVIDIA GPU is available:
+#
+#   docker compose -f docker-compose.yml -f docker-compose.cpu.yml up -d
+#
+# Or just run:  .\scripts\docker\start-dev.ps1 -SkipGpu
+# =========================================================
+
+services:
+  ollama:
+    deploy:
+      resources:
+        reservations:
+          devices: []    # Override: no GPU devices

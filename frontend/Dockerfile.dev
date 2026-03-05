@@ -1,0 +1,21 @@
+# ==============================================================
+# Nivesh Frontend — Development Dockerfile (Next.js)
+# ==============================================================
+# Hot-reload enabled via volume mount + next dev
+# ==============================================================
+
+FROM node:20-alpine
+
+RUN corepack enable && corepack prepare pnpm@9.15.4 --activate
+
+WORKDIR /app
+
+# Install dependencies first (cache layer)
+COPY package.json pnpm-lock.yaml* ./
+RUN pnpm install --frozen-lockfile 2>/dev/null || pnpm install
+
+# Source is mounted via docker-compose volume — .next cache excluded via volume
+
+EXPOSE 3000
+
+CMD ["pnpm", "run", "dev"]

@@ -634,18 +634,73 @@ services:
       - ollama_data:/root/.ollama
     networks:
       - nivesh-network
-    # Native Compose GPU support (requires Docker Engine ≥ 19.03 + nvidia-container-runtime).
-    # If 'gpus' is not supported by your Compose version, use the device_requests form instead:
-    #   device_requests:
-    #     - driver: nvidia
-    #       count: 1
-    #       capabilities: [gpu]
-    gpus: 1
     restart: unless-stopped
-    # Pull models on first start (runs in background)
-    # After container is up, run:
-    #   docker exec nivesh-ollama ollama pull llama3:8b-instruct-q4_K_M
-    #   docker exec nivesh-ollama ollama pull mistral:7b-instruct-q4_K_M
+    # GPU support via Compose spec (requires NVIDIA Container Toolkit on the host).
+    # On CPU-only machines Ollama falls back to CPU automatically — no change needed.
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:11434/api/tags"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 20s
+    # Models are pulled by the ollama-init service below on first boot.
+
+  # Pull LLaMA-3 and Mistral once Ollama is healthy, then exit.
+  ollama-init:
+    image: ollama/ollama:latest
+    container_name: nivesh-ollama-init
+    depends_on:
+      ollama:
+        condition: service_healthy
+    networks:
+      - nivesh-network
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        echo "==> Pulling LLaMA-3 8B Instruct (Q4_K_M)..."
+        OLLAMA_HOST=http://ollama:11434 ollama pull llama3:8b-instruct-q4_K_M
+        echo "==> Pulling Mistral 7B Instruct (Q4_K_M)..."
+        OLLAMA_HOST=http://ollama:11434 ollama pull mistral:7b-instruct-q4_K_M
+        echo "==> Model pull complete."
+    restart: "no"
+
+  # ==========================================
+  # Frontend Service (Next.js)
+  # ==========================================
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    container_name: nivesh-frontend
+    environment:
+      NODE_ENV: development
+      NEXT_PUBLIC_API_URL: http://localhost:3000
+      NEXT_PUBLIC_FIREBASE_PROJECT_ID: ${FIREBASE_PROJECT_ID:-}
+    ports:
+      - "3002:3000"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+      - /app/.next
+    depends_on:
+      - backend
+    networks:
+      - nivesh-network
+    command: pnpm run dev
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
 
 # ==========================================
 # Volumes
@@ -669,6 +724,7 @@ volumes:
   airflow_logs:
   ollama_data:
   loki_data:
+  frontend_next:
 
 # ==========================================
 # Networks
