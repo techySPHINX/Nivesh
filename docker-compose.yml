@@ -286,6 +286,7 @@ services:
       MLFLOW_TRACKING_URI: http://mlflow:5000
       REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379/0
       MODEL_CACHE_TTL: 3600
+      NVIDIA_VISIBLE_DEVICES: all
     ports:
       - "8000:8000"
     volumes:
@@ -296,6 +297,13 @@ services:
       - redis
     networks:
       - nivesh-network
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
       interval: 10s

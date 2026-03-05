@@ -1,6 +1,6 @@
 # docker-compose.cpu.yml
 # =========================================================
-# CPU-only override — removes GPU reservation from Ollama.
+# CPU-only override — removes GPU reservation from Ollama and ML API.
 # Merge with primary file when no NVIDIA GPU is available:
 #
 #   docker compose -f docker-compose.yml -f docker-compose.cpu.yml up -d
@@ -10,6 +10,12 @@
 
 services:
   ollama:
+    deploy:
+      resources:
+        reservations:
+          devices: []    # Override: no GPU devices
+
+  ml-api:
     deploy:
       resources:
         reservations:
