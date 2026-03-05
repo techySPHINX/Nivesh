@@ -7,7 +7,6 @@ Last Updated: January 27, 2026
 """
 
 import sys
-import logging
 from pathlib import Path
 
 # Add parent directory to path for imports
@@ -18,17 +17,16 @@ from shared.logger import get_logger as setup_logger
 from shared.config import MLConfig
 from shared.security import verify_api_key, check_rate_limit, InputValidator
 from shared.exceptions import (
-    ModelNotLoadedError, ModelPredictionError, ValidationError,
-    ExternalServiceError
+    ModelNotLoadedError, ValidationError
 )
 from shared.circuit_breaker import circuit_breaker
 from shared.retry import retry_redis, retry_mlflow
 from shared.monitoring import (
-    track_prediction, get_prediction_tracker, health_monitor,
+    get_prediction_tracker, health_monitor,
     track_cache_access, track_invalid_input
 )
 from shared.performance import (
-    LRUCache, lru_cache, RequestDeduplicator, measure_performance
+    LRUCache, RequestDeduplicator
 )
 from fastapi import FastAPI, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
@@ -395,7 +393,11 @@ async def predict_intent(
 
 @app.post("/predict/ner", response_model=NERResponse)
 @prediction_latency.labels(model_name='financial_ner').time()
-async def extract_entities(request: NERRequest):
+async def extract_entities(
+    request: NERRequest,
+    api_key: str = Depends(verify_api_key),
+    _rate_limit: None = Depends(check_rate_limit)
+):
     """
     Extract financial entities (MONEY, DATE, CATEGORY, MERCHANT, ACCOUNT)
     """
@@ -440,7 +442,11 @@ async def extract_entities(request: NERRequest):
 
 @app.post("/predict/spending", response_model=SpendingPredictionResponse)
 @prediction_latency.labels(model_name='spending_predictor').time()
-async def predict_spending(request: SpendingPredictionRequest):
+async def predict_spending(
+    request: SpendingPredictionRequest,
+    api_key: str = Depends(verify_api_key),
+    _rate_limit: None = Depends(check_rate_limit)
+):
     """
     Predict future spending using Prophet time series model
     Returns monthly spending forecasts with confidence intervals
@@ -460,7 +466,7 @@ async def predict_spending(request: SpendingPredictionRequest):
             # Try user-specific model first
             model = load_model(
                 f'spending_predictor_{request.user_id}', 'production')
-        except:
+        except Exception:  # noqa: BLE001
             # Fall back to general model
             model = load_model('spending_predictor', 'production')
 
@@ -504,7 +510,11 @@ async def predict_spending(request: SpendingPredictionRequest):
 
 @app.post("/predict/anomaly", response_model=AnomalyDetectionResponse)
 @prediction_latency.labels(model_name='anomaly_detector').time()
-async def detect_anomaly(request: AnomalyDetectionRequest):
+async def detect_anomaly(
+    request: AnomalyDetectionRequest,
+    api_key: str = Depends(verify_api_key),
+    _rate_limit: None = Depends(check_rate_limit)
+):
     """
     Detect anomalous transactions using Isolation Forest
     Returns anomaly flag, score, and threshold
@@ -525,7 +535,7 @@ async def detect_anomaly(request: AnomalyDetectionRequest):
         try:
             model = load_model(
                 f'anomaly_detector_{request.user_id}', 'production')
-        except:
+        except Exception:  # noqa: BLE001
             model = load_model('anomaly_detector', 'production')
 
         # Predict using the AnomalyDetector's predict method
@@ -551,7 +561,11 @@ async def detect_anomaly(request: AnomalyDetectionRequest):
 
 @app.post("/predict/credit-risk", response_model=CreditRiskResponse)
 @prediction_latency.labels(model_name='credit_risk_scorer').time()
-async def predict_credit_risk(request: CreditRiskRequest):
+async def predict_credit_risk(
+    request: CreditRiskRequest,
+    api_key: str = Depends(verify_api_key),
+    _rate_limit: None = Depends(check_rate_limit)
+):
     """
     Predict loan default risk using XGBoost classifier
     Returns risk score (0-100), risk category, and default probability
@@ -621,11 +635,16 @@ async def list_models():
 
 
 @app.post("/cache/clear")
-async def clear_cache():
+async def clear_cache(
+    api_key: str = Depends(verify_api_key)
+):
     """Clear all cached predictions"""
     try:
         # Clear Redis cache
         pattern = "pred:*"
+        if redis_client is None:
+            models_cache.clear()
+            return {"message": "Redis not available — cleared 0 cached predictions and all loaded models"}
         keys = redis_client.keys(pattern)
         if keys:
             redis_client.delete(*keys)
@@ -643,8 +662,6 @@ async def clear_cache():
 # ==========================================
 
 # Import drift detection router
-sys.path.insert(0, str(Path(__file__).parent.parent / 'drift_detection'))
-
 try:
     from drift_detection.drift_endpoints import router as drift_router
     app.include_router(drift_router)
@@ -685,7 +702,7 @@ async def warmup_models():
             logger.info(f"Warming up {model_name}...")
 
             # Pre-load model
-            model = load_model(model_name, "production")
+            load_model(model_name, "production")
             successful_warmups.append(model_name)
 
             logger.info(f"✅ {model_name} warmed up successfully")

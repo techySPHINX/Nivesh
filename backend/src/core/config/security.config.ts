@@ -14,9 +14,11 @@ function assertNotInsecureDefault(value: string | undefined, name: string): void
   if (value && INSECURE_DEFAULTS.includes(value)) {
     const nodeEnv = process.env.NODE_ENV || 'development';
     if (nodeEnv === 'production') {
+      const generationHint =
+        name === 'ENCRYPTION_KEY' ? 'openssl rand -hex 16' : 'openssl rand -hex 32';
       throw new Error(
         `FATAL: ${name} is using an insecure default value. ` +
-        `Generate a secure value with: openssl rand -hex 32`,
+        `Generate a secure value with: ${generationHint}`,
       );
     }
   }

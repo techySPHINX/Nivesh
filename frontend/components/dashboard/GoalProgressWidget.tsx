@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { api } from '@/lib/api/client';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import { Goal } from '@/types';
-import { Target, Plus, TrendingUp } from 'lucide-react';
+import { Target, Plus } from 'lucide-react';
 import Link from 'next/link';
 
 export default function GoalProgressWidget() {
@@ -20,9 +20,9 @@ export default function GoalProgressWidget() {
         setLoading(true);
         const response = await api.get('/api/v1/goals');
         setGoals(response.data.slice(0, 3)); // Show top 3 goals
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error('Failed to fetch goals:', err);
-        setError(err.message || 'Failed to load goals');
+        setError(err instanceof Error ? err.message : 'Failed to load goals');
       } finally {
         setLoading(false);
       }

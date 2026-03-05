@@ -6,7 +6,7 @@ import {
   ISimulationRepository,
   SIMULATION_REPOSITORY,
 } from '../../../domain/repositories/simulation.repository.interface';
-import { Simulation } from '../../../domain/entities/simulation.entity';
+import { Simulation, SimulationType } from '../../../domain/entities/simulation.entity';
 import {
   SimulationStartedEvent,
   SimulationCompletedEvent,
@@ -51,9 +51,23 @@ export class RunSimulationHandler implements ICommandHandler<RunSimulationComman
     );
 
     try {
-      // Run Monte Carlo simulation
       simulation.markRunning();
-      const results = simulation.runMonteCarloSimulation();
+
+      // Dispatch to the correct engine based on simulation type
+      let results: ReturnType<Simulation['runMonteCarloSimulation']>;
+      switch (simulation.type) {
+        case SimulationType.WHAT_IF:
+          results = simulation.runWhatIfSimulation();
+          break;
+        case SimulationType.STRESS_TEST:
+          results = simulation.runStressTestSimulation();
+          break;
+        case SimulationType.MONTE_CARLO:
+        default:
+          results = simulation.runMonteCarloSimulation();
+          break;
+      }
+
       simulation.complete(results);
 
       const savedSimulation = await this.simulationRepository.save(simulation);
@@ -68,7 +82,9 @@ export class RunSimulationHandler implements ICommandHandler<RunSimulationComman
         ),
       );
 
-      this.logger.log(`Simulation completed: ${simulation.id} — median: ${results.median}`);
+      this.logger.log(
+        `Simulation [${simulation.type}] completed: ${simulation.id} — median: ${results.median}`,
+      );
       return SimulationResponseDto.fromEntity(savedSimulation);
     } catch (error) {
       simulation.fail();

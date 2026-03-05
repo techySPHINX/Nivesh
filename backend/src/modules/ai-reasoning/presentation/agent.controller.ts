@@ -7,6 +7,7 @@ import {
   HttpCode,
   HttpStatus,
   UseGuards,
+  Request,
   Logger,
 } from '@nestjs/common';
 import {
@@ -21,6 +22,7 @@ import { OrchestratorAgent } from '../agents/orchestrator.agent';
 import { DecisionTraceService } from '../services/decision-trace.service';
 import { AgentMemoryService } from '../services/agent-memory.service';
 import { AgentLearningService } from '../services/agent-learning.service';
+import { JwtAuthGuard } from '../../../core/security/auth/guards/jwt-auth.guard';
 
 /**
  * Agent Orchestration Controller
@@ -56,8 +58,9 @@ import { AgentLearningService } from '../services/agent-learning.service';
  * }
  */
 @ApiTags('AI Agents')
+@ApiBearerAuth()
+@UseGuards(JwtAuthGuard)
 @Controller('agents')
-// @ApiBearerAuth() // Uncomment when auth is implemented
 export class AgentController {
   private readonly logger = new Logger(AgentController.name);
 

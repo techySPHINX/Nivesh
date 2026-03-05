@@ -14,6 +14,9 @@ import { RAGPipelineModule } from '../src/modules/rag-pipeline/rag-pipeline.modu
  * NOTE: These tests hit controller-level logic only; Qdrant/Redis calls
  * may fail gracefully in CI where those services are unavailable, so we
  * also test the "unhealthy" path.
+ *
+ * TODO: Replace graceful-degradation pattern with a proper Qdrant mock/test-container
+ * so that index & search paths are exercised deterministically in CI.
  */
 describe('RAG Pipeline (e2e)', () => {
   let app: INestApplication;

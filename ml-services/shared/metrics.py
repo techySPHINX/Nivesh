@@ -65,7 +65,7 @@ def track_latency(model_name: str):
                 latency = time.time() - start_time
                 prediction_latency.labels(model_name=model_name).observe(latency)
                 return result
-            except Exception as e:
+            except Exception:
                 latency = time.time() - start_time
                 prediction_latency.labels(model_name=model_name).observe(latency)
                 raise
@@ -78,7 +78,7 @@ def track_latency(model_name: str):
                 latency = time.time() - start_time
                 prediction_latency.labels(model_name=model_name).observe(latency)
                 return result
-            except Exception as e:
+            except Exception:
                 latency = time.time() - start_time
                 prediction_latency.labels(model_name=model_name).observe(latency)
                 raise

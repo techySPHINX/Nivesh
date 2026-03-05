@@ -8,7 +8,6 @@ conftest.py. Redis connection is patched so no live server is needed.
 
 import sys
 import os
-import pytest
 from unittest.mock import patch, MagicMock
 
 # Ensure parent is on sys.path
@@ -50,7 +49,7 @@ with patch("redis.Redis", return_value=_mock_redis_instance), \
 # Restore original register
 _prom_reg.CollectorRegistry.register = _original_register
 
-from fastapi.testclient import TestClient
+from fastapi.testclient import TestClient  # noqa: E402
 
 client = TestClient(app, raise_server_exceptions=False)
 

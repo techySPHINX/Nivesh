@@ -30,6 +30,7 @@ import { StreamingResponseService } from './infrastructure/services/streaming-re
 // Application Handlers
 import { ProcessQueryHandler } from './application/handlers/process-query.handler';
 import { SimulateScenarioHandler } from './application/handlers/simulate-scenario.handler';
+import { GetFinancialContextQueryHandler } from './application/queries/handlers/get-financial-context.handler';
 
 // Presentation
 import { ReasoningController } from './presentation/reasoning.controller';
@@ -45,6 +46,8 @@ import { ExecutionPlanBuilder } from './services/execution-plan-builder.service'
 import { ToolBootstrapService } from './services/tool-bootstrap.service';
 import { AgentMemoryService } from './services/agent-memory.service';
 import { AgentLearningService } from './services/agent-learning.service';
+
+import { AgentBootstrapService } from './services/agent-bootstrap.service';
 
 // Specialized Agents
 import { FinancialPlanningAgent } from './agents/financial-planning.agent';
@@ -87,6 +90,7 @@ const AgentServices = [
   DecisionTraceService,
   ExecutionPlanBuilder,
   ToolBootstrapService,
+  AgentBootstrapService,
   AgentMemoryService,
   AgentLearningService,
 ];
@@ -107,7 +111,9 @@ const CommandHandlers = [
   SimulateScenarioHandler,
 ];
 
-const QueryHandlers = [];
+const QueryHandlers = [
+  GetFinancialContextQueryHandler,
+];
 
 const Gateways = [
   AIChatGateway,

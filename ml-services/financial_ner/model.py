@@ -11,7 +11,6 @@ from pathlib import Path
 sys.path.insert(0, os.path.abspath(
     os.path.join(os.path.dirname(__file__), '..')))
 
-from shared.mlflow_utils import create_experiment, log_model_params, log_model_metrics
 from shared import config, get_logger, NER_ENTITY_TYPES
 import spacy
 from spacy.training import Example
@@ -20,8 +19,6 @@ from thinc.schedules import compounding
 import json
 import random
 from typing import List, Dict, Any, Optional, Tuple
-import mlflow
-import mlflow.spacy
 
 
 logger = get_logger(__name__)
@@ -129,10 +126,11 @@ class FinancialNER:
         if self.nlp is None:
             self.create_blank_model()
 
-        assert self.nlp is not None, "NLP model must be initialized before training"
+        if self.nlp is None:
+            raise RuntimeError("NLP model must be initialized before training")
 
         # Get NER component
-        ner = self.nlp.get_pipe("ner")
+        self.nlp.get_pipe("ner")
 
         # Disable other pipeline components during training
         other_pipes = [pipe for pipe in self.nlp.pipe_names if pipe != "ner"]
@@ -142,7 +140,7 @@ class FinancialNER:
 
         with self.nlp.disable_pipes(*other_pipes):
             # Initialize optimizer
-            optimizer = self.nlp.begin_training()
+            self.nlp.begin_training()
 
             for iteration in range(n_iter):
                 random.shuffle(training_data)
@@ -216,9 +214,9 @@ class FinancialNER:
         entity_scores = {}
         for entity_type in self.entity_types:
             entity_scores[entity_type] = {
-                'precision': scores.get(f'ents_per_type', {}).get(entity_type, {}).get('p', 0.0),
-                'recall': scores.get(f'ents_per_type', {}).get(entity_type, {}).get('r', 0.0),
-                'f1': scores.get(f'ents_per_type', {}).get(entity_type, {}).get('f', 0.0)
+                'precision': scores.get('ents_per_type', {}).get(entity_type, {}).get('p', 0.0),
+                'recall': scores.get('ents_per_type', {}).get(entity_type, {}).get('r', 0.0),
+                'f1': scores.get('ents_per_type', {}).get(entity_type, {}).get('f', 0.0)
             }
 
         results = {

@@ -13,17 +13,23 @@ Supports:
 import json
 import logging
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
-from datetime import datetime, timedelta
+from typing import Dict, List, Optional
+from datetime import datetime
 
 import pandas as pd
-import numpy as np
 from evidently import ColumnMapping
 from evidently.report import Report
 from evidently.metric_preset import DataDriftPreset, TargetDriftPreset, DataQualityPreset
-from evidently.metrics import *
 from evidently.test_suite import TestSuite
-from evidently.tests import *
+from evidently.tests import (  # noqa: E402
+    TestNumberOfColumnsWithMissingValues,
+    TestNumberOfRowsWithMissingValues,
+    TestNumberOfConstantColumns,
+    TestNumberOfDuplicatedRows,
+    TestNumberOfDuplicatedColumns,
+    TestColumnsType,
+    TestNumberOfDriftedColumns,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -262,7 +268,7 @@ class DriftMonitor:
             Alert information
         """
         drift_score = drift_summary.get('drift_score', 0)
-        dataset_drift = drift_summary.get('dataset_drift', False)
+        drift_summary.get('dataset_drift', False)
         
         alert = {
             'model_name': self.model_name,
@@ -411,7 +417,7 @@ def create_drift_monitoring_job(
     Returns:
         Job configuration
     """
-    monitor = DriftMonitor(model_name, reference_data)
+    DriftMonitor(model_name, reference_data)
     
     job_config = {
         'model_name': model_name,

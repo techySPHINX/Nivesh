@@ -319,8 +319,8 @@ class TestConnectionPool:
             min_size=1
         )
 
-        conn1 = await pool.acquire()
-        conn2 = await pool.acquire()
+        await pool.acquire()
+        await pool.acquire()
 
         # Should have 2 connections in use
         assert len(pool.in_use) == 2

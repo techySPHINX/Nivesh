@@ -14,8 +14,7 @@ import logging
 from typing import Dict, Any, Optional, Callable
 from functools import wraps
 from datetime import datetime
-from prometheus_client import Counter, Histogram, Gauge, Summary
-import json
+from prometheus_client import Counter, Histogram, Gauge
 
 logger = logging.getLogger(__name__)
 

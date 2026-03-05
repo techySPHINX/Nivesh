@@ -296,7 +296,7 @@ def finetune_anomaly_detector(
         if passed:
             logger.info("✅ Anomaly Detector passed quality gate!")
         else:
-            logger.warning(f"⚠️ Quality gate failed")
+            logger.warning("⚠️ Quality gate failed")
     
     return result
 

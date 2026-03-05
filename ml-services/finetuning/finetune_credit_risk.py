@@ -26,11 +26,10 @@ import mlflow.xgboost
 import xgboost as xgb
 import joblib
 from sklearn.model_selection import train_test_split, StratifiedKFold
-from sklearn.preprocessing import LabelEncoder, StandardScaler
+from sklearn.preprocessing import LabelEncoder
 from sklearn.metrics import (
-    classification_report, confusion_matrix, roc_auc_score,
-    f1_score, precision_score, recall_score, accuracy_score,
-    precision_recall_curve, average_precision_score
+    classification_report, roc_auc_score,
+    f1_score, precision_score, recall_score, accuracy_score
 )
 
 sys.path.insert(0, str(Path(__file__).parent.parent))

@@ -16,7 +16,6 @@ from shared.security import (
     SecurityConfig,
     sanitize_log_data
 )
-from fastapi import HTTPException
 
 
 class TestInputValidator:

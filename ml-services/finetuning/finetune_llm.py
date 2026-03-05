@@ -27,7 +27,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from finetuning.config import (
     LLMFinetuneConfig, SYNTHETIC_DATA_DIR, FINETUNED_MODELS_DIR,
-    EVAL_RESULTS_DIR, EvalThresholds
+    EVAL_RESULTS_DIR
 )
 
 logger = logging.getLogger(__name__)
@@ -362,7 +362,7 @@ def finetune_llm(
             json.dump(result, f, indent=2, default=str)
         
         logger.info("✅ LLM fine-tuning complete!")
-        logger.info(f"To serve with Ollama:")
+        logger.info("To serve with Ollama:")
         logger.info(f"  ollama create {config.ollama_model_name} -f {modelfile_path}")
         logger.info(f"  ollama run {config.ollama_model_name}")
     
@@ -380,7 +380,6 @@ def _export_gguf(model_path: str, output_dir: str, config: LLMFinetuneConfig) ->
         gguf_path = os.path.join(gguf_dir, f"nivesh-advisor-{config.gguf_quantization}.gguf")
         
         # Try using llama.cpp's convert script
-        convert_script = "python -m llama_cpp.convert"
         
         # Alternative: use transformers' GGUF export if available
         logger.info(f"Attempting GGUF export to {gguf_path}...")

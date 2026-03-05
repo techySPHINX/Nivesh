@@ -160,7 +160,7 @@ export default function ChatMessages() {
         const response = await fetch('/api/v1/chat/history');
         const history = await response.json();
         setMessages(
-          history.map((msg: any) => ({
+          (history as Array<Omit<Message, 'timestamp'> & { timestamp: string }>).map((msg) => ({
             ...msg,
             timestamp: new Date(msg.timestamp),
           }))

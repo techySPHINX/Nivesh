@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { CqrsModule } from '@nestjs/cqrs';
+import { HttpModule } from '@nestjs/axios';
 
 // Controllers
 import { AccountController } from './presentation/account.controller';
@@ -37,6 +38,7 @@ import { AccountRepository } from './infrastructure/persistence/account.reposito
 import { TransactionRepository } from './infrastructure/persistence/transaction.repository';
 import { ACCOUNT_REPOSITORY } from './domain/repositories/account.repository.interface';
 import { TRANSACTION_REPOSITORY } from './domain/repositories/transaction.repository.interface';
+import { MlCategorizationService } from './infrastructure/services/ml-categorization.service';
 
 // Core modules
 import { DatabaseModule } from '../../core/database/database.module';
@@ -68,7 +70,7 @@ const QueryHandlers = [
 ];
 
 @Module({
-  imports: [CqrsModule, DatabaseModule, MessagingModule],
+  imports: [CqrsModule, DatabaseModule, MessagingModule, HttpModule],
   controllers: [AccountController, TransactionController],
   providers: [
     // Repositories
@@ -80,10 +82,12 @@ const QueryHandlers = [
       provide: TRANSACTION_REPOSITORY,
       useClass: TransactionRepository,
     },
+    // Services
+    MlCategorizationService,
     // Handlers
     ...CommandHandlers,
     ...QueryHandlers,
   ],
-  exports: [ACCOUNT_REPOSITORY, TRANSACTION_REPOSITORY],
+  exports: [ACCOUNT_REPOSITORY, TRANSACTION_REPOSITORY, MlCategorizationService],
 })
 export class FinancialDataModule { }

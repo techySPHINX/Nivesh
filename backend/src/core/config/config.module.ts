@@ -20,7 +20,7 @@ import qdrantConfig from './qdrant.config';
         // Environment
         NODE_ENV: Joi.string()
           .valid('development', 'production', 'test', 'staging')
-          .default('development'),
+          .required(),
         PORT: Joi.number().default(3000),
 
         // Security — required in production, optional in dev
@@ -29,7 +29,7 @@ import qdrantConfig from './qdrant.config';
           then: Joi.required(),
           otherwise: Joi.optional(),
         }),
-        ENCRYPTION_KEY: Joi.string().length(32).when('NODE_ENV', {
+        ENCRYPTION_KEY: Joi.string().min(32).when('NODE_ENV', {
           is: 'production',
           then: Joi.required(),
           otherwise: Joi.optional(),

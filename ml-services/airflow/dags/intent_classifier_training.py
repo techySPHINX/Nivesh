@@ -14,9 +14,6 @@ Schedule: Weekly on Sundays at 2:00 AM
 from datetime import datetime, timedelta
 from airflow import DAG
 from airflow.operators.python import PythonOperator
-from airflow.operators.bash import BashOperator
-from airflow.sensors.external_task import ExternalTaskSensor
-from airflow.utils.task_group import TaskGroup
 import logging
 
 logger = logging.getLogger(__name__)
@@ -48,7 +45,6 @@ dag = DAG(
 def validate_training_data(**context):
     """Validate training data quality and completeness."""
     import pandas as pd
-    import json
     from pathlib import Path
     
     logger.info("Validating training data for Intent Classifier")

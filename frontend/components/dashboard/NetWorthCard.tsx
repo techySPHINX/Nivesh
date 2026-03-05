@@ -23,26 +23,26 @@ export default function NetWorthCard() {
       try {
         setLoading(true);
         const response = await api.get('/api/v1/users/me');
-        const userData = response.data;
+        const userData = response.data as { accounts?: Array<{ balance: number }>; netWorthChange?: number };
 
         // Calculate net worth from user accounts
-        const accounts = userData.accounts || [];
+        const accounts = userData.accounts ?? [];
         const totalAssets = accounts
-          .filter((acc: any) => acc.balance > 0)
-          .reduce((sum: number, acc: any) => sum + acc.balance, 0);
+          .filter((acc) => acc.balance > 0)
+          .reduce((sum, acc) => sum + acc.balance, 0);
         const totalLiabilities = accounts
-          .filter((acc: any) => acc.balance < 0)
-          .reduce((sum: number, acc: any) => sum + Math.abs(acc.balance), 0);
+          .filter((acc) => acc.balance < 0)
+          .reduce((sum, acc) => sum + Math.abs(acc.balance), 0);
 
         setData({
           totalAssets,
           totalLiabilities,
           netWorth: totalAssets - totalLiabilities,
-          changePercentage: userData.netWorthChange || 0,
+          changePercentage: userData.netWorthChange ?? 0,
         });
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error('Failed to fetch net worth:', err);
-        setError(err.message || 'Failed to load net worth data');
+        setError(err instanceof Error ? err.message : 'Failed to load net worth data');
       } finally {
         setLoading(false);
       }

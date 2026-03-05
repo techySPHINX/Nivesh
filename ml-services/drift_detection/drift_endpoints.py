@@ -9,7 +9,7 @@ Adds drift detection endpoints to the model server:
 """
 
 from typing import Dict, List, Optional
-from datetime import datetime, timedelta
+from datetime import datetime
 
 from fastapi import APIRouter, HTTPException, BackgroundTasks
 from pydantic import BaseModel
@@ -240,7 +240,7 @@ async def get_drift_metrics():
     metrics = []
     
     for model_name, monitor in drift_monitors.items():
-        prom_metrics = monitor.export_prometheus_metrics()
+        monitor.export_prometheus_metrics()
         
         history = monitor.get_drift_history()
         if history:

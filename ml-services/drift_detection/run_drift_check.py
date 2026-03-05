@@ -11,7 +11,6 @@ import argparse
 import logging
 import sys
 from pathlib import Path
-from datetime import datetime, timedelta
 
 import pandas as pd
 import numpy as np

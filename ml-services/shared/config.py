@@ -1,7 +1,6 @@
 """
 Shared configuration for ML services
 """
-import os
 from typing import Dict, Any, Optional
 from pydantic_settings import BaseSettings
 from pydantic import Field

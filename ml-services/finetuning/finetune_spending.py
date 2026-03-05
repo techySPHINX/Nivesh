@@ -16,14 +16,12 @@ import sys
 from pathlib import Path
 from typing import Dict, Optional
 
-import numpy as np
 import pandas as pd
 import optuna
 import mlflow
 import mlflow.prophet
 from prophet import Prophet
 from prophet.diagnostics import cross_validation, performance_metrics
-from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 

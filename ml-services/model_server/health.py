@@ -7,7 +7,6 @@ from fastapi import APIRouter, Response, status
 from pydantic import BaseModel
 from typing import Dict, List, Optional, Any
 import redis
-import mlflow
 import logging
 from datetime import datetime
 import psutil
@@ -315,7 +314,7 @@ async def _quick_check_redis() -> bool:
         )
         client.ping()
         return True
-    except:
+    except Exception:  # noqa: BLE001
         return False
 
 
@@ -326,7 +325,7 @@ async def _quick_check_models() -> bool:
         from shared.config import MLConfig
         config = MLConfig()
         return Path(config.model_storage_path).exists()
-    except:
+    except Exception:  # noqa: BLE001
         return False
 
 

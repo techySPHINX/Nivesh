@@ -16,7 +16,6 @@ Schedule: Weekly on Saturdays at 3:00 AM
 from datetime import datetime, timedelta
 from airflow import DAG
 from airflow.operators.python import PythonOperator
-from airflow.utils.task_group import TaskGroup
 import logging
 
 logger = logging.getLogger(__name__)

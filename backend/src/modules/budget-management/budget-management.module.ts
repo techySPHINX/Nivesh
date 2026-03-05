@@ -12,6 +12,10 @@ import {
   GetBudgetSpendingHandler,
 } from './application/queries';
 import { PrismaService } from '../../core/database/postgres/prisma.service';
+import { PrismaBudgetRepository } from './infrastructure/persistence/budget.repository';
+import { BUDGET_REPOSITORY } from './domain/repositories/budget.repository.interface';
+import { BudgetAlertHandler } from './application/events/budget-alert.handler';
+import { AlertsModule } from '../alerts/alerts.module';
 
 const CommandHandlers = [
   CreateBudgetHandler,
@@ -25,14 +29,20 @@ const QueryHandlers = [
   GetBudgetSpendingHandler,
 ];
 
+const Repositories = [
+  { provide: BUDGET_REPOSITORY, useClass: PrismaBudgetRepository },
+];
+
 @Module({
-  imports: [CqrsModule],
+  imports: [CqrsModule, AlertsModule],
   controllers: [BudgetController],
   providers: [
     PrismaService,
     ...CommandHandlers,
     ...QueryHandlers,
+    ...Repositories,
+    ...BudgetAlertHandler,
   ],
-  exports: [],
+  exports: [BUDGET_REPOSITORY],
 })
 export class BudgetManagementModule {}

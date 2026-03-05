@@ -87,7 +87,7 @@ services:
     networks:
       - nivesh-network
     healthcheck:
-      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "--raw", "incr", "ping"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -258,7 +258,7 @@ services:
       mlflow server
       --host 0.0.0.0
       --port 5000
-      --backend-store-uri postgresql://nivesh_user:nivesh_password@postgres:5432/mlflow
+      --backend-store-uri postgresql://${POSTGRES_USER:?POSTGRES_USER is required}:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}@postgres:5432/mlflow
       --default-artifact-root /mlflow/artifacts
       --serve-artifacts
     ports:
@@ -286,6 +286,7 @@ services:
       MLFLOW_TRACKING_URI: http://mlflow:5000
       REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379/0
       MODEL_CACHE_TTL: 3600
+      NVIDIA_VISIBLE_DEVICES: all
     ports:
       - "8000:8000"
     volumes:
@@ -296,6 +297,13 @@ services:
       - redis
     networks:
       - nivesh-network
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
       interval: 10s
@@ -335,9 +343,20 @@ services:
   alertmanager:
     image: prom/alertmanager:v0.26.0
     container_name: nivesh-alertmanager
+    environment:
+      # These env vars are referenced in alertmanager.yml via ${...} syntax.
+      # Alertmanager does not natively expand env vars, so we template at startup.
+      SLACK_WEBHOOK_URL: ${SLACK_WEBHOOK_URL:-https://hooks.slack.com/services/PLACEHOLDER}
+      PAGERDUTY_KEY: ${PAGERDUTY_KEY:-PLACEHOLDER}
+    entrypoint: ["/bin/sh", "-c"]
     command:
-      - "--config.file=/etc/alertmanager/alertmanager.yml"
-      - "--storage.path=/alertmanager"
+      - |
+        sed -e 's|${SLACK_WEBHOOK_URL[^}]*}|'"$SLACK_WEBHOOK_URL"'|g' \
+            -e 's|${PAGERDUTY_KEY[^}]*}|'"$PAGERDUTY_KEY"'|g' \
+            /etc/alertmanager/alertmanager.yml > /tmp/alertmanager.yml
+        exec /bin/alertmanager \
+          --config.file=/tmp/alertmanager.yml \
+          --storage.path=/alertmanager
     ports:
       - "9093:9093"
     volumes:
@@ -355,7 +374,7 @@ services:
     container_name: nivesh-grafana
     environment:
       GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-admin}
-      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:?GRAFANA_ADMIN_PASSWORD is required}
       GF_USERS_ALLOW_SIGN_UP: false
     ports:
       - "3001:3000"
@@ -439,14 +458,14 @@ services:
     container_name: nivesh-airflow-postgres
     environment:
       POSTGRES_USER: ${AIRFLOW_DB_USER:-airflow}
-      POSTGRES_PASSWORD: ${AIRFLOW_DB_PASSWORD:-airflow}
+      POSTGRES_PASSWORD: ${AIRFLOW_DB_PASSWORD:?AIRFLOW_DB_PASSWORD is required}
       POSTGRES_DB: ${AIRFLOW_DB_NAME:-airflow}
     volumes:
       - airflow_postgres_data:/var/lib/postgresql/data
     networks:
       - nivesh-network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U airflow"]
+      test: ["CMD-SHELL", "pg_isready -U ${AIRFLOW_DB_USER:-airflow}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -465,7 +484,7 @@ services:
       _AIRFLOW_DB_MIGRATE: 'true'
       _AIRFLOW_WWW_USER_CREATE: 'true'
       _AIRFLOW_WWW_USER_USERNAME: ${AIRFLOW_ADMIN_USER:-admin}
-      _AIRFLOW_WWW_USER_PASSWORD: ${AIRFLOW_ADMIN_PASSWORD:-admin}
+      _AIRFLOW_WWW_USER_PASSWORD: ${AIRFLOW_ADMIN_PASSWORD:?AIRFLOW_ADMIN_PASSWORD is required}
     volumes:
       - ./ml-services/airflow/dags:/opt/airflow/dags
       - ./ml-services:/opt/airflow/ml-services
@@ -479,7 +498,7 @@ services:
         airflow db migrate &&
         airflow users create \
           --username ${AIRFLOW_ADMIN_USER:-admin} \
-          --password ${AIRFLOW_ADMIN_PASSWORD:-admin} \
+          --password ${AIRFLOW_ADMIN_PASSWORD:?AIRFLOW_ADMIN_PASSWORD is required} \
           --firstname Admin \
           --lastname User \
           --role Admin \
@@ -623,18 +642,73 @@ services:
       - ollama_data:/root/.ollama
     networks:
       - nivesh-network
-    # Native Compose GPU support (requires Docker Engine ≥ 19.03 + nvidia-container-runtime).
-    # If 'gpus' is not supported by your Compose version, use the device_requests form instead:
-    #   device_requests:
-    #     - driver: nvidia
-    #       count: 1
-    #       capabilities: [gpu]
-    gpus: 1
     restart: unless-stopped
-    # Pull models on first start (runs in background)
-    # After container is up, run:
-    #   docker exec nivesh-ollama ollama pull llama3:8b-instruct-q4_K_M
-    #   docker exec nivesh-ollama ollama pull mistral:7b-instruct-q4_K_M
+    # GPU support via Compose spec (requires NVIDIA Container Toolkit on the host).
+    # On CPU-only machines Ollama falls back to CPU automatically — no change needed.
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:11434/api/tags"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 20s
+    # Models are pulled by the ollama-init service below on first boot.
+
+  # Pull LLaMA-3 and Mistral once Ollama is healthy, then exit.
+  ollama-init:
+    image: ollama/ollama:latest
+    container_name: nivesh-ollama-init
+    depends_on:
+      ollama:
+        condition: service_healthy
+    networks:
+      - nivesh-network
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        echo "==> Pulling LLaMA-3 8B Instruct (Q4_K_M)..."
+        OLLAMA_HOST=http://ollama:11434 ollama pull llama3:8b-instruct-q4_K_M
+        echo "==> Pulling Mistral 7B Instruct (Q4_K_M)..."
+        OLLAMA_HOST=http://ollama:11434 ollama pull mistral:7b-instruct-q4_K_M
+        echo "==> Model pull complete."
+    restart: "no"
+
+  # ==========================================
+  # Frontend Service (Next.js)
+  # ==========================================
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    container_name: nivesh-frontend
+    environment:
+      NODE_ENV: development
+      NEXT_PUBLIC_API_URL: http://localhost:3000
+      NEXT_PUBLIC_FIREBASE_PROJECT_ID: ${FIREBASE_PROJECT_ID:-}
+    ports:
+      - "3002:3000"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+      - /app/.next
+    depends_on:
+      - backend
+    networks:
+      - nivesh-network
+    command: pnpm run dev
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
 
 # ==========================================
 # Volumes
@@ -658,6 +732,7 @@ volumes:
   airflow_logs:
   ollama_data:
   loki_data:
+  frontend_next:
 
 # ==========================================
 # Networks

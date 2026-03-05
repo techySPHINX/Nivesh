@@ -12,8 +12,6 @@ import os
 import pytest
 import numpy as np
 import pandas as pd
-from unittest.mock import MagicMock
-from datetime import datetime
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 

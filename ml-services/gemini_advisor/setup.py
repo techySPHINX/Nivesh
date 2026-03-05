@@ -25,7 +25,6 @@ from gemini_advisor.model import (
     create_fine_tuning_dataset,
     evaluate_responses
 )
-from shared.config import MLConfig
 
 # Setup logging
 logging.basicConfig(

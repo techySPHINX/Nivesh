@@ -6,7 +6,7 @@ anomaly detection, credit risk, spending prediction, and intent classification.
 """
 
 import pytest
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 from datetime import datetime, timedelta
 import numpy as np
 

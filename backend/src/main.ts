@@ -32,8 +32,8 @@ async function bootstrap() {
     .filter(Boolean);
 
   if (nodeEnv === 'production' && allowedOrigins.length === 0) {
-    logger.warn(
-      '⚠️  CORS_ALLOWED_ORIGINS is empty in production — all cross-origin requests will be rejected. ' +
+    throw new Error(
+      'FATAL: CORS_ALLOWED_ORIGINS is empty in production — all cross-origin requests will be rejected. ' +
       'Set CORS_ALLOWED_ORIGINS=https://app.nivesh.finance in your environment.',
     );
   }
@@ -55,7 +55,8 @@ async function bootstrap() {
       if (effectiveOrigins.includes(origin)) {
         return callback(null, true);
       }
-      logger.warn(`CORS: Blocked request from disallowed origin: ${origin}`);
+      const safeOrigin = origin.replace(/[\r\n]/g, '');
+      logger.warn(`CORS: Blocked request from disallowed origin: ${safeOrigin}`);
       return callback(new Error('Not allowed by CORS'), false);
     },
     credentials: true,
@@ -111,7 +112,7 @@ async function bootstrap() {
       .addTag('goals', 'Goal planning and tracking')
       .addTag('alerts', 'Smart alerts and notifications')
       .addTag('analytics', 'Analytics and insights')
-      .addTag('rag-pipeline', 'RAG vector indexing and semantic retrieval')
+      .addTag('RAG Pipeline', 'RAG vector indexing and semantic retrieval')
       .addBearerAuth()
       .build();
 

@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { PrismaService } from '../../../../core/database/prisma.service';
+import { PrismaService } from '../../../../core/database/postgres/prisma.service';
 import { IAlertRuleRepository } from '../../domain/repositories/alert-rule.repository.interface';
 import { AlertRule, AlertRuleType } from '../../domain/entities/alert-rule.entity';
 
@@ -30,9 +30,9 @@ export class PrismaAlertRuleRepository implements IAlertRuleRepository {
     return records.map((r) => this.toDomain(r));
   }
 
-  async findByRuleType(ruleType: string): Promise<AlertRule[]> {
+  async findByType(userId: string, ruleType: AlertRuleType): Promise<AlertRule[]> {
     const records = await this.prisma.alertRule.findMany({
-      where: { ruleType, isActive: true },
+      where: { userId, ruleType: ruleType as string, isActive: true },
     });
     return records.map((r) => this.toDomain(r));
   }

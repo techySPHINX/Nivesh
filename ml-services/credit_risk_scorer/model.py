@@ -18,14 +18,11 @@ from typing import Dict, List, Optional, Tuple
 import pandas as pd
 import numpy as np
 import xgboost as xgb
-from sklearn.model_selection import train_test_split, cross_val_score
 from sklearn.preprocessing import LabelEncoder, StandardScaler
 from sklearn.metrics import (
-    classification_report, confusion_matrix, roc_auc_score,
-    roc_curve, precision_recall_curve, f1_score
+    roc_auc_score,
+    precision_recall_curve, f1_score
 )
-import mlflow
-import mlflow.xgboost
 import joblib
 
 logger = logging.getLogger(__name__)

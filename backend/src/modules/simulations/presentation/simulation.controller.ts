@@ -9,6 +9,7 @@ import {
   Request,
   HttpCode,
   HttpStatus,
+  UseGuards,
 } from '@nestjs/common';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import {
@@ -22,9 +23,11 @@ import {
 import { RunSimulationDto, SimulationResponseDto } from '../application/dto';
 import { RunSimulationCommand, DeleteSimulationCommand } from '../application/commands';
 import { GetSimulationQuery, GetSimulationHistoryQuery } from '../application/queries';
+import { JwtAuthGuard } from '../../../core/security/auth/guards/jwt-auth.guard';
 
 @ApiTags('simulations')
 @ApiBearerAuth()
+@UseGuards(JwtAuthGuard)
 @Controller('simulations')
 export class SimulationController {
   constructor(
@@ -44,7 +47,7 @@ export class SimulationController {
     @Request() req,
     @Body() runSimulationDto: RunSimulationDto,
   ): Promise<SimulationResponseDto> {
-    const userId = req.user?.sub || req.user?.userId || 'anonymous';
+    const userId = req.user.sub || req.user.userId;
     const command = new RunSimulationCommand(userId, runSimulationDto);
     return this.commandBus.execute(command);
   }
@@ -59,7 +62,7 @@ export class SimulationController {
     @Query('page') page?: number,
     @Query('limit') limit?: number,
   ) {
-    const userId = req.user?.sub || req.user?.userId || 'anonymous';
+    const userId = req.user.sub || req.user.userId;
     const query = new GetSimulationHistoryQuery(userId, page || 1, limit || 20);
     return this.queryBus.execute(query);
   }
@@ -77,7 +80,7 @@ export class SimulationController {
     @Request() req,
     @Param('id') simulationId: string,
   ): Promise<SimulationResponseDto> {
-    const userId = req.user?.sub || req.user?.userId || 'anonymous';
+    const userId = req.user.sub || req.user.userId;
     const query = new GetSimulationQuery(simulationId, userId);
     return this.queryBus.execute(query);
   }
@@ -91,7 +94,7 @@ export class SimulationController {
     @Request() req,
     @Param('id') simulationId: string,
   ): Promise<void> {
-    const userId = req.user?.sub || req.user?.userId || 'anonymous';
+    const userId = req.user.sub || req.user.userId;
     const command = new DeleteSimulationCommand(simulationId, userId);
     await this.commandBus.execute(command);
   }

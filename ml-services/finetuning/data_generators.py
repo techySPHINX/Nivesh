@@ -14,14 +14,13 @@ import random
 import hashlib
 import logging
 from datetime import datetime, timedelta
-from pathlib import Path
 from typing import Dict, List, Tuple, Optional
 from collections import defaultdict
 
 import numpy as np
 
 from finetuning.config import (
-    DataGenConfig, SYNTHETIC_DATA_DIR, DATA_DIR
+    DataGenConfig, SYNTHETIC_DATA_DIR
 )
 
 logger = logging.getLogger(__name__)

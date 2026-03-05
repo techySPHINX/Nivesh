@@ -45,7 +45,8 @@ export class UpdateBudgetHandler implements ICommandHandler<UpdateBudgetCommand>
     });
 
     // Publish domain event
-    // this.eventBus.publish(new BudgetUpdatedEvent(budget.id, userId));
+    const { BudgetUpdatedEvent } = await import('../../../domain/events/budget.events');
+    this.eventBus.publish(new BudgetUpdatedEvent(budget.id, userId, updateBudgetDto as any));
 
     return BudgetResponseDto.fromEntity(budget);
   }

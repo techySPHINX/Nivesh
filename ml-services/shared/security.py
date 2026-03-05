@@ -10,11 +10,10 @@ Provides:
 
 import re
 import hashlib
-import secrets
 from typing import Optional, List
 from fastapi import Security, HTTPException, status, Request
 from fastapi.security import APIKeyHeader
-from pydantic import BaseModel, validator
+from pydantic import BaseModel
 import os
 import logging
 
@@ -318,17 +317,6 @@ def sanitize_log_data(data: dict) -> dict:
     return sanitized
 
 
-# Exception classes (use shared.exceptions.ValidationError for cross-module compatibility)
-class InputValidationError(Exception):
-    """Input validation error"""
-    pass
-
-
-class AuthenticationError(Exception):
-    """Authentication error"""
-    pass
-
-
-class RateLimitError(Exception):
-    """Rate limit exceeded"""
-    pass
+# Exception classes removed — use the appropriate exceptions from
+# shared.exceptions (for example, shared.exceptions.ValidationError)
+# for cross-module compatibility instead of defining duplicates here.
