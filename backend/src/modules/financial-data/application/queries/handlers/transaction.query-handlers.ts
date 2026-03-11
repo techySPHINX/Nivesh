@@ -1,18 +1,21 @@
-import { QueryHandler, IQueryHandler } from '@nestjs/cqrs';
-import { Inject, Logger } from '@nestjs/common';
+import { QueryHandler, IQueryHandler } from "@nestjs/cqrs";
+import { Inject, Logger } from "@nestjs/common";
 import {
   GetTransactionQuery,
   GetTransactionsByAccountQuery,
   GetTransactionsByUserQuery,
   GetAllTransactionsQuery,
   GetRecentTransactionsQuery,
-} from '../transaction.queries';
+} from "../transaction.queries";
 import {
   ITransactionRepository,
   TRANSACTION_REPOSITORY,
-} from '../../../domain/repositories/transaction.repository.interface';
-import { Transaction, TransactionCategory } from '../../../domain/entities/transaction.entity';
-import { EntityNotFoundException } from '../../../../../core/exceptions/base.exception';
+} from "../../../domain/repositories/transaction.repository.interface";
+import {
+  Transaction,
+  TransactionCategory,
+} from "../../../domain/entities/transaction.entity";
+import { EntityNotFoundException } from "../../../../../core/exceptions/base.exception";
 
 @QueryHandler(GetTransactionQuery)
 export class GetTransactionHandler implements IQueryHandler<GetTransactionQuery> {
@@ -21,15 +24,17 @@ export class GetTransactionHandler implements IQueryHandler<GetTransactionQuery>
   constructor(
     @Inject(TRANSACTION_REPOSITORY)
     private readonly transactionRepository: ITransactionRepository,
-  ) { }
+  ) {}
 
   async execute(query: GetTransactionQuery): Promise<Transaction> {
     this.logger.debug(`Getting transaction: ${query.transactionId}`);
 
-    const transaction = await this.transactionRepository.findById(query.transactionId);
+    const transaction = await this.transactionRepository.findById(
+      query.transactionId,
+    );
 
     if (!transaction) {
-      throw new EntityNotFoundException('Transaction', query.transactionId);
+      throw new EntityNotFoundException("Transaction", query.transactionId);
     }
 
     return transaction;
@@ -37,19 +42,21 @@ export class GetTransactionHandler implements IQueryHandler<GetTransactionQuery>
 }
 
 @QueryHandler(GetTransactionsByAccountQuery)
-export class GetTransactionsByAccountHandler
-  implements IQueryHandler<GetTransactionsByAccountQuery> {
+export class GetTransactionsByAccountHandler implements IQueryHandler<GetTransactionsByAccountQuery> {
   private readonly logger = new Logger(GetTransactionsByAccountHandler.name);
 
   constructor(
     @Inject(TRANSACTION_REPOSITORY)
     private readonly transactionRepository: ITransactionRepository,
-  ) { }
+  ) {}
 
   async execute(query: GetTransactionsByAccountQuery): Promise<Transaction[]> {
     this.logger.debug(`Getting transactions for account: ${query.accountId}`);
 
-    return this.transactionRepository.findByAccountId(query.accountId, query.limit);
+    return this.transactionRepository.findByAccountId(
+      query.accountId,
+      query.limit,
+    );
   }
 }
 
@@ -60,7 +67,7 @@ export class GetTransactionsByUserHandler implements IQueryHandler<GetTransactio
   constructor(
     @Inject(TRANSACTION_REPOSITORY)
     private readonly transactionRepository: ITransactionRepository,
-  ) { }
+  ) {}
 
   async execute(query: GetTransactionsByUserQuery): Promise<Transaction[]> {
     this.logger.debug(`Getting transactions for user: ${query.userId}`);
@@ -76,7 +83,7 @@ export class GetAllTransactionsHandler implements IQueryHandler<GetAllTransactio
   constructor(
     @Inject(TRANSACTION_REPOSITORY)
     private readonly transactionRepository: ITransactionRepository,
-  ) { }
+  ) {}
 
   async execute(
     query: GetAllTransactionsQuery,
@@ -106,7 +113,7 @@ export class GetRecentTransactionsHandler implements IQueryHandler<GetRecentTran
   constructor(
     @Inject(TRANSACTION_REPOSITORY)
     private readonly transactionRepository: ITransactionRepository,
-  ) { }
+  ) {}
 
   async execute(query: GetRecentTransactionsQuery): Promise<Transaction[]> {
     this.logger.debug(`Getting recent transactions for user: ${query.userId}`);

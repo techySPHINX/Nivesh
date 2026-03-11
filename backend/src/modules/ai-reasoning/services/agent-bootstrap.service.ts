@@ -1,16 +1,16 @@
-import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
-import { AgentRegistry } from './agent-registry.service';
-import { AgentType } from '../types/agent.types';
+import { Injectable, Logger, OnModuleInit } from "@nestjs/common";
+import { AgentRegistry } from "./agent-registry.service";
+import { AgentType } from "../types/agent.types";
 
 // Specialized agents
-import { OrchestratorAgent } from '../agents/orchestrator.agent';
-import { FinancialPlanningAgent } from '../agents/financial-planning.agent';
-import { RiskAssessmentAgent } from '../agents/risk-assessment.agent';
-import { InvestmentAdvisorAgent } from '../agents/investment-advisor.agent';
-import { SimulationAgent } from '../agents/simulation.agent';
-import { FinancialGraphAgent } from '../agents/financial-graph.agent';
-import { ActionExecutionAgent } from '../agents/action-execution.agent';
-import { MonitoringAgent } from '../agents/monitoring.agent';
+import { OrchestratorAgent } from "../agents/orchestrator.agent";
+import { FinancialPlanningAgent } from "../agents/financial-planning.agent";
+import { RiskAssessmentAgent } from "../agents/risk-assessment.agent";
+import { InvestmentAdvisorAgent } from "../agents/investment-advisor.agent";
+import { SimulationAgent } from "../agents/simulation.agent";
+import { FinancialGraphAgent } from "../agents/financial-graph.agent";
+import { ActionExecutionAgent } from "../agents/action-execution.agent";
+import { MonitoringAgent } from "../agents/monitoring.agent";
 
 /**
  * AgentBootstrapService
@@ -35,10 +35,10 @@ export class AgentBootstrapService implements OnModuleInit {
   ) {}
 
   async onModuleInit() {
-    this.logger.log('Bootstrapping agent registry...');
+    this.logger.log("Bootstrapping agent registry...");
 
     try {
-      const agentMap = new Map([
+      const agentMap = new Map<AgentType, any>([
         [AgentType.ORCHESTRATOR, this.orchestratorAgent],
         [AgentType.FINANCIAL_PLANNING, this.financialPlanningAgent],
         [AgentType.RISK_ASSESSMENT, this.riskAssessmentAgent],
@@ -52,10 +52,10 @@ export class AgentBootstrapService implements OnModuleInit {
       this.agentRegistry.registerAgents(agentMap as any);
 
       this.logger.log(
-        `Agent bootstrap complete — ${agentMap.size} agents registered: ${[...agentMap.keys()].join(', ')}`,
+        `Agent bootstrap complete — ${agentMap.size} agents registered: ${[...agentMap.keys()].join(", ")}`,
       );
     } catch (error) {
-      this.logger.error('Agent bootstrap failed', error.stack);
+      this.logger.error("Agent bootstrap failed", error.stack);
       throw error;
     }
   }

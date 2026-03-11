@@ -1,8 +1,8 @@
-import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import * as admin from 'firebase-admin';
-import { App } from 'firebase-admin/app';
-import { Auth } from 'firebase-admin/auth';
+import { Injectable, Logger, OnModuleInit } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
+import * as admin from "firebase-admin";
+import { App } from "firebase-admin/app";
+import { Auth } from "firebase-admin/auth";
 
 @Injectable()
 export class FirebaseService implements OnModuleInit {
@@ -10,19 +10,21 @@ export class FirebaseService implements OnModuleInit {
   private app: App;
   private auth: Auth;
 
-  constructor(private readonly configService: ConfigService) { }
+  constructor(private readonly configService: ConfigService) {}
 
   async onModuleInit(): Promise<void> {
     try {
-      const projectId = this.configService.get<string>('FIREBASE_PROJECT_ID');
+      const projectId = this.configService.get<string>("FIREBASE_PROJECT_ID");
       const privateKey = this.configService
-        .get<string>('FIREBASE_PRIVATE_KEY')
-        ?.replace(/\\n/g, '\n');
-      const clientEmail = this.configService.get<string>('FIREBASE_CLIENT_EMAIL');
+        .get<string>("FIREBASE_PRIVATE_KEY")
+        ?.replace(/\\n/g, "\n");
+      const clientEmail = this.configService.get<string>(
+        "FIREBASE_CLIENT_EMAIL",
+      );
 
       if (!projectId || !privateKey || !clientEmail) {
         this.logger.warn(
-          'Firebase configuration incomplete. Auth features will be limited.',
+          "Firebase configuration incomplete. Auth features will be limited.",
         );
         return;
       }
@@ -37,16 +39,16 @@ export class FirebaseService implements OnModuleInit {
 
       this.auth = admin.auth(this.app);
 
-      this.logger.log('Firebase Admin SDK initialized successfully');
+      this.logger.log("Firebase Admin SDK initialized successfully");
     } catch (error) {
-      this.logger.error('Failed to initialize Firebase Admin SDK', error);
+      this.logger.error("Failed to initialize Firebase Admin SDK", error);
       throw error;
     }
   }
 
   getAuth(): Auth {
     if (!this.auth) {
-      throw new Error('Firebase Auth is not initialized');
+      throw new Error("Firebase Auth is not initialized");
     }
     return this.auth;
   }
@@ -57,7 +59,7 @@ export class FirebaseService implements OnModuleInit {
       this.logger.debug(`Token verified for user: ${decodedToken.uid}`);
       return decodedToken;
     } catch (error) {
-      this.logger.error('Token verification failed', error);
+      this.logger.error("Token verification failed", error);
       throw error;
     }
   }
@@ -80,7 +82,10 @@ export class FirebaseService implements OnModuleInit {
     }
   }
 
-  async createUser(email: string, password: string): Promise<admin.auth.UserRecord> {
+  async createUser(
+    email: string,
+    password: string,
+  ): Promise<admin.auth.UserRecord> {
     try {
       const userRecord = await this.auth.createUser({
         email,
@@ -90,7 +95,7 @@ export class FirebaseService implements OnModuleInit {
       this.logger.log(`Firebase user created: ${userRecord.uid}`);
       return userRecord;
     } catch (error) {
-      this.logger.error('Failed to create Firebase user', error);
+      this.logger.error("Failed to create Firebase user", error);
       throw error;
     }
   }
@@ -134,7 +139,10 @@ export class FirebaseService implements OnModuleInit {
       await this.auth.revokeRefreshTokens(uid);
       this.logger.log(`Refresh tokens revoked for user: ${uid}`);
     } catch (error) {
-      this.logger.error(`Failed to revoke refresh tokens for user: ${uid}`, error);
+      this.logger.error(
+        `Failed to revoke refresh tokens for user: ${uid}`,
+        error,
+      );
       throw error;
     }
   }

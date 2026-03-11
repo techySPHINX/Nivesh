@@ -1,10 +1,13 @@
-import { IQueryHandler, QueryHandler } from '@nestjs/cqrs';
-import { Logger } from '@nestjs/common';
-import { GetNetWorthHistoryQuery } from '../get-net-worth-history.query';
-import { NetWorthHistoryResponseDto } from '../../dto/analytics-response.dto';
-import { ClickhouseService } from '../../../../core/database/clickhouse/clickhouse.service';
-import { PrismaService } from '../../../../core/database/postgres/prisma.service';
-import { TimeGranularity, NetWorthPoint } from '../../../domain/entities/analytics.entity';
+import { IQueryHandler, QueryHandler } from "@nestjs/cqrs";
+import { Logger } from "@nestjs/common";
+import { GetNetWorthHistoryQuery } from "../get-net-worth-history.query";
+import { NetWorthHistoryResponseDto } from "../../dto/analytics-response.dto";
+import { ClickhouseService } from "../../../../../core/database/clickhouse/clickhouse.service";
+import { PrismaService } from "../../../../../core/database/postgres/prisma.service";
+import {
+  TimeGranularity,
+  NetWorthPoint,
+} from "../../../domain/entities/analytics.entity";
 
 @QueryHandler(GetNetWorthHistoryQuery)
 export class GetNetWorthHistoryHandler implements IQueryHandler<GetNetWorthHistoryQuery> {
@@ -15,25 +18,45 @@ export class GetNetWorthHistoryHandler implements IQueryHandler<GetNetWorthHisto
     private readonly prisma: PrismaService,
   ) {}
 
-  async execute(query: GetNetWorthHistoryQuery): Promise<NetWorthHistoryResponseDto> {
+  async execute(
+    query: GetNetWorthHistoryQuery,
+  ): Promise<NetWorthHistoryResponseDto> {
     const { userId, granularity } = query;
     const now = new Date();
-    const from = query.from || new Date(now.getFullYear() - 1, now.getMonth(), 1).toISOString();
+    const from =
+      query.from ||
+      new Date(now.getFullYear() - 1, now.getMonth(), 1).toISOString();
     const to = query.to || now.toISOString();
 
     let data: NetWorthPoint[];
 
     try {
-      data = await this.calculateNetWorthFromClickHouse(userId, from, to, granularity);
+      data = await this.calculateNetWorthFromClickHouse(
+        userId,
+        from,
+        to,
+        granularity,
+      );
     } catch (error) {
-      this.logger.warn('ClickHouse unavailable, falling back to Prisma for net worth history');
-      data = await this.calculateNetWorthFromPrisma(userId, from, to, granularity);
+      this.logger.warn(
+        "ClickHouse unavailable, falling back to Prisma for net worth history",
+      );
+      data = await this.calculateNetWorthFromPrisma(
+        userId,
+        from,
+        to,
+        granularity,
+      );
     }
 
-    const currentNetWorth = data.length > 0 ? data[data.length - 1].netWorth : 0;
+    const currentNetWorth =
+      data.length > 0 ? data[data.length - 1].netWorth : 0;
     const firstNetWorth = data.length > 0 ? data[0].netWorth : 0;
     const changeOverPeriod = currentNetWorth - firstNetWorth;
-    const changePercentage = firstNetWorth !== 0 ? (changeOverPeriod / Math.abs(firstNetWorth)) * 100 : 0;
+    const changePercentage =
+      firstNetWorth !== 0
+        ? (changeOverPeriod / Math.abs(firstNetWorth)) * 100
+        : 0;
 
     return {
       userId,
@@ -52,11 +75,13 @@ export class GetNetWorthHistoryHandler implements IQueryHandler<GetNetWorthHisto
     to: string,
     granularity: TimeGranularity,
   ): Promise<NetWorthPoint[]> {
-    const dateFormat = granularity === TimeGranularity.DAILY
-      ? "formatDateTime(snapshot_date, '%Y-%m-%d')"
-      : "formatDateTime(snapshot_date, '%Y-%m')";
+    const dateFormat =
+      granularity === TimeGranularity.DAILY
+        ? "formatDateTime(snapshot_date, '%Y-%m-%d')"
+        : "formatDateTime(snapshot_date, '%Y-%m')";
 
-    const rows = await this.clickhouse.query<any>(`
+    const rows = await this.clickhouse.query<any>(
+      `
       SELECT
         ${dateFormat} as date,
         sum(CASE WHEN account_type IN ('SAVINGS', 'INVESTMENT', 'CHECKING') THEN balance ELSE 0 END) as totalAssets,
@@ -67,7 +92,9 @@ export class GetNetWorthHistoryHandler implements IQueryHandler<GetNetWorthHisto
         AND snapshot_date <= {to:DateTime}
       GROUP BY date
       ORDER BY date ASC
-    `, { userId, from, to });
+    `,
+      { userId, from, to },
+    );
 
     let previousNetWorth = 0;
     return rows.map((row) => {
@@ -100,11 +127,13 @@ export class GetNetWorthHistoryHandler implements IQueryHandler<GetNetWorthHisto
     });
 
     const totalAssets = accounts
-      .filter((a) => ['SAVINGS', 'INVESTMENT', 'CHECKING'].includes(a.accountType))
+      .filter((a) =>
+        ["SAVINGS", "INVESTMENT", "CHECKING"].includes(a.accountType),
+      )
       .reduce((sum, a) => sum + Number(a.balance), 0);
 
     const totalLiabilities = accounts
-      .filter((a) => ['CREDIT_CARD', 'LOAN'].includes(a.accountType))
+      .filter((a) => ["CREDIT_CARD", "LOAN"].includes(a.accountType))
       .reduce((sum, a) => sum + Number(a.balance), 0);
 
     // Single snapshot for fallback - real data requires historical snapshots

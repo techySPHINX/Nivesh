@@ -1,11 +1,11 @@
-import { Injectable } from '@nestjs/common';
-import { PrismaService } from '../../../../core/database/postgres/prisma.service';
-import { IGoalContributionRepository } from '../../domain/repositories/goal-contribution.repository.interface';
-import { GoalContribution } from '../../domain/entities/goal-contribution.entity';
+import { Injectable } from "@nestjs/common";
+import { PrismaService } from "../../../../core/database/postgres/prisma.service";
+import { IGoalContributionRepository } from "../../domain/repositories/goal-contribution.repository.interface";
+import { GoalContribution } from "../../domain/entities/goal-contribution.entity";
 
 @Injectable()
 export class GoalContributionRepository implements IGoalContributionRepository {
-  constructor(private readonly prisma: PrismaService) { }
+  constructor(private readonly prisma: PrismaService) {}
 
   async save(contribution: GoalContribution): Promise<GoalContribution> {
     const data = {
@@ -40,19 +40,19 @@ export class GoalContributionRepository implements IGoalContributionRepository {
   async findByGoalId(goalId: string): Promise<GoalContribution[]> {
     const results = await this.prisma.goalContribution.findMany({
       where: { goalId },
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: "desc" },
     });
 
-    return results.map(r => GoalContribution.fromPersistence(r));
+    return results.map((r) => GoalContribution.fromPersistence(r));
   }
 
   async findByUserId(userId: string): Promise<GoalContribution[]> {
     const results = await this.prisma.goalContribution.findMany({
       where: { userId },
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: "desc" },
     });
 
-    return results.map(r => GoalContribution.fromPersistence(r));
+    return results.map((r) => GoalContribution.fromPersistence(r));
   }
 
   async getTotalContributionsByGoal(goalId: string): Promise<number> {
@@ -66,17 +66,24 @@ export class GoalContributionRepository implements IGoalContributionRepository {
     return Number(result._sum.amount) || 0;
   }
 
-  async getRecentContributions(userId: string, limit: number): Promise<GoalContribution[]> {
+  async getRecentContributions(
+    userId: string,
+    limit: number,
+  ): Promise<GoalContribution[]> {
     const results = await this.prisma.goalContribution.findMany({
       where: { userId },
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: "desc" },
       take: limit,
     });
 
-    return results.map(r => GoalContribution.fromPersistence(r));
+    return results.map((r) => GoalContribution.fromPersistence(r));
   }
 
-  async findByDateRange(userId: string, startDate: Date, endDate: Date): Promise<GoalContribution[]> {
+  async findByDateRange(
+    userId: string,
+    startDate: Date,
+    endDate: Date,
+  ): Promise<GoalContribution[]> {
     const results = await this.prisma.goalContribution.findMany({
       where: {
         userId,
@@ -85,10 +92,10 @@ export class GoalContributionRepository implements IGoalContributionRepository {
           lte: endDate,
         },
       },
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: "desc" },
     });
 
-    return results.map(r => GoalContribution.fromPersistence(r));
+    return results.map((r) => GoalContribution.fromPersistence(r));
   }
 
   async delete(id: string): Promise<void> {

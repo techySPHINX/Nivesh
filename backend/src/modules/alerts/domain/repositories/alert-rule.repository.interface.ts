@@ -1,4 +1,4 @@
-import { AlertRule, AlertRuleType } from '../entities/alert-rule.entity';
+import { AlertRule, AlertRuleType } from "../entities/alert-rule.entity";
 
 export interface IAlertRuleRepository {
   save(rule: AlertRule): Promise<AlertRule>;
@@ -9,4 +9,4 @@ export interface IAlertRuleRepository {
   delete(id: string): Promise<void>;
 }
 
-export const ALERT_RULE_REPOSITORY = Symbol('ALERT_RULE_REPOSITORY');
+export const ALERT_RULE_REPOSITORY = Symbol("ALERT_RULE_REPOSITORY");

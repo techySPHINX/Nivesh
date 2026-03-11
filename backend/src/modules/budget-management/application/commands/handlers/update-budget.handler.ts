@@ -1,8 +1,12 @@
-import { CommandHandler, ICommandHandler, EventBus } from '@nestjs/cqrs';
-import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
-import { UpdateBudgetCommand } from '../update-budget.command';
-import { PrismaService } from '../../../../../core/database/postgres/prisma.service';
-import { BudgetResponseDto } from '../../dto';
+import { CommandHandler, ICommandHandler, EventBus } from "@nestjs/cqrs";
+import {
+  Injectable,
+  NotFoundException,
+  ForbiddenException,
+} from "@nestjs/common";
+import { UpdateBudgetCommand } from "../update-budget.command";
+import { PrismaService } from "../../../../../core/database/postgres/prisma.service";
+import { BudgetResponseDto } from "../../dto";
 
 @CommandHandler(UpdateBudgetCommand)
 @Injectable()
@@ -25,7 +29,9 @@ export class UpdateBudgetHandler implements ICommandHandler<UpdateBudgetCommand>
     }
 
     if (existingBudget.userId !== userId) {
-      throw new ForbiddenException('You do not have permission to update this budget');
+      throw new ForbiddenException(
+        "You do not have permission to update this budget",
+      );
     }
 
     // Update budget
@@ -33,20 +39,35 @@ export class UpdateBudgetHandler implements ICommandHandler<UpdateBudgetCommand>
       where: { id: budgetId },
       data: {
         ...(updateBudgetDto.category && { category: updateBudgetDto.category }),
-        ...(updateBudgetDto.amount !== undefined && { amount: updateBudgetDto.amount }),
+        ...(updateBudgetDto.amount !== undefined && {
+          amount: updateBudgetDto.amount,
+        }),
         ...(updateBudgetDto.currency && { currency: updateBudgetDto.currency }),
         ...(updateBudgetDto.period && { period: updateBudgetDto.period }),
-        ...(updateBudgetDto.startDate && { startDate: new Date(updateBudgetDto.startDate) }),
-        ...(updateBudgetDto.endDate && { endDate: new Date(updateBudgetDto.endDate) }),
-        ...(updateBudgetDto.alertThreshold !== undefined && { alertThreshold: updateBudgetDto.alertThreshold }),
-        ...(updateBudgetDto.isRecurring !== undefined && { isRecurring: updateBudgetDto.isRecurring }),
-        ...(updateBudgetDto.isActive !== undefined && { isActive: updateBudgetDto.isActive }),
+        ...(updateBudgetDto.startDate && {
+          startDate: new Date(updateBudgetDto.startDate),
+        }),
+        ...(updateBudgetDto.endDate && {
+          endDate: new Date(updateBudgetDto.endDate),
+        }),
+        ...(updateBudgetDto.alertThreshold !== undefined && {
+          alertThreshold: updateBudgetDto.alertThreshold,
+        }),
+        ...(updateBudgetDto.isRecurring !== undefined && {
+          isRecurring: updateBudgetDto.isRecurring,
+        }),
+        ...(updateBudgetDto.isActive !== undefined && {
+          isActive: updateBudgetDto.isActive,
+        }),
       },
     });
 
     // Publish domain event
-    const { BudgetUpdatedEvent } = await import('../../../domain/events/budget.events');
-    this.eventBus.publish(new BudgetUpdatedEvent(budget.id, userId, updateBudgetDto as any));
+    const { BudgetUpdatedEvent } =
+      await import("../../../domain/events/budget.events");
+    this.eventBus.publish(
+      new BudgetUpdatedEvent(budget.id, userId, updateBudgetDto as any),
+    );
 
     return BudgetResponseDto.fromEntity(budget);
   }

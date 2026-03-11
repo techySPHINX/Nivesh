@@ -10,49 +10,53 @@ import {
   HttpCode,
   HttpStatus,
   UseGuards,
-} from '@nestjs/common';
-import { CommandBus, QueryBus } from '@nestjs/cqrs';
+} from "@nestjs/common";
+import { CommandBus, QueryBus } from "@nestjs/cqrs";
 import {
   ApiTags,
   ApiOperation,
   ApiResponse,
   ApiBearerAuth,
   ApiQuery,
-} from '@nestjs/swagger';
-import { CreateUserDto, UpdateUserDto, UserResponseDto } from '../application/dto/user.dto';
-import { CreateUserCommand } from '../application/commands/create-user.command';
-import { UpdateUserCommand } from '../application/commands/update-user.command';
+} from "@nestjs/swagger";
+import {
+  CreateUserDto,
+  UpdateUserDto,
+  UserResponseDto,
+} from "../application/dto/user.dto";
+import { CreateUserCommand } from "../application/commands/create-user.command";
+import { UpdateUserCommand } from "../application/commands/update-user.command";
 import {
   GetUserQuery,
   GetUserByEmailQuery,
   GetAllUsersQuery,
-} from '../application/queries/user.queries';
-import { User } from '../domain/entities/user.entity';
-import { JwtAuthGuard } from '../../../core/security/auth/guards/jwt-auth.guard';
-import { CurrentUser } from '../../../core/security/auth/decorators/current-user.decorator';
-import { Public } from '../../../core/security/auth/decorators/auth.decorators';
+} from "../application/queries/user.queries";
+import { User } from "../domain/entities/user.entity";
+import { JwtAuthGuard } from "../../../core/security/auth/guards/jwt-auth.guard";
+import { CurrentUser } from "../../../core/security/auth/decorators/current-user.decorator";
+import { Public } from "../../../core/security/auth/decorators/auth.decorators";
 
-@ApiTags('users')
-@Controller('users')
+@ApiTags("users")
+@Controller("users")
 @UseGuards(JwtAuthGuard)
 @ApiBearerAuth()
 export class UserController {
   constructor(
     private readonly commandBus: CommandBus,
     private readonly queryBus: QueryBus,
-  ) { }
+  ) {}
 
   @Post()
   @Public()
   @HttpCode(HttpStatus.CREATED)
-  @ApiOperation({ summary: 'Create a new user' })
+  @ApiOperation({ summary: "Create a new user" })
   @ApiResponse({
     status: 201,
-    description: 'User created successfully',
+    description: "User created successfully",
     type: UserResponseDto,
   })
-  @ApiResponse({ status: 400, description: 'Invalid input' })
-  @ApiResponse({ status: 409, description: 'User already exists' })
+  @ApiResponse({ status: 400, description: "Invalid input" })
+  @ApiResponse({ status: 409, description: "User already exists" })
   async createUser(@Body() dto: CreateUserDto): Promise<UserResponseDto> {
     const command = new CreateUserCommand(
       dto.email,
@@ -63,34 +67,38 @@ export class UserController {
       dto.firebaseUid,
     );
 
-    const user = await this.commandBus.execute<CreateUserCommand, User>(command);
+    const user = await this.commandBus.execute<CreateUserCommand, User>(
+      command,
+    );
 
     return this.toResponse(user);
   }
 
-  @Get('me')
-  @ApiOperation({ summary: 'Get current user profile' })
+  @Get("me")
+  @ApiOperation({ summary: "Get current user profile" })
   @ApiResponse({
     status: 200,
-    description: 'User profile retrieved successfully',
+    description: "User profile retrieved successfully",
     type: UserResponseDto,
   })
-  async getCurrentUser(@CurrentUser('userId') userId: string): Promise<UserResponseDto> {
+  async getCurrentUser(
+    @CurrentUser("userId") userId: string,
+  ): Promise<UserResponseDto> {
     const query = new GetUserQuery(userId);
     const user = await this.queryBus.execute<GetUserQuery, User>(query);
 
     return this.toResponse(user);
   }
 
-  @Get(':id')
-  @ApiOperation({ summary: 'Get user by ID' })
+  @Get(":id")
+  @ApiOperation({ summary: "Get user by ID" })
   @ApiResponse({
     status: 200,
-    description: 'User found',
+    description: "User found",
     type: UserResponseDto,
   })
-  @ApiResponse({ status: 404, description: 'User not found' })
-  async getUserById(@Param('id') id: string): Promise<UserResponseDto> {
+  @ApiResponse({ status: 404, description: "User not found" })
+  async getUserById(@Param("id") id: string): Promise<UserResponseDto> {
     const query = new GetUserQuery(id);
     const user = await this.queryBus.execute<GetUserQuery, User>(query);
 
@@ -98,20 +106,25 @@ export class UserController {
   }
 
   @Get()
-  @ApiOperation({ summary: 'Get all users with pagination' })
-  @ApiQuery({ name: 'skip', required: false, type: Number })
-  @ApiQuery({ name: 'take', required: false, type: Number })
-  @ApiQuery({ name: 'isActive', required: false, type: Boolean })
+  @ApiOperation({ summary: "Get all users with pagination" })
+  @ApiQuery({ name: "skip", required: false, type: Number })
+  @ApiQuery({ name: "take", required: false, type: Number })
+  @ApiQuery({ name: "isActive", required: false, type: Boolean })
   @ApiResponse({
     status: 200,
-    description: 'Users retrieved successfully',
+    description: "Users retrieved successfully",
     type: [UserResponseDto],
   })
   async getAllUsers(
-    @Query('skip') skip?: number,
-    @Query('take') take?: number,
-    @Query('isActive') isActive?: boolean,
-  ): Promise<{ users: UserResponseDto[]; total: number; skip: number; take: number }> {
+    @Query("skip") skip?: number,
+    @Query("take") take?: number,
+    @Query("isActive") isActive?: boolean,
+  ): Promise<{
+    users: UserResponseDto[];
+    total: number;
+    skip: number;
+    take: number;
+  }> {
     const query = new GetAllUsersQuery(
       skip ? parseInt(skip.toString()) : 0,
       take ? parseInt(take.toString()) : 10,
@@ -131,31 +144,33 @@ export class UserController {
     };
   }
 
-  @Get('email/:email')
-  @ApiOperation({ summary: 'Get user by email' })
+  @Get("email/:email")
+  @ApiOperation({ summary: "Get user by email" })
   @ApiResponse({
     status: 200,
-    description: 'User found',
+    description: "User found",
     type: UserResponseDto,
   })
-  @ApiResponse({ status: 404, description: 'User not found' })
-  async getUserByEmail(@Param('email') email: string): Promise<UserResponseDto> {
+  @ApiResponse({ status: 404, description: "User not found" })
+  async getUserByEmail(
+    @Param("email") email: string,
+  ): Promise<UserResponseDto> {
     const query = new GetUserByEmailQuery(email);
     const user = await this.queryBus.execute<GetUserByEmailQuery, User>(query);
 
     return this.toResponse(user);
   }
 
-  @Patch(':id')
-  @ApiOperation({ summary: 'Update user profile' })
+  @Patch(":id")
+  @ApiOperation({ summary: "Update user profile" })
   @ApiResponse({
     status: 200,
-    description: 'User updated successfully',
+    description: "User updated successfully",
     type: UserResponseDto,
   })
-  @ApiResponse({ status: 404, description: 'User not found' })
+  @ApiResponse({ status: 404, description: "User not found" })
   async updateUser(
-    @Param('id') id: string,
+    @Param("id") id: string,
     @Body() dto: UpdateUserDto,
   ): Promise<UserResponseDto> {
     const command = new UpdateUserCommand(id, {
@@ -167,17 +182,19 @@ export class UserController {
       riskProfile: dto.riskProfile,
     });
 
-    const user = await this.commandBus.execute<UpdateUserCommand, User>(command);
+    const user = await this.commandBus.execute<UpdateUserCommand, User>(
+      command,
+    );
 
     return this.toResponse(user);
   }
 
-  @Delete(':id')
+  @Delete(":id")
   @HttpCode(HttpStatus.NO_CONTENT)
-  @ApiOperation({ summary: 'Soft delete user' })
-  @ApiResponse({ status: 204, description: 'User deleted successfully' })
-  @ApiResponse({ status: 404, description: 'User not found' })
-  async deleteUser(@Param('id') id: string): Promise<void> {
+  @ApiOperation({ summary: "Soft delete user" })
+  @ApiResponse({ status: 204, description: "User deleted successfully" })
+  @ApiResponse({ status: 404, description: "User not found" })
+  async deleteUser(@Param("id") id: string): Promise<void> {
     // Implementation would use a DeleteUserCommand
     // For now, this is a placeholder
   }

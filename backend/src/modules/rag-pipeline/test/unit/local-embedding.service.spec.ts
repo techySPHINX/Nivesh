@@ -1,12 +1,12 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { ConfigService } from '@nestjs/config';
-import { LocalEmbeddingService } from '../../../application/services/local-embedding.service';
-import Redis from 'ioredis';
+import { Test, TestingModule } from "@nestjs/testing";
+import { ConfigService } from "@nestjs/config";
+import { LocalEmbeddingService } from "../../../application/services/local-embedding.service";
+import Redis from "ioredis";
 
 // Mock Redis
-jest.mock('ioredis');
+jest.mock("ioredis");
 
-describe('LocalEmbeddingService', () => {
+describe("LocalEmbeddingService", () => {
   let service: LocalEmbeddingService;
   let configService: ConfigService;
   let redisMock: jest.Mocked<Redis>;
@@ -20,9 +20,9 @@ describe('LocalEmbeddingService', () => {
           useValue: {
             get: jest.fn((key: string) => {
               const config: Record<string, any> = {
-                'redis.host': 'localhost',
-                'redis.port': 6379,
-                'redis.password': 'test',
+                "redis.host": "localhost",
+                "redis.port": 6379,
+                "redis.password": "test",
               };
               return config[key];
             }),
@@ -40,43 +40,39 @@ describe('LocalEmbeddingService', () => {
     jest.clearAllMocks();
   });
 
-  describe('generateEmbedding', () => {
-    it('should generate 384-dimensional vector', async () => {
-      const text = 'Test financial transaction';
+  describe("generateEmbedding", () => {
+    it("should generate 384-dimensional vector", async () => {
+      const text = "Test financial transaction";
       const result = await service.generateEmbedding(text);
 
       expect(result).toBeDefined();
       expect(result.vector).toHaveLength(384);
       expect(result.dimension).toBe(384);
-      expect(result.model).toBe('Xenova/all-MiniLM-L6-v2');
+      expect(result.model).toBe("Xenova/all-MiniLM-L6-v2");
     });
 
-    it('should throw error for empty text', async () => {
-      await expect(service.generateEmbedding('')).rejects.toThrow(
-        'Text cannot be empty',
+    it("should throw error for empty text", async () => {
+      await expect(service.generateEmbedding("")).rejects.toThrow(
+        "Text cannot be empty",
       );
     });
 
-    it('should return cached embedding on second call', async () => {
-      const text = 'Cached transaction';
-      
+    it("should return cached embedding on second call", async () => {
+      const text = "Cached transaction";
+
       // First call - generates embedding
       const first = await service.generateEmbedding(text);
-      
+
       // Second call - should hit cache
       const second = await service.generateEmbedding(text);
-      
+
       expect(first.vector).toEqual(second.vector);
     });
   });
 
-  describe('generateBatchEmbeddings', () => {
-    it('should generate embeddings for multiple texts', async () => {
-      const texts = [
-        'Transaction 1',
-        'Transaction 2',
-        'Transaction 3',
-      ];
+  describe("generateBatchEmbeddings", () => {
+    it("should generate embeddings for multiple texts", async () => {
+      const texts = ["Transaction 1", "Transaction 2", "Transaction 3"];
 
       const results = await service.generateBatchEmbeddings(texts);
 
@@ -86,13 +82,13 @@ describe('LocalEmbeddingService', () => {
       });
     });
 
-    it('should return empty array for empty input', async () => {
+    it("should return empty array for empty input", async () => {
       const results = await service.generateBatchEmbeddings([]);
       expect(results).toEqual([]);
     });
 
-    it('should be faster than individual calls', async () => {
-      const texts = ['Text 1', 'Text 2', 'Text 3', 'Text 4', 'Text 5'];
+    it("should be faster than individual calls", async () => {
+      const texts = ["Text 1", "Text 2", "Text 3", "Text 4", "Text 5"];
 
       // Batch generation
       const batchStart = Date.now();
@@ -111,30 +107,30 @@ describe('LocalEmbeddingService', () => {
     });
   });
 
-  describe('getModelName', () => {
-    it('should return correct model name', () => {
-      expect(service.getModelName()).toBe('Xenova/all-MiniLM-L6-v2');
+  describe("getModelName", () => {
+    it("should return correct model name", () => {
+      expect(service.getModelName()).toBe("Xenova/all-MiniLM-L6-v2");
     });
   });
 
-  describe('getVectorDimension', () => {
-    it('should return correct dimension', () => {
+  describe("getVectorDimension", () => {
+    it("should return correct dimension", () => {
       expect(service.getVectorDimension()).toBe(384);
     });
   });
 
-  describe('cache operations', () => {
-    it('should retrieve cache statistics', async () => {
+  describe("cache operations", () => {
+    it("should retrieve cache statistics", async () => {
       const stats = await service.getCacheStats();
-      
-      expect(stats).toHaveProperty('hits');
-      expect(stats).toHaveProperty('misses');
-      expect(stats).toHaveProperty('size');
+
+      expect(stats).toHaveProperty("hits");
+      expect(stats).toHaveProperty("misses");
+      expect(stats).toHaveProperty("size");
     });
 
-    it('should clear cache', async () => {
+    it("should clear cache", async () => {
       await service.clearCache();
-      
+
       // Verify cache was cleared
       // In real implementation, would verify Redis flush
     });

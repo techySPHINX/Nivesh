@@ -1,27 +1,33 @@
-import { CommandHandler, ICommandHandler, EventBus } from '@nestjs/cqrs';
-import { Inject, Logger } from '@nestjs/common';
+import { CommandHandler, ICommandHandler, EventBus } from "@nestjs/cqrs";
+import { Inject, Logger } from "@nestjs/common";
 import {
   CreateAccountCommand,
   UpdateAccountCommand,
   DeleteAccountCommand,
   LinkAccountCommand,
-} from '../account.commands';
+} from "../account.commands";
 import {
   IAccountRepository,
   ACCOUNT_REPOSITORY,
-} from '../../../domain/repositories/account.repository.interface';
-import { Account, AccountStatus } from '../../../domain/entities/account.entity';
-import { AccountNumber } from '../../../domain/value-objects/account-number.vo';
-import { IFSCCode } from '../../../domain/value-objects/ifsc-code.vo';
-import { Money } from '../../../domain/value-objects/money.vo';
+} from "../../../domain/repositories/account.repository.interface";
+import {
+  Account,
+  AccountStatus,
+} from "../../../domain/entities/account.entity";
+import { AccountNumber } from "../../../domain/value-objects/account-number.vo";
+import { IFSCCode } from "../../../domain/value-objects/ifsc-code.vo";
+import { Money } from "../../../domain/value-objects/money.vo";
 import {
   ConflictException,
   EntityNotFoundException,
   UnauthorizedException,
-} from '../../../../../core/exceptions/base.exception';
-import { AccountCreatedEvent, AccountUpdatedEvent } from '../../../domain/events/account.events';
-import { KafkaProducerService } from '../../../../../core/messaging/kafka/kafka.producer';
-import { KafkaTopics } from '../../../../../core/messaging/kafka/topics.enum';
+} from "../../../../../core/exceptions/base.exception";
+import {
+  AccountCreatedEvent,
+  AccountUpdatedEvent,
+} from "../../../domain/events/account.events";
+import { KafkaProducerService } from "../../../../../core/messaging/kafka/kafka.producer";
+import { KafkaTopics } from "../../../../../core/messaging/kafka/topics.enum";
 
 @CommandHandler(CreateAccountCommand)
 export class CreateAccountHandler implements ICommandHandler<CreateAccountCommand> {
@@ -32,7 +38,7 @@ export class CreateAccountHandler implements ICommandHandler<CreateAccountComman
     private readonly accountRepository: IAccountRepository,
     private readonly eventBus: EventBus,
     private readonly kafkaProducer: KafkaProducerService,
-  ) { }
+  ) {}
 
   async execute(command: CreateAccountCommand): Promise<Account> {
     this.logger.debug(`Creating account for user: ${command.userId}`);
@@ -43,12 +49,14 @@ export class CreateAccountHandler implements ICommandHandler<CreateAccountComman
     );
 
     if (existingAccount) {
-      throw new ConflictException('Account with this number already exists');
+      throw new ConflictException("Account with this number already exists");
     }
 
     // Create value objects
     const accountNumber = new AccountNumber(command.accountNumber);
-    const ifscCode = command.ifscCode ? new IFSCCode(command.ifscCode) : undefined;
+    const ifscCode = command.ifscCode
+      ? new IFSCCode(command.ifscCode)
+      : undefined;
     const balance = new Money(command.balance, command.currency);
 
     // Create account entity
@@ -97,7 +105,7 @@ export class UpdateAccountHandler implements ICommandHandler<UpdateAccountComman
     private readonly accountRepository: IAccountRepository,
     private readonly eventBus: EventBus,
     private readonly kafkaProducer: KafkaProducerService,
-  ) { }
+  ) {}
 
   async execute(command: UpdateAccountCommand): Promise<Account> {
     this.logger.debug(`Updating account: ${command.accountId}`);
@@ -105,11 +113,11 @@ export class UpdateAccountHandler implements ICommandHandler<UpdateAccountComman
     const account = await this.accountRepository.findById(command.accountId);
 
     if (!account) {
-      throw new EntityNotFoundException('Account', command.accountId);
+      throw new EntityNotFoundException("Account", command.accountId);
     }
 
     if (account.UserId !== command.userId) {
-      throw new UnauthorizedException('Not authorized to update this account');
+      throw new UnauthorizedException("Not authorized to update this account");
     }
 
     // Apply updates
@@ -118,7 +126,10 @@ export class UpdateAccountHandler implements ICommandHandler<UpdateAccountComman
     }
 
     if (command.updates.balance !== undefined) {
-      const newBalance = new Money(command.updates.balance, account.Balance.getCurrency());
+      const newBalance = new Money(
+        command.updates.balance,
+        account.Balance.getCurrency(),
+      );
       account.updateBalance(newBalance);
     }
 
@@ -168,7 +179,7 @@ export class DeleteAccountHandler implements ICommandHandler<DeleteAccountComman
   constructor(
     @Inject(ACCOUNT_REPOSITORY)
     private readonly accountRepository: IAccountRepository,
-  ) { }
+  ) {}
 
   async execute(command: DeleteAccountCommand): Promise<void> {
     this.logger.debug(`Deleting account: ${command.accountId}`);
@@ -176,11 +187,11 @@ export class DeleteAccountHandler implements ICommandHandler<DeleteAccountComman
     const account = await this.accountRepository.findById(command.accountId);
 
     if (!account) {
-      throw new EntityNotFoundException('Account', command.accountId);
+      throw new EntityNotFoundException("Account", command.accountId);
     }
 
     if (account.UserId !== command.userId) {
-      throw new UnauthorizedException('Not authorized to delete this account');
+      throw new UnauthorizedException("Not authorized to delete this account");
     }
 
     await this.accountRepository.delete(command.accountId);
@@ -196,7 +207,7 @@ export class LinkAccountHandler implements ICommandHandler<LinkAccountCommand> {
   constructor(
     @Inject(ACCOUNT_REPOSITORY)
     private readonly accountRepository: IAccountRepository,
-  ) { }
+  ) {}
 
   async execute(command: LinkAccountCommand): Promise<Account> {
     this.logger.debug(`Linking account: ${command.accountId}`);
@@ -204,11 +215,11 @@ export class LinkAccountHandler implements ICommandHandler<LinkAccountCommand> {
     const account = await this.accountRepository.findById(command.accountId);
 
     if (!account) {
-      throw new EntityNotFoundException('Account', command.accountId);
+      throw new EntityNotFoundException("Account", command.accountId);
     }
 
     if (account.UserId !== command.userId) {
-      throw new UnauthorizedException('Not authorized to link this account');
+      throw new UnauthorizedException("Not authorized to link this account");
     }
 
     account.linkAccount();

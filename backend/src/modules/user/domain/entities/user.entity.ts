@@ -1,17 +1,17 @@
-import { Email } from '../value-objects/email.vo';
-import { PhoneNumber } from '../value-objects/phone-number.vo';
-import { UserName } from '../value-objects/user-name.vo';
+import { Email } from "../value-objects/email.vo";
+import { PhoneNumber } from "../value-objects/phone-number.vo";
+import { UserName } from "../value-objects/user-name.vo";
 
 export enum KycStatus {
-  PENDING = 'pending',
-  VERIFIED = 'verified',
-  REJECTED = 'rejected',
+  PENDING = "pending",
+  VERIFIED = "verified",
+  REJECTED = "rejected",
 }
 
 export enum RiskProfile {
-  CONSERVATIVE = 'conservative',
-  MODERATE = 'moderate',
-  AGGRESSIVE = 'aggressive',
+  CONSERVATIVE = "conservative",
+  MODERATE = "moderate",
+  AGGRESSIVE = "aggressive",
 }
 
 export interface UserProps {

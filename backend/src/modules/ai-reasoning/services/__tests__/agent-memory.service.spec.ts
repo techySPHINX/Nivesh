@@ -1,8 +1,8 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { AgentMemoryService } from '../agent-memory.service';
-import { PrismaService } from '../../../../core/database/postgres/prisma.service';
+import { Test, TestingModule } from "@nestjs/testing";
+import { AgentMemoryService } from "../agent-memory.service";
+import { PrismaService } from "../../../../core/database/postgres/prisma.service";
 
-describe('AgentMemoryService', () => {
+describe("AgentMemoryService", () => {
   let service: AgentMemoryService;
   let prisma: PrismaService;
 
@@ -34,11 +34,11 @@ describe('AgentMemoryService', () => {
     jest.clearAllMocks();
   });
 
-  describe('storeMessage', () => {
-    it('should store user message in conversation', async () => {
-      const conversationId = 'conv123';
-      const userId = 'user123';
-      const message = 'How much should I save for retirement?';
+  describe("storeMessage", () => {
+    it("should store user message in conversation", async () => {
+      const conversationId = "conv123";
+      const userId = "user123";
+      const message = "How much should I save for retirement?";
 
       await service.storeMessage(conversationId, userId, message);
 
@@ -48,9 +48,9 @@ describe('AgentMemoryService', () => {
       );
     });
 
-    it('should limit conversation to MAX_MESSAGES', async () => {
-      const conversationId = 'conv123';
-      const userId = 'user123';
+    it("should limit conversation to MAX_MESSAGES", async () => {
+      const conversationId = "conv123";
+      const userId = "user123";
 
       // Store 15 messages (max is 10)
       for (let i = 0; i < 15; i++) {
@@ -61,16 +61,16 @@ describe('AgentMemoryService', () => {
       expect(context?.messages.length).toBeLessThanOrEqual(10);
       // Should keep the most recent 10
       expect(context?.messages[context.messages.length - 1].content).toBe(
-        'Message 14',
+        "Message 14",
       );
     });
   });
 
-  describe('storeResponse', () => {
-    it('should store agent response in conversation', async () => {
-      const conversationId = 'conv123';
+  describe("storeResponse", () => {
+    it("should store agent response in conversation", async () => {
+      const conversationId = "conv123";
       const response = {
-        agentType: 'financial_planning',
+        agentType: "financial_planning",
         result: { monthlySavings: 50000 },
         confidence: 0.85,
         timestamp: new Date(),
@@ -80,17 +80,17 @@ describe('AgentMemoryService', () => {
 
       const context = await service.getConversationContext(conversationId);
       expect(context?.responses).toContainEqual(
-        expect.objectContaining({ agentType: 'financial_planning' }),
+        expect.objectContaining({ agentType: "financial_planning" }),
       );
     });
   });
 
-  describe('getUserPreferences', () => {
-    it('should return cached preferences', async () => {
-      const userId = 'user123';
+  describe("getUserPreferences", () => {
+    it("should return cached preferences", async () => {
+      const userId = "user123";
       const preferences = {
-        riskTolerance: 'moderate',
-        investmentStyle: 'balanced',
+        riskTolerance: "moderate",
+        investmentStyle: "balanced",
       };
 
       // First call - cache miss, database lookup
@@ -111,28 +111,28 @@ describe('AgentMemoryService', () => {
       expect(result1).toEqual(result2);
     });
 
-    it('should return default preferences for new user', async () => {
+    it("should return default preferences for new user", async () => {
       mockPrisma.userPreferences.findUnique.mockResolvedValue(null);
 
-      const result = await service.getUserPreferences('newUser');
+      const result = await service.getUserPreferences("newUser");
 
       expect(result).toEqual({
-        riskTolerance: 'moderate',
-        investmentStyle: 'balanced',
+        riskTolerance: "moderate",
+        investmentStyle: "balanced",
         preferredAgents: [],
-        communicationStyle: 'detailed',
+        communicationStyle: "detailed",
         notificationPreferences: {},
         financialGoals: [],
       });
     });
   });
 
-  describe('updateUserPreferences', () => {
-    it('should update user preferences', async () => {
-      const userId = 'user123';
+  describe("updateUserPreferences", () => {
+    it("should update user preferences", async () => {
+      const userId = "user123";
       const updates = {
-        riskTolerance: 'aggressive',
-        investmentStyle: 'growth',
+        riskTolerance: "aggressive",
+        investmentStyle: "growth",
       };
 
       mockPrisma.userPreferences.upsert.mockResolvedValue({
@@ -154,17 +154,17 @@ describe('AgentMemoryService', () => {
 
       // Verify cache is updated
       const prefs = await service.getUserPreferences(userId);
-      expect(prefs.riskTolerance).toBe('aggressive');
+      expect(prefs.riskTolerance).toBe("aggressive");
     });
   });
 
-  describe('cleanupExpiredConversations', () => {
-    it('should remove conversations older than 24 hours', async () => {
-      const conversationId = 'conv123';
-      const userId = 'user123';
+  describe("cleanupExpiredConversations", () => {
+    it("should remove conversations older than 24 hours", async () => {
+      const conversationId = "conv123";
+      const userId = "user123";
 
       // Store a conversation
-      await service.storeMessage(conversationId, userId, 'Test message');
+      await service.storeMessage(conversationId, userId, "Test message");
 
       // Mock time to 25 hours later
       const originalDate = Date.now;
@@ -180,22 +180,22 @@ describe('AgentMemoryService', () => {
     });
   });
 
-  describe('getConversationStats', () => {
-    it('should return conversation statistics', async () => {
-      const userId = 'user123';
+  describe("getConversationStats", () => {
+    it("should return conversation statistics", async () => {
+      const userId = "user123";
 
       // Create test conversations
-      await service.storeMessage('conv1', userId, 'Message 1');
-      await service.storeResponse('conv1', {
-        agentType: 'financial_planning',
+      await service.storeMessage("conv1", userId, "Message 1");
+      await service.storeResponse("conv1", {
+        agentType: "financial_planning",
         result: {},
         confidence: 0.85,
         timestamp: new Date(),
       });
 
-      await service.storeMessage('conv2', userId, 'Message 2');
-      await service.storeResponse('conv2', {
-        agentType: 'risk_assessment',
+      await service.storeMessage("conv2", userId, "Message 2");
+      await service.storeResponse("conv2", {
+        agentType: "risk_assessment",
         result: {},
         confidence: 0.9,
         timestamp: new Date(),

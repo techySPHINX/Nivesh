@@ -3,25 +3,25 @@
  * Represents different states in the payment lifecycle
  */
 export enum PaymentStatus {
-  CREATED = 'CREATED',
-  PENDING = 'PENDING',
-  AUTHORIZED = 'AUTHORIZED',
-  CAPTURED = 'CAPTURED',
-  REFUNDED = 'REFUNDED',
-  PARTIALLY_REFUNDED = 'PARTIALLY_REFUNDED',
-  FAILED = 'FAILED',
-  CANCELLED = 'CANCELLED',
+  CREATED = "CREATED",
+  PENDING = "PENDING",
+  AUTHORIZED = "AUTHORIZED",
+  CAPTURED = "CAPTURED",
+  REFUNDED = "REFUNDED",
+  PARTIALLY_REFUNDED = "PARTIALLY_REFUNDED",
+  FAILED = "FAILED",
+  CANCELLED = "CANCELLED",
 }
 
 /**
  * Payment Method Enum
  */
 export enum PaymentMethod {
-  CARD = 'CARD',
-  UPI = 'UPI',
-  NETBANKING = 'NETBANKING',
-  WALLET = 'WALLET',
-  EMI = 'EMI',
+  CARD = "CARD",
+  UPI = "UPI",
+  NETBANKING = "NETBANKING",
+  WALLET = "WALLET",
+  EMI = "EMI",
 }
 
 /**
@@ -48,7 +48,7 @@ export class Payment {
     public errorDescription: string | null,
     public readonly createdAt: Date,
     public updatedAt: Date,
-  ) { }
+  ) {}
 
   /**
    * Factory method to create a new payment
@@ -89,8 +89,15 @@ export class Payment {
   /**
    * Mark payment as authorized
    */
-  authorize(gatewayPaymentId: string, gatewayOrderId: string, method: PaymentMethod): void {
-    if (this.status !== PaymentStatus.CREATED && this.status !== PaymentStatus.PENDING) {
+  authorize(
+    gatewayPaymentId: string,
+    gatewayOrderId: string,
+    method: PaymentMethod,
+  ): void {
+    if (
+      this.status !== PaymentStatus.CREATED &&
+      this.status !== PaymentStatus.PENDING
+    ) {
       throw new Error(`Cannot authorize payment in ${this.status} status`);
     }
 
@@ -118,7 +125,10 @@ export class Payment {
    * Fail payment
    */
   fail(errorCode: string, errorDescription: string): void {
-    if (this.status === PaymentStatus.CAPTURED || this.status === PaymentStatus.REFUNDED) {
+    if (
+      this.status === PaymentStatus.CAPTURED ||
+      this.status === PaymentStatus.REFUNDED
+    ) {
       throw new Error(`Cannot fail payment in ${this.status} status`);
     }
 
@@ -136,7 +146,9 @@ export class Payment {
       throw new Error(`Cannot refund payment in ${this.status} status`);
     }
 
-    this.status = isPartial ? PaymentStatus.PARTIALLY_REFUNDED : PaymentStatus.REFUNDED;
+    this.status = isPartial
+      ? PaymentStatus.PARTIALLY_REFUNDED
+      : PaymentStatus.REFUNDED;
     this.updatedAt = new Date();
   }
 
@@ -161,7 +173,8 @@ export class Payment {
    */
   isSuccessful(): boolean {
     return (
-      this.status === PaymentStatus.CAPTURED || this.status === PaymentStatus.PARTIALLY_REFUNDED
+      this.status === PaymentStatus.CAPTURED ||
+      this.status === PaymentStatus.PARTIALLY_REFUNDED
     );
   }
 
@@ -169,21 +182,30 @@ export class Payment {
    * Check if payment can be refunded
    */
   canBeRefunded(): boolean {
-    return this.status === PaymentStatus.CAPTURED || this.status === PaymentStatus.PARTIALLY_REFUNDED;
+    return (
+      this.status === PaymentStatus.CAPTURED ||
+      this.status === PaymentStatus.PARTIALLY_REFUNDED
+    );
   }
 
   /**
    * Check if payment is pending
    */
   isPending(): boolean {
-    return this.status === PaymentStatus.PENDING || this.status === PaymentStatus.AUTHORIZED;
+    return (
+      this.status === PaymentStatus.PENDING ||
+      this.status === PaymentStatus.AUTHORIZED
+    );
   }
 
   /**
    * Check if payment has failed
    */
   hasFailed(): boolean {
-    return this.status === PaymentStatus.FAILED || this.status === PaymentStatus.CANCELLED;
+    return (
+      this.status === PaymentStatus.FAILED ||
+      this.status === PaymentStatus.CANCELLED
+    );
   }
 
   /**

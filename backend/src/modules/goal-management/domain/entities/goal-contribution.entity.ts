@@ -2,10 +2,10 @@
  * Contribution Type Enum
  */
 export enum ContributionType {
-  MANUAL = 'MANUAL',
-  AUTOMATIC = 'AUTOMATIC',
-  TRANSFER = 'TRANSFER',
-  ADJUSTMENT = 'ADJUSTMENT',
+  MANUAL = "MANUAL",
+  AUTOMATIC = "AUTOMATIC",
+  TRANSFER = "TRANSFER",
+  ADJUSTMENT = "ADJUSTMENT",
 }
 
 /**
@@ -25,7 +25,7 @@ export class GoalContribution {
     public readonly notes: string | null,
     public readonly metadata: Record<string, any> | null,
     public readonly createdAt: Date,
-  ) { }
+  ) {}
 
   /**
    * Factory method to create a new contribution
@@ -43,7 +43,7 @@ export class GoalContribution {
     metadata?: Record<string, any>;
   }): GoalContribution {
     if (params.amount <= 0) {
-      throw new Error('Contribution amount must be positive');
+      throw new Error("Contribution amount must be positive");
     }
 
     return new GoalContribution(

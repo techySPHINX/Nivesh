@@ -1,5 +1,10 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { AlertRule, AlertRuleType, AlertRuleConditions, AlertRuleActions } from '../../domain/entities/alert-rule.entity';
+import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
+import {
+  AlertRule,
+  AlertRuleType,
+  AlertRuleConditions,
+  AlertRuleActions,
+} from "../../domain/entities/alert-rule.entity";
 
 export class AlertRuleResponseDto {
   @ApiProperty()

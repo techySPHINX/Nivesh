@@ -1,6 +1,6 @@
-import { Tool } from '../types/agent.types';
-import { Neo4jService } from '../../../core/database/neo4j/neo4j.service';
-import { Result } from 'neo4j-driver';
+import { Tool } from "../types/agent.types";
+import { Neo4jService } from "../../../core/database/neo4j/neo4j.service";
+import { Result } from "neo4j-driver";
 
 /**
  * Financial Graph Query Tool
@@ -31,18 +31,18 @@ import { Result } from 'neo4j-driver';
 interface GraphQueryInput {
   userId: string;
   queryType:
-    | 'spending_patterns'
-    | 'merchant_loyalty'
-    | 'anomaly_detection'
-    | 'goal_impact'
-    | 'income_sources'
-    | 'risk_indicators';
-  timeframe?: string;          // 'month', 'quarter', 'year'
-  category?: string;           // Filter by category
-  merchantName?: string;       // Filter by merchant
-  goalId?: string;            // Filter by goal
-  startDate?: string;         // Custom start date (ISO)
-  endDate?: string;           // Custom end date (ISO)
+    | "spending_patterns"
+    | "merchant_loyalty"
+    | "anomaly_detection"
+    | "goal_impact"
+    | "income_sources"
+    | "risk_indicators";
+  timeframe?: string; // 'month', 'quarter', 'year'
+  category?: string; // Filter by category
+  merchantName?: string; // Filter by merchant
+  goalId?: string; // Filter by goal
+  startDate?: string; // Custom start date (ISO)
+  endDate?: string; // Custom end date (ISO)
 }
 
 interface GraphQueryOutput {
@@ -54,7 +54,7 @@ interface GraphQueryOutput {
     transactionCount: number;
     totalAmount: number;
     averageAmount: number;
-    trend: 'increasing' | 'stable' | 'decreasing';
+    trend: "increasing" | "stable" | "decreasing";
     topMerchants: string[];
     timeframe: string;
     anomalies: any[];
@@ -106,13 +106,13 @@ interface GraphQueryOutput {
 /** Safely convert neo4j Integer or number to JS number */
 function toNumber(val: any): number {
   if (val == null) return 0;
-  if (typeof val.toNumber === 'function') return val.toNumber();
+  if (typeof val.toNumber === "function") return val.toNumber();
   return Number(val);
 }
 
 /** Extract records array from a neo4j Result */
-function extractRecords(result: Result): any[] {
-  return (result as any).records ?? [];
+function extractRecords(result: any): any[] {
+  return result.records ?? [];
 }
 
 /** Compute date range boundaries from timeframe string */
@@ -126,13 +126,13 @@ function getDateRange(timeframe: string, startDate?: string, endDate?: string) {
   } else {
     start = new Date(now);
     switch (timeframe) {
-      case 'year':
+      case "year":
         start.setFullYear(start.getFullYear() - 1);
         break;
-      case 'quarter':
+      case "quarter":
         start.setMonth(start.getMonth() - 3);
         break;
-      case 'month':
+      case "month":
       default:
         start.setMonth(start.getMonth() - 1);
         break;
@@ -145,51 +145,77 @@ function getDateRange(timeframe: string, startDate?: string, endDate?: string) {
 /**
  * Factory: create query_financial_graph tool wired to a real Neo4jService.
  */
-export function createQueryFinancialGraphTool(neo4jService: Neo4jService): Tool {
+export function createQueryFinancialGraphTool(
+  neo4jService: Neo4jService,
+): Tool {
   return {
-    name: 'query_financial_graph',
+    name: "query_financial_graph",
     description:
-      'Query Neo4j knowledge graph for relationship-based financial insights including spending patterns, merchant loyalty, anomaly detection, and goal impact analysis',
+      "Query Neo4j knowledge graph for relationship-based financial insights including spending patterns, merchant loyalty, anomaly detection, and goal impact analysis",
     schema: {
-      type: 'object',
+      type: "object",
       properties: {
-        userId: { type: 'string', description: 'User ID to query data for' },
+        userId: { type: "string", description: "User ID to query data for" },
         queryType: {
-          type: 'string',
+          type: "string",
           enum: [
-            'spending_patterns',
-            'merchant_loyalty',
-            'anomaly_detection',
-            'goal_impact',
-            'income_sources',
-            'risk_indicators',
+            "spending_patterns",
+            "merchant_loyalty",
+            "anomaly_detection",
+            "goal_impact",
+            "income_sources",
+            "risk_indicators",
           ],
-          description: 'Type of graph query to execute',
+          description: "Type of graph query to execute",
         },
         timeframe: {
-          type: 'string',
-          enum: ['month', 'quarter', 'year'],
-          description: 'Time period for analysis (optional)',
-          default: 'month',
+          type: "string",
+          enum: ["month", "quarter", "year"],
+          description: "Time period for analysis (optional)",
+          default: "month",
         },
-        category: { type: 'string', description: 'Filter by specific category (optional)' },
-        merchantName: { type: 'string', description: 'Filter by specific merchant (optional)' },
-        goalId: { type: 'string', description: 'Filter by specific goal (optional)' },
-        startDate: { type: 'string', description: 'Custom start date in ISO format (optional)' },
-        endDate: { type: 'string', description: 'Custom end date in ISO format (optional)' },
+        category: {
+          type: "string",
+          description: "Filter by specific category (optional)",
+        },
+        merchantName: {
+          type: "string",
+          description: "Filter by specific merchant (optional)",
+        },
+        goalId: {
+          type: "string",
+          description: "Filter by specific goal (optional)",
+        },
+        startDate: {
+          type: "string",
+          description: "Custom start date in ISO format (optional)",
+        },
+        endDate: {
+          type: "string",
+          description: "Custom end date in ISO format (optional)",
+        },
       },
-      required: ['userId', 'queryType'],
+      required: ["userId", "queryType"],
     },
     handler: async (args: GraphQueryInput): Promise<GraphQueryOutput> => {
       const startTime = Date.now();
-      const { userId, queryType, timeframe = 'month', category, merchantName, goalId, startDate, endDate } = args;
+      const {
+        userId,
+        queryType,
+        timeframe = "month",
+        category,
+        merchantName,
+        goalId,
+        startDate,
+        endDate,
+      } = args;
       const { start, end } = getDateRange(timeframe, startDate, endDate);
 
       try {
-        let resultData: Partial<GraphQueryOutput> = {};
+        const resultData: Partial<GraphQueryOutput> = {};
 
         switch (queryType) {
-          case 'spending_patterns': {
+          case "spending_patterns": {
             const prevStart = new Date(start);
             const rangeMs = new Date(end).getTime() - new Date(start).getTime();
             prevStart.setTime(prevStart.getTime() - rangeMs);
@@ -197,7 +223,7 @@ export function createQueryFinancialGraphTool(neo4jService: Neo4jService): Tool 
             const cypher = `
               MATCH (u:User {id: $userId})-[:MADE]->(t:Transaction)-[:IN_CATEGORY]->(c:Category)
               WHERE t.transactionDate >= $start AND t.transactionDate <= $end
-                ${category ? 'AND c.name = $category' : ''}
+                ${category ? "AND c.name = $category" : ""}
               WITH c.name AS name,
                    count(t) AS txCount,
                    sum(t.amount) AS total,
@@ -217,17 +243,19 @@ export function createQueryFinancialGraphTool(neo4jService: Neo4jService): Tool 
               ORDER BY total DESC
             `;
             const result = await neo4jService.read(cypher, {
-              userId, start, end,
+              userId,
+              start,
+              end,
               prevStart: prevStart.toISOString(),
               ...(category ? { category } : {}),
             });
             resultData.categories = extractRecords(result).map((r) => ({
-              name: r.get('name'),
-              transactionCount: toNumber(r.get('txCount')),
-              totalAmount: toNumber(r.get('total')),
-              averageAmount: toNumber(r.get('avg')),
-              trend: r.get('trend') as 'increasing' | 'stable' | 'decreasing',
-              topMerchants: r.get('topMerchants') ?? [],
+              name: r.get("name"),
+              transactionCount: toNumber(r.get("txCount")),
+              totalAmount: toNumber(r.get("total")),
+              averageAmount: toNumber(r.get("avg")),
+              trend: r.get("trend") as "increasing" | "stable" | "decreasing",
+              topMerchants: r.get("topMerchants") ?? [],
               timeframe,
               anomalies: [],
             }));
@@ -240,16 +268,19 @@ export function createQueryFinancialGraphTool(neo4jService: Neo4jService): Tool 
               { userId, start, end },
             );
             const incRecs = extractRecords(incResult);
-            if (incRecs.length > 0) resultData.monthlyIncome = toNumber(incRecs[0].get('monthlyIncome'));
+            if (incRecs.length > 0)
+              resultData.monthlyIncome = toNumber(
+                incRecs[0].get("monthlyIncome"),
+              );
             break;
           }
 
-          case 'merchant_loyalty': {
+          case "merchant_loyalty": {
             const cypher = `
               MATCH (u:User {id: $userId})-[:MADE]->(t:Transaction)
               WHERE t.transactionDate >= $start AND t.transactionDate <= $end
                 AND t.merchantName IS NOT NULL
-                ${merchantName ? 'AND t.merchantName = $merchantName' : ''}
+                ${merchantName ? "AND t.merchantName = $merchantName" : ""}
               WITH t.merchantName AS name,
                    sum(t.amount) AS totalSpent,
                    count(t) AS txCount,
@@ -261,21 +292,23 @@ export function createQueryFinancialGraphTool(neo4jService: Neo4jService): Tool 
               LIMIT 20
             `;
             const result = await neo4jService.read(cypher, {
-              userId, start, end,
+              userId,
+              start,
+              end,
               ...(merchantName ? { merchantName } : {}),
             });
             resultData.merchants = extractRecords(result).map((r) => ({
-              name: r.get('name'),
-              totalSpent: toNumber(r.get('totalSpent')),
-              transactionCount: toNumber(r.get('txCount')),
-              frequency: toNumber(r.get('monthlyFreq')),
-              category: r.get('category') ?? 'Uncategorised',
-              averageTicketSize: toNumber(r.get('avgTicket')),
+              name: r.get("name"),
+              totalSpent: toNumber(r.get("totalSpent")),
+              transactionCount: toNumber(r.get("txCount")),
+              frequency: toNumber(r.get("monthlyFreq")),
+              category: r.get("category") ?? "Uncategorised",
+              averageTicketSize: toNumber(r.get("avgTicket")),
             }));
             break;
           }
 
-          case 'anomaly_detection': {
+          case "anomaly_detection": {
             const cypher = `
               MATCH (u:User {id: $userId})-[:MADE]->(t:Transaction)-[:IN_CATEGORY]->(c:Category)
               WHERE t.transactionDate >= $start AND t.transactionDate <= $end
@@ -291,16 +324,20 @@ export function createQueryFinancialGraphTool(neo4jService: Neo4jService): Tool 
               ORDER BY deviation DESC
               LIMIT 20
             `;
-            const result = await neo4jService.read(cypher, { userId, start, end });
+            const result = await neo4jService.read(cypher, {
+              userId,
+              start,
+              end,
+            });
             resultData.anomalies = extractRecords(result).map((r) => {
-              const deviation = toNumber(r.get('deviation'));
-              const catAvg = toNumber(r.get('catAvg'));
+              const deviation = toNumber(r.get("deviation"));
+              const catAvg = toNumber(r.get("catAvg"));
               return {
-                transactionId: r.get('txId'),
-                category: r.get('category'),
-                amount: toNumber(r.get('amount')),
-                date: r.get('txDate'),
-                merchant: r.get('merchant'),
+                transactionId: r.get("txId"),
+                category: r.get("category"),
+                amount: toNumber(r.get("amount")),
+                date: r.get("txDate"),
+                merchant: r.get("merchant"),
                 deviation,
                 reason: `Amount ${deviation}% above category average (₹${Math.round(catAvg)})`,
               };
@@ -308,10 +345,10 @@ export function createQueryFinancialGraphTool(neo4jService: Neo4jService): Tool 
             break;
           }
 
-          case 'goal_impact': {
+          case "goal_impact": {
             const cypher = `
               MATCH (u:User {id: $userId})-[:HAS_GOAL]->(g:Goal)
-              WHERE g.status = 'active' ${goalId ? 'AND g.id = $goalId' : ''}
+              WHERE g.status = 'active' ${goalId ? "AND g.id = $goalId" : ""}
               WITH g LIMIT 1
               OPTIONAL MATCH (u)-[:MADE]->(t:Transaction)
               WHERE t.transactionDate >= $start AND t.transactionDate <= $end
@@ -324,13 +361,16 @@ export function createQueryFinancialGraphTool(neo4jService: Neo4jService): Tool 
                      collect({category: catName, amount: catTotal}) AS catItems
             `;
             const result = await neo4jService.read(cypher, {
-              userId, start, end,
+              userId,
+              start,
+              end,
               ...(goalId ? { goalId } : {}),
             });
             const records = extractRecords(result);
             if (records.length > 0) {
               const r = records[0];
-              const catItems: Array<{ category: string; amount: number }> = r.get('catItems') ?? [];
+              const catItems: Array<{ category: string; amount: number }> =
+                r.get("catItems") ?? [];
               const impacting = catItems
                 .filter((i) => i.category)
                 .sort((a, b) => toNumber(b.amount) - toNumber(a.amount))
@@ -341,20 +381,24 @@ export function createQueryFinancialGraphTool(neo4jService: Neo4jService): Tool 
                   suggestedReduction: Math.round(toNumber(amount) * 0.2),
                 }));
 
-              const monthlySavings = toNumber(r.get('monthlySavings'));
+              const monthlySavings = toNumber(r.get("monthlySavings"));
               resultData.goal = {
-                id: r.get('goalId'),
-                name: r.get('goalName'),
-                targetAmount: toNumber(r.get('target')),
+                id: r.get("goalId"),
+                name: r.get("goalName"),
+                targetAmount: toNumber(r.get("target")),
                 monthlySavings,
-                actualMonthlySavings: Math.max(0, monthlySavings - impacting.reduce((s, i) => s + i.suggestedReduction, 0)),
+                actualMonthlySavings: Math.max(
+                  0,
+                  monthlySavings -
+                    impacting.reduce((s, i) => s + i.suggestedReduction, 0),
+                ),
               };
               resultData.impactingCategories = impacting;
             }
             break;
           }
 
-          case 'income_sources': {
+          case "income_sources": {
             const cypher = `
               MATCH (u:User {id: $userId})-[:MADE]->(t:Transaction)
               WHERE t.type IN ['credit','income','CREDIT']
@@ -368,17 +412,21 @@ export function createQueryFinancialGraphTool(neo4jService: Neo4jService): Tool 
                      round(row.total / grandTotal * 100, 2) AS percentage
               ORDER BY total DESC LIMIT 10
             `;
-            const result = await neo4jService.read(cypher, { userId, start, end });
+            const result = await neo4jService.read(cypher, {
+              userId,
+              start,
+              end,
+            });
             resultData.incomeSources = extractRecords(result).map((r) => ({
-              source: r.get('source'),
-              totalAmount: toNumber(r.get('total')),
-              transactionCount: toNumber(r.get('txCount')),
-              percentage: toNumber(r.get('percentage')),
+              source: r.get("source"),
+              totalAmount: toNumber(r.get("total")),
+              transactionCount: toNumber(r.get("txCount")),
+              percentage: toNumber(r.get("percentage")),
             }));
             break;
           }
 
-          case 'risk_indicators': {
+          case "risk_indicators": {
             const cypher = `
               MATCH (u:User {id: $userId})-[:MADE]->(t:Transaction)
               WHERE t.transactionDate >= $start AND t.transactionDate <= $end
@@ -390,25 +438,30 @@ export function createQueryFinancialGraphTool(neo4jService: Neo4jService): Tool 
                      CASE WHEN totalIncome > 0 THEN round(debtPayments / totalIncome * 100, 2) ELSE 0 END AS debtRatio,
                      CASE WHEN totalIncome > 0 THEN round(totalExpense / totalIncome * 100, 2) ELSE 0 END AS expenseRatio
             `;
-            const result = await neo4jService.read(cypher, { userId, start, end });
+            const result = await neo4jService.read(cypher, {
+              userId,
+              start,
+              end,
+            });
             const records = extractRecords(result);
             if (records.length > 0) {
               const r = records[0];
-              const debtRatio = toNumber(r.get('debtRatio'));
-              const expenseRatio = toNumber(r.get('expenseRatio'));
-              const indicators: Required<GraphQueryOutput>['riskIndicators'] = [];
+              const debtRatio = toNumber(r.get("debtRatio"));
+              const expenseRatio = toNumber(r.get("expenseRatio"));
+              const indicators: Required<GraphQueryOutput>["riskIndicators"] =
+                [];
               if (debtRatio > 40) {
                 indicators.push({
-                  type: 'HIGH_DEBT_RATIO',
-                  severity: debtRatio > 60 ? 'critical' : 'high',
+                  type: "HIGH_DEBT_RATIO",
+                  severity: debtRatio > 60 ? "critical" : "high",
                   description: `Debt payments are ${debtRatio}% of income (safe max: 40%)`,
                   value: debtRatio,
                 });
               }
               if (expenseRatio > 90) {
                 indicators.push({
-                  type: 'HIGH_EXPENSE_RATIO',
-                  severity: expenseRatio > 100 ? 'critical' : 'high',
+                  type: "HIGH_EXPENSE_RATIO",
+                  severity: expenseRatio > 100 ? "critical" : "high",
                   description: `Spending is ${expenseRatio}% of income — very low savings margin`,
                   value: expenseRatio,
                 });
@@ -440,8 +493,6 @@ export function createQueryFinancialGraphTool(neo4jService: Neo4jService): Tool 
  * Backward-compatible stub.
  * ToolBootstrapService calls createQueryFinancialGraphTool(this.neo4jService) directly.
  */
-export const queryFinancialGraphTool: Tool = createQueryFinancialGraphTool(null as any);
-
-
-
-
+export const queryFinancialGraphTool: Tool = createQueryFinancialGraphTool(
+  null as any,
+);

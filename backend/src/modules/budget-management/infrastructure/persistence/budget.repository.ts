@@ -1,11 +1,11 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { PrismaService } from '../../../../core/database/postgres/prisma.service';
-import { IBudgetRepository } from '../../domain/repositories/budget.repository.interface';
+import { Injectable, Logger } from "@nestjs/common";
+import { PrismaService } from "../../../../core/database/postgres/prisma.service";
+import { IBudgetRepository } from "../../domain/repositories/budget.repository.interface";
 import {
   Budget,
   BudgetPeriod,
   BudgetStatus,
-} from '../../domain/entities/budget.entity';
+} from "../../domain/entities/budget.entity";
 
 @Injectable()
 export class PrismaBudgetRepository implements IBudgetRepository {
@@ -19,11 +19,11 @@ export class PrismaBudgetRepository implements IBudgetRepository {
     return new Budget(
       record.id,
       record.userId,
-      record.name ?? record.category,          // name may be stored as category
-      record.description ?? '',
+      record.name ?? record.category, // name may be stored as category
+      record.description ?? "",
       Number(record.amount),
       Number(record.currentSpending ?? 0),
-      record.currency ?? 'INR',
+      record.currency ?? "INR",
       record.period as BudgetPeriod,
       record.startDate,
       record.endDate,
@@ -32,9 +32,12 @@ export class PrismaBudgetRepository implements IBudgetRepository {
           ? BudgetStatus.EXCEEDED
           : BudgetStatus.ACTIVE
         : BudgetStatus.PAUSED,
-      new Map(),           // categoryBudgets — not stored separately
-      [50, 75, 90, 100],   // default alert thresholds
-      new Set(),           // alertsSent
+      new Map(), // categoryBudgets — not stored separately
+      [50, 75, 90, 100], // default alert thresholds
+      new Set(), // alertsSent
+      record.metadata || null,
+      record.createdAt ?? new Date(),
+      record.updatedAt ?? new Date(),
     ) as Budget;
   }
 
@@ -49,10 +52,9 @@ export class PrismaBudgetRepository implements IBudgetRepository {
       period: budget.period,
       startDate: budget.startDate,
       endDate: budget.endDate,
-      alertThreshold:
-        budget.alertThresholds?.length
-          ? Math.max(...budget.alertThresholds)
-          : 90,
+      alertThreshold: budget.alertThresholds?.length
+        ? Math.max(...budget.alertThresholds)
+        : 90,
       isRecurring: false,
       isActive: budget.status !== BudgetStatus.PAUSED,
       currentSpending: budget.totalSpent,
@@ -75,7 +77,7 @@ export class PrismaBudgetRepository implements IBudgetRepository {
   async findByUserId(userId: string): Promise<Budget[]> {
     const records = await this.prisma.budget.findMany({
       where: { userId },
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: "desc" },
     });
     return records.map((r) => this.toDomain(r));
   }
@@ -83,7 +85,7 @@ export class PrismaBudgetRepository implements IBudgetRepository {
   async findActiveByUserId(userId: string): Promise<Budget[]> {
     const records = await this.prisma.budget.findMany({
       where: { userId, isActive: true },
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: "desc" },
     });
     return records.map((r) => this.toDomain(r));
   }
@@ -160,7 +162,7 @@ export class PrismaBudgetRepository implements IBudgetRepository {
         startDate: { gte: startDate },
         endDate: { lte: endDate },
       },
-      orderBy: { startDate: 'asc' },
+      orderBy: { startDate: "asc" },
     });
     return records.map((r) => this.toDomain(r));
   }

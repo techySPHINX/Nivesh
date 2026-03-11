@@ -1,8 +1,12 @@
-import { QueryHandler, IQueryHandler } from '@nestjs/cqrs';
-import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
-import { GetBudgetSpendingQuery } from '../get-budget-spending.query';
-import { PrismaService } from '../../../../../core/database/postgres/prisma.service';
-import { BudgetSpendingDto } from '../../dto';
+import { QueryHandler, IQueryHandler } from "@nestjs/cqrs";
+import {
+  Injectable,
+  NotFoundException,
+  ForbiddenException,
+} from "@nestjs/common";
+import { GetBudgetSpendingQuery } from "../get-budget-spending.query";
+import { PrismaService } from "../../../../../core/database/postgres/prisma.service";
+import { BudgetSpendingDto } from "../../dto";
 
 @QueryHandler(GetBudgetSpendingQuery)
 @Injectable()
@@ -22,7 +26,9 @@ export class GetBudgetSpendingHandler implements IQueryHandler<GetBudgetSpending
     }
 
     if (budget.userId !== userId) {
-      throw new ForbiddenException('You do not have permission to view this budget');
+      throw new ForbiddenException(
+        "You do not have permission to view this budget",
+      );
     }
 
     // Get transactions for the budget period and category
@@ -34,11 +40,14 @@ export class GetBudgetSpendingHandler implements IQueryHandler<GetBudgetSpending
           gte: budget.startDate,
           lte: budget.endDate,
         },
-        type: 'DEBIT', // Only count expenses
+        type: "DEBIT", // Only count expenses
       },
     });
 
-    const currentSpending = transactions.reduce((sum, tx) => sum + Number(tx.amount), 0);
+    const currentSpending = transactions.reduce(
+      (sum, tx) => sum + Number(tx.amount),
+      0,
+    );
     const limit = Number(budget.amount);
     const remaining = Math.max(limit - currentSpending, 0);
     const percentage = limit > 0 ? (currentSpending / limit) * 100 : 0;
@@ -46,11 +55,16 @@ export class GetBudgetSpendingHandler implements IQueryHandler<GetBudgetSpending
     // Calculate days remaining
     const now = new Date();
     const endDate = new Date(budget.endDate);
-    const daysRemaining = Math.max(0, Math.ceil((endDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)));
+    const daysRemaining = Math.max(
+      0,
+      Math.ceil((endDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)),
+    );
 
     // Calculate projections
     const startDate = new Date(budget.startDate);
-    const totalDays = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+    const totalDays = Math.ceil(
+      (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24),
+    );
     const elapsedDays = Math.max(1, totalDays - daysRemaining);
     const averageDailySpending = currentSpending / elapsedDays;
     const projectedSpending = averageDailySpending * totalDays;

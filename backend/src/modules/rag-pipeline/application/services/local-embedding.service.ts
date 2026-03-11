@@ -1,20 +1,20 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import { pipeline, Pipeline } from '@xenova/transformers';
-import Redis from 'ioredis';
-import { createHash } from 'crypto';
-import { IEmbeddingService } from '../../domain/interfaces/embedding-service.interface';
-import { EmbeddingVector } from '../../domain/entities/embedding-vector.entity';
+import { Injectable, Logger } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
+import { pipeline, Pipeline } from "@xenova/transformers";
+import Redis from "ioredis";
+import { createHash } from "crypto";
+import { IEmbeddingService } from "../../domain/interfaces/embedding-service.interface";
+import { EmbeddingVector } from "../../domain/entities/embedding-vector.entity";
 
 /**
  * Local Embedding Service using Sentence Transformers
- * 
+ *
  * Model: sentence-transformers/all-MiniLM-L6-v2
  * - Dimension: 384
  * - Fast inference (~50ms per query)
  * - Good quality for semantic search
  * - Runs locally, no API costs
- * 
+ *
  * Redis caching:
  * - Key pattern: emb:{model}:{hash(text)}
  * - TTL: 7 days
@@ -23,9 +23,9 @@ import { EmbeddingVector } from '../../domain/entities/embedding-vector.entity';
 @Injectable()
 export class LocalEmbeddingService implements IEmbeddingService {
   private readonly logger = new Logger(LocalEmbeddingService.name);
-  private readonly MODEL_NAME = 'Xenova/all-MiniLM-L6-v2';
+  private readonly MODEL_NAME = "Xenova/all-MiniLM-L6-v2";
   private readonly VECTOR_DIMENSION = 384;
-  private readonly CACHE_PREFIX = 'emb';
+  private readonly CACHE_PREFIX = "emb";
   private readonly CACHE_TTL = 7 * 24 * 60 * 60; // 7 days in seconds
 
   private embeddingPipeline: Pipeline | null = null;
@@ -35,9 +35,9 @@ export class LocalEmbeddingService implements IEmbeddingService {
   constructor(private readonly configService: ConfigService) {
     // Initialize Redis connection
     this.redis = new Redis({
-      host: this.configService.get('redis.host'),
-      port: this.configService.get('redis.port'),
-      password: this.configService.get('redis.password'),
+      host: this.configService.get("redis.host"),
+      port: this.configService.get("redis.port"),
+      password: this.configService.get("redis.password"),
       db: 2, // Dedicated DB for embeddings cache
       keyPrefix: `${this.CACHE_PREFIX}:`,
       retryStrategy: (times: number) => {
@@ -46,8 +46,8 @@ export class LocalEmbeddingService implements IEmbeddingService {
       },
     });
 
-    this.redis.on('error', (err) => {
-      this.logger.error('Redis connection error:', err);
+    this.redis.on("error", (err) => {
+      this.logger.error("Redis connection error:", err);
     });
   }
 
@@ -63,11 +63,11 @@ export class LocalEmbeddingService implements IEmbeddingService {
         this.logger.log(`Initializing embedding model: ${this.MODEL_NAME}`);
         const startTime = Date.now();
 
-        this.embeddingPipeline = await pipeline(
-          'feature-extraction',
+        this.embeddingPipeline = (await pipeline(
+          "feature-extraction",
           this.MODEL_NAME,
           { quantized: true }, // Use quantized model for faster inference
-        );
+        )) as unknown as Pipeline;
 
         const duration = Date.now() - startTime;
         this.logger.log(`Embedding model loaded in ${duration}ms`);
@@ -81,7 +81,10 @@ export class LocalEmbeddingService implements IEmbeddingService {
    * Generate cache key for text
    */
   private getCacheKey(text: string): string {
-    const hash = createHash('sha256').update(text).digest('hex').substring(0, 16);
+    const hash = createHash("sha256")
+      .update(text)
+      .digest("hex")
+      .substring(0, 16);
     return `${this.MODEL_NAME}:${hash}`;
   }
 
@@ -92,13 +95,13 @@ export class LocalEmbeddingService implements IEmbeddingService {
     try {
       const key = this.getCacheKey(text);
       const cached = await this.redis.get(key);
-      
+
       if (cached) {
         this.logger.debug(`Cache hit for embedding: ${key}`);
         return JSON.parse(cached);
       }
     } catch (error) {
-      this.logger.warn('Cache retrieval failed:', error);
+      this.logger.warn("Cache retrieval failed:", error);
     }
     return null;
   }
@@ -112,7 +115,7 @@ export class LocalEmbeddingService implements IEmbeddingService {
       await this.redis.setex(key, this.CACHE_TTL, JSON.stringify(vector));
       this.logger.debug(`Cached embedding: ${key}`);
     } catch (error) {
-      this.logger.warn('Cache storage failed:', error);
+      this.logger.warn("Cache storage failed:", error);
     }
   }
 
@@ -121,7 +124,7 @@ export class LocalEmbeddingService implements IEmbeddingService {
    */
   async generateEmbedding(text: string): Promise<EmbeddingVector> {
     if (!text || text.trim().length === 0) {
-      throw new Error('Text cannot be empty');
+      throw new Error("Text cannot be empty");
     }
 
     // Check cache first
@@ -132,10 +135,10 @@ export class LocalEmbeddingService implements IEmbeddingService {
 
     // Generate embedding
     await this.ensurePipeline();
-    
+
     const startTime = Date.now();
     const output = await this.embeddingPipeline!(text, {
-      pooling: 'mean',
+      pooling: "mean",
       normalize: true,
     });
 
@@ -143,7 +146,9 @@ export class LocalEmbeddingService implements IEmbeddingService {
     const vector = Array.from(output.data) as number[];
     const duration = Date.now() - startTime;
 
-    this.logger.debug(`Generated embedding in ${duration}ms (dim: ${vector.length})`);
+    this.logger.debug(
+      `Generated embedding in ${duration}ms (dim: ${vector.length})`,
+    );
 
     // Cache for future use
     await this.storeInCache(text, vector);
@@ -168,7 +173,7 @@ export class LocalEmbeddingService implements IEmbeddingService {
     for (let i = 0; i < texts.length; i++) {
       const text = texts[i];
       const cached = await this.getFromCache(text);
-      
+
       if (cached) {
         results[i] = new EmbeddingVector(cached, this.MODEL_NAME);
       } else {
@@ -180,14 +185,14 @@ export class LocalEmbeddingService implements IEmbeddingService {
     // Generate embeddings for uncached texts
     if (uncachedTexts.length > 0) {
       await this.ensurePipeline();
-      
+
       this.logger.debug(
         `Batch generating ${uncachedTexts.length}/${texts.length} embeddings`,
       );
-      
+
       const startTime = Date.now();
       const output = await this.embeddingPipeline!(uncachedTexts, {
-        pooling: 'mean',
+        pooling: "mean",
         normalize: true,
       });
       const duration = Date.now() - startTime;
@@ -200,12 +205,12 @@ export class LocalEmbeddingService implements IEmbeddingService {
       for (let i = 0; i < uncachedTexts.length; i++) {
         const vector = Array.from(output[i].data) as number[];
         const embedding = new EmbeddingVector(vector, this.MODEL_NAME);
-        
+
         results[uncachedIndices[i]] = embedding;
-        
+
         // Cache asynchronously (fire-and-forget)
         this.storeInCache(uncachedTexts[i], vector).catch((err) =>
-          this.logger.warn('Failed to cache batch embedding:', err),
+          this.logger.warn("Failed to cache batch embedding:", err),
         );
       }
     }
@@ -224,16 +229,20 @@ export class LocalEmbeddingService implements IEmbeddingService {
   /**
    * Get cache statistics
    */
-  async getCacheStats(): Promise<{ hits: number; misses: number; size: number }> {
+  async getCacheStats(): Promise<{
+    hits: number;
+    misses: number;
+    size: number;
+  }> {
     try {
-      const keys = await this.redis.keys('*');
+      const keys = await this.redis.keys("*");
       return {
         hits: 0, // Would need separate tracking
         misses: 0,
         size: keys.length,
       };
     } catch (error) {
-      this.logger.error('Failed to get cache stats:', error);
+      this.logger.error("Failed to get cache stats:", error);
       return { hits: 0, misses: 0, size: 0 };
     }
   }
@@ -244,9 +253,9 @@ export class LocalEmbeddingService implements IEmbeddingService {
   async clearCache(): Promise<void> {
     try {
       await this.redis.flushdb();
-      this.logger.log('Embedding cache cleared');
+      this.logger.log("Embedding cache cleared");
     } catch (error) {
-      this.logger.error('Failed to clear cache:', error);
+      this.logger.error("Failed to clear cache:", error);
     }
   }
 

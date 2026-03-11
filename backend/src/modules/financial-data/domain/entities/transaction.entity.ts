@@ -1,40 +1,40 @@
-import { v4 as uuidv4 } from 'uuid';
-import { DomainException } from '../../../../core/exceptions/base.exception';
-import { Money } from '../value-objects/money.vo';
+import { v4 as uuidv4 } from "uuid";
+import { DomainException } from "../../../../core/exceptions/base.exception";
+import { Money } from "../value-objects/money.vo";
 
 export enum TransactionType {
-  DEBIT = 'DEBIT',
-  CREDIT = 'CREDIT',
+  DEBIT = "DEBIT",
+  CREDIT = "CREDIT",
 }
 
 export enum TransactionCategory {
   // Income
-  SALARY = 'SALARY',
-  FREELANCE = 'FREELANCE',
-  INVESTMENT_RETURN = 'INVESTMENT_RETURN',
-  REFUND = 'REFUND',
-  OTHER_INCOME = 'OTHER_INCOME',
+  SALARY = "SALARY",
+  FREELANCE = "FREELANCE",
+  INVESTMENT_RETURN = "INVESTMENT_RETURN",
+  REFUND = "REFUND",
+  OTHER_INCOME = "OTHER_INCOME",
 
   // Expenses
-  FOOD = 'FOOD',
-  TRANSPORT = 'TRANSPORT',
-  SHOPPING = 'SHOPPING',
-  BILLS = 'BILLS',
-  ENTERTAINMENT = 'ENTERTAINMENT',
-  HEALTHCARE = 'HEALTHCARE',
-  EDUCATION = 'EDUCATION',
-  RENT = 'RENT',
-  EMI = 'EMI',
-  INVESTMENT = 'INVESTMENT',
-  TRANSFER = 'TRANSFER',
-  OTHER_EXPENSE = 'OTHER_EXPENSE',
+  FOOD = "FOOD",
+  TRANSPORT = "TRANSPORT",
+  SHOPPING = "SHOPPING",
+  BILLS = "BILLS",
+  ENTERTAINMENT = "ENTERTAINMENT",
+  HEALTHCARE = "HEALTHCARE",
+  EDUCATION = "EDUCATION",
+  RENT = "RENT",
+  EMI = "EMI",
+  INVESTMENT = "INVESTMENT",
+  TRANSFER = "TRANSFER",
+  OTHER_EXPENSE = "OTHER_EXPENSE",
 }
 
 export enum TransactionStatus {
-  PENDING = 'PENDING',
-  COMPLETED = 'COMPLETED',
-  FAILED = 'FAILED',
-  REVERSED = 'REVERSED',
+  PENDING = "PENDING",
+  COMPLETED = "COMPLETED",
+  FAILED = "FAILED",
+  REVERSED = "REVERSED",
 }
 
 export interface CreateTransactionProps {
@@ -83,7 +83,7 @@ export class Transaction {
     private metadata: Record<string, any> | undefined,
     private readonly createdAt: Date,
     private updatedAt: Date,
-  ) { }
+  ) {}
 
   // Factory method for creating new transaction
   static create(props: CreateTransactionProps): Transaction {
@@ -92,7 +92,7 @@ export class Transaction {
 
     // Validate transaction date is not in future
     if (props.transactionDate > now) {
-      throw new DomainException('Transaction date cannot be in the future');
+      throw new DomainException("Transaction date cannot be in the future");
     }
 
     return new Transaction(
@@ -115,7 +115,10 @@ export class Transaction {
 
   // Factory method for reconstituting from persistence
   static fromPersistence(data: TransactionPersistence): Transaction {
-    const amount = Money.fromJSON({ amount: data.amount, currency: data.currency });
+    const amount = Money.fromJSON({
+      amount: data.amount,
+      currency: data.currency,
+    });
 
     return new Transaction(
       data.id,
@@ -154,18 +157,18 @@ export class Transaction {
     }
     this.status = TransactionStatus.FAILED;
     if (reason) {
-      this.addMetadata('failureReason', reason);
+      this.addMetadata("failureReason", reason);
     }
     this.updatedAt = new Date();
   }
 
   reverse(reason?: string): void {
     if (this.status !== TransactionStatus.COMPLETED) {
-      throw new DomainException('Can only reverse completed transactions');
+      throw new DomainException("Can only reverse completed transactions");
     }
     this.status = TransactionStatus.REVERSED;
     if (reason) {
-      this.addMetadata('reversalReason', reason);
+      this.addMetadata("reversalReason", reason);
     }
     this.updatedAt = new Date();
   }
@@ -174,17 +177,17 @@ export class Transaction {
     if (this.category === newCategory) return;
 
     this.category = newCategory;
-    this.addMetadata('categoryChangedAt', new Date().toISOString());
-    this.addMetadata('previousCategory', this.category);
+    this.addMetadata("categoryChangedAt", new Date().toISOString());
+    this.addMetadata("previousCategory", this.category);
     this.updatedAt = new Date();
   }
 
   updateDescription(newDescription: string): void {
     if (!newDescription || newDescription.trim().length === 0) {
-      throw new DomainException('Description cannot be empty');
+      throw new DomainException("Description cannot be empty");
     }
     if (newDescription.length > 500) {
-      throw new DomainException('Description too long (max 500 characters)');
+      throw new DomainException("Description too long (max 500 characters)");
     }
 
     this.description = newDescription.trim();

@@ -2,19 +2,19 @@
  * Simulation Type Enum
  */
 export enum SimulationType {
-  MONTE_CARLO = 'MONTE_CARLO',
-  WHAT_IF = 'WHAT_IF',
-  STRESS_TEST = 'STRESS_TEST',
+  MONTE_CARLO = "MONTE_CARLO",
+  WHAT_IF = "WHAT_IF",
+  STRESS_TEST = "STRESS_TEST",
 }
 
 /**
  * Simulation Status Enum
  */
 export enum SimulationStatus {
-  PENDING = 'PENDING',
-  RUNNING = 'RUNNING',
-  COMPLETED = 'COMPLETED',
-  FAILED = 'FAILED',
+  PENDING = "PENDING",
+  RUNNING = "RUNNING",
+  COMPLETED = "COMPLETED",
+  FAILED = "FAILED",
 }
 
 /**
@@ -25,7 +25,7 @@ export interface SimulationInputParameters {
   monthlyContribution: number;
   durationMonths: number;
   expectedAnnualReturn: number;
-  riskLevel: 'conservative' | 'moderate' | 'aggressive';
+  riskLevel: "conservative" | "moderate" | "aggressive";
   inflationRate?: number;
   iterations?: number;
 }
@@ -127,7 +127,9 @@ export class Simulation {
     } = this.inputParameters;
 
     const monthlyReturn = expectedAnnualReturn / 12;
-    const monthlyVolatility = this.getVolatilityForRisk(this.inputParameters.riskLevel);
+    const monthlyVolatility = this.getVolatilityForRisk(
+      this.inputParameters.riskLevel,
+    );
     const finalValues: number[] = [];
 
     for (let i = 0; i < iterations; i++) {
@@ -139,24 +141,32 @@ export class Simulation {
         const z = Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
 
         const monthlyReturnSimulated = monthlyReturn + monthlyVolatility * z;
-        portfolioValue = portfolioValue * (1 + monthlyReturnSimulated) + monthlyContribution;
+        portfolioValue =
+          portfolioValue * (1 + monthlyReturnSimulated) + monthlyContribution;
       }
 
       // Adjust for inflation
-      const inflationMultiplier = Math.pow(1 + inflationRate, durationMonths / 12);
+      const inflationMultiplier = Math.pow(
+        1 + inflationRate,
+        durationMonths / 12,
+      );
       portfolioValue = portfolioValue / inflationMultiplier;
       finalValues.push(Math.round(portfolioValue * 100) / 100);
     }
 
     finalValues.sort((a, b) => a - b);
 
-    const percentile = (arr: number[], p: number) => arr[Math.floor(arr.length * p / 100)];
+    const percentile = (arr: number[], p: number) =>
+      arr[Math.floor((arr.length * p) / 100)];
     const mean = finalValues.reduce((a, b) => a + b, 0) / finalValues.length;
     const variance =
-      finalValues.reduce((sum, v) => sum + Math.pow(v - mean, 2), 0) / finalValues.length;
+      finalValues.reduce((sum, v) => sum + Math.pow(v - mean, 2), 0) /
+      finalValues.length;
 
     return {
-      projectedValues: finalValues.filter((_, i) => i % Math.ceil(iterations / 100) === 0), // sample 100 points
+      projectedValues: finalValues.filter(
+        (_, i) => i % Math.ceil(iterations / 100) === 0,
+      ), // sample 100 points
       percentile10: percentile(finalValues, 10),
       percentile25: percentile(finalValues, 25),
       percentile50: percentile(finalValues, 50),
@@ -172,11 +182,11 @@ export class Simulation {
 
   private getVolatilityForRisk(riskLevel: string): number {
     switch (riskLevel) {
-      case 'conservative':
+      case "conservative":
         return 0.02;
-      case 'moderate':
+      case "moderate":
         return 0.04;
-      case 'aggressive':
+      case "aggressive":
         return 0.07;
       default:
         return 0.04;
@@ -198,11 +208,31 @@ export class Simulation {
     } = this.inputParameters;
 
     // Scenarios: base | optimistic (+2% return) | conservative (-2% return) | stretch (2x contribution)
-    const scenarios: Array<{ label: string; rate: number; contribution: number }> = [
-      { label: 'base', rate: expectedAnnualReturn, contribution: monthlyContribution },
-      { label: 'optimistic', rate: expectedAnnualReturn + 0.02, contribution: monthlyContribution },
-      { label: 'conservative', rate: Math.max(expectedAnnualReturn - 0.02, 0.01), contribution: monthlyContribution },
-      { label: 'stretch', rate: expectedAnnualReturn, contribution: monthlyContribution * 1.5 },
+    const scenarios: Array<{
+      label: string;
+      rate: number;
+      contribution: number;
+    }> = [
+      {
+        label: "base",
+        rate: expectedAnnualReturn,
+        contribution: monthlyContribution,
+      },
+      {
+        label: "optimistic",
+        rate: expectedAnnualReturn + 0.02,
+        contribution: monthlyContribution,
+      },
+      {
+        label: "conservative",
+        rate: Math.max(expectedAnnualReturn - 0.02, 0.01),
+        contribution: monthlyContribution,
+      },
+      {
+        label: "stretch",
+        rate: expectedAnnualReturn,
+        contribution: monthlyContribution * 1.5,
+      },
     ];
 
     const project = (rate: number, contribution: number): number => {
@@ -214,10 +244,13 @@ export class Simulation {
       return val / Math.pow(1 + inflationRate, durationMonths / 12);
     };
 
-    const results = scenarios.map((s) => Math.round(project(s.rate, s.contribution) * 100) / 100);
+    const results = scenarios.map(
+      (s) => Math.round(project(s.rate, s.contribution) * 100) / 100,
+    );
     const sorted = [...results].sort((a, b) => a - b);
     const mean = results.reduce((a, b) => a + b, 0) / results.length;
-    const variance = results.reduce((s, v) => s + Math.pow(v - mean, 2), 0) / results.length;
+    const variance =
+      results.reduce((s, v) => s + Math.pow(v - mean, 2), 0) / results.length;
 
     return {
       projectedValues: results,
@@ -257,15 +290,42 @@ export class Simulation {
 
     // Stress scenarios
     const stressScenarios = [
-      { label: '2008_gfc', annualReturn: -0.40, recoveryMonths: 36, volatility: 0.12 },
-      { label: '2020_covid', annualReturn: -0.35, recoveryMonths: 12, volatility: 0.10 },
-      { label: 'prolonged_bear', annualReturn: -0.15, recoveryMonths: 60, volatility: 0.08 },
-      { label: 'stagflation', annualReturn: 0.02, recoveryMonths: 0, volatility: 0.06 },
+      {
+        label: "2008_gfc",
+        annualReturn: -0.4,
+        recoveryMonths: 36,
+        volatility: 0.12,
+      },
+      {
+        label: "2020_covid",
+        annualReturn: -0.35,
+        recoveryMonths: 12,
+        volatility: 0.1,
+      },
+      {
+        label: "prolonged_bear",
+        annualReturn: -0.15,
+        recoveryMonths: 60,
+        volatility: 0.08,
+      },
+      {
+        label: "stagflation",
+        annualReturn: 0.02,
+        recoveryMonths: 0,
+        volatility: 0.06,
+      },
     ];
 
-    const runStressed = (annualReturn: number, recoveryMonths: number, vol: number): number => {
+    const runStressed = (
+      annualReturn: number,
+      recoveryMonths: number,
+      vol: number,
+    ): number => {
       const crashMonths = Math.min(12, durationMonths);
-      const recovMonths = Math.min(recoveryMonths, durationMonths - crashMonths);
+      const recovMonths = Math.min(
+        recoveryMonths,
+        durationMonths - crashMonths,
+      );
       const normalMonths = durationMonths - crashMonths - recovMonths;
 
       let val = initialAmount;
@@ -283,9 +343,17 @@ export class Simulation {
       // Recovery phase — gradual rebound (half of normal return)
       const normalReturn = this.inputParameters.expectedAnnualReturn || 0.12;
       phase(recovMonths, normalReturn * 0.5, vol * 0.5);
-      phase(normalMonths, normalReturn, this.getVolatilityForRisk(this.inputParameters.riskLevel));
+      phase(
+        normalMonths,
+        normalReturn,
+        this.getVolatilityForRisk(this.inputParameters.riskLevel),
+      );
 
-      return Math.round(val / Math.pow(1 + inflationRate, durationMonths / 12) * 100) / 100;
+      return (
+        Math.round(
+          (val / Math.pow(1 + inflationRate, durationMonths / 12)) * 100,
+        ) / 100
+      );
     };
 
     const iterations = 200;
@@ -293,16 +361,23 @@ export class Simulation {
     for (const scenario of stressScenarios) {
       for (let i = 0; i < iterations / stressScenarios.length; i++) {
         allFinalValues.push(
-          runStressed(scenario.annualReturn, scenario.recoveryMonths, scenario.volatility),
+          runStressed(
+            scenario.annualReturn,
+            scenario.recoveryMonths,
+            scenario.volatility,
+          ),
         );
       }
     }
 
     allFinalValues.sort((a, b) => a - b);
-    const percentile = (arr: number[], p: number) => arr[Math.floor(arr.length * p / 100)];
-    const mean = allFinalValues.reduce((a, b) => a + b, 0) / allFinalValues.length;
+    const percentile = (arr: number[], p: number) =>
+      arr[Math.floor((arr.length * p) / 100)];
+    const mean =
+      allFinalValues.reduce((a, b) => a + b, 0) / allFinalValues.length;
     const variance =
-      allFinalValues.reduce((s, v) => s + Math.pow(v - mean, 2), 0) / allFinalValues.length;
+      allFinalValues.reduce((s, v) => s + Math.pow(v - mean, 2), 0) /
+      allFinalValues.length;
 
     return {
       projectedValues: allFinalValues.filter((_, i) => i % 2 === 0),

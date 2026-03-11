@@ -1,9 +1,9 @@
-import { Injectable, Logger, BadRequestException } from '@nestjs/common';
-import { PrismaService } from '../../../../core/database/postgres/prisma.service';
+import { Injectable, Logger, BadRequestException } from "@nestjs/common";
+import { PrismaService } from "../../../../core/database/postgres/prisma.service";
 
 /**
  * Function Executor Service
- * 
+ *
  * Executes registered functions called by LLM:
  * - Routes function calls to appropriate handlers
  * - Handles errors and timeouts
@@ -38,16 +38,11 @@ export class FunctionExecutorService {
       );
 
       const latency = Date.now() - startTime;
-      this.logger.debug(
-        `Function ${functionName} executed in ${latency}ms`,
-      );
+      this.logger.debug(`Function ${functionName} executed in ${latency}ms`);
 
       return result;
     } catch (error) {
-      this.logger.error(
-        `Function ${functionName} failed:`,
-        error,
-      );
+      this.logger.error(`Function ${functionName} failed:`, error);
       throw error;
     }
   }
@@ -61,36 +56,36 @@ export class FunctionExecutorService {
     userId: string,
   ): Promise<any> {
     switch (functionName) {
-      case 'query_financial_graph':
+      case "query_financial_graph":
         return this.queryFinancialGraph(args, userId);
-      
-      case 'calculate_emi':
+
+      case "calculate_emi":
         return this.calculateEMI(args);
-      
-      case 'run_monte_carlo_simulation':
+
+      case "run_monte_carlo_simulation":
         return this.runMonteCarloSimulation(args);
-      
-      case 'calculate_compound_interest':
+
+      case "calculate_compound_interest":
         return this.calculateCompoundInterest(args);
-      
-      case 'calculate_tax':
+
+      case "calculate_tax":
         return this.calculateTax(args);
-      
-      case 'analyze_spending_pattern':
+
+      case "analyze_spending_pattern":
         return this.analyzeSpendingPattern(args, userId);
-      
-      case 'check_goal_progress':
+
+      case "check_goal_progress":
         return this.checkGoalProgress(args, userId);
-      
-      case 'calculate_sip_returns':
+
+      case "calculate_sip_returns":
         return this.calculateSIPReturns(args);
-      
-      case 'assess_loan_affordability':
+
+      case "assess_loan_affordability":
         return this.assessLoanAffordability(args);
-      
-      case 'optimize_portfolio':
+
+      case "optimize_portfolio":
         return this.optimizePortfolio(args);
-      
+
       default:
         throw new BadRequestException(`Unknown function: ${functionName}`);
     }
@@ -108,7 +103,7 @@ export class FunctionExecutorService {
     return {
       query_type,
       data: `Mock data for ${query_type}`,
-      message: 'Neo4j integration pending',
+      message: "Neo4j integration pending",
     };
   }
 
@@ -191,12 +186,12 @@ export class FunctionExecutorService {
       principal,
       rate,
       time_years,
-      compounding_frequency = 'annually',
+      compounding_frequency = "annually",
     } = args;
 
     const frequencies: Record<string, number> = {
       annually: 1,
-      'semi-annually': 2,
+      "semi-annually": 2,
       quarterly: 4,
       monthly: 12,
       daily: 365,
@@ -225,7 +220,7 @@ export class FunctionExecutorService {
     let taxableIncome = annual_income;
     let tax = 0;
 
-    if (regime === 'old') {
+    if (regime === "old") {
       // Apply deductions
       taxableIncome = Math.max(0, annual_income - deductions);
 
@@ -254,14 +249,17 @@ export class FunctionExecutorService {
     return {
       annual_income,
       regime,
-      deductions: regime === 'old' ? deductions : 0,
+      deductions: regime === "old" ? deductions : 0,
       taxable_income: Math.round(taxableIncome),
       tax_amount: Math.round(totalTax),
-      effective_rate: ((totalTax / annual_income) * 100).toFixed(2) + '%',
+      effective_rate: ((totalTax / annual_income) * 100).toFixed(2) + "%",
     };
   }
 
-  private async analyzeSpendingPattern(args: any, userId: string): Promise<any> {
+  private async analyzeSpendingPattern(
+    args: any,
+    userId: string,
+  ): Promise<any> {
     const { months = 3, category } = args;
 
     // Get transactions from database
@@ -274,20 +272,23 @@ export class FunctionExecutorService {
         createdAt: { gte: startDate },
         ...(category && { category }),
       },
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: "desc" },
     });
 
     // Analyze spending
     const totalSpent = transactions
-      .filter((t) => t.type === 'DEBIT')
+      .filter((t) => t.type === "DEBIT")
       .reduce((sum, t) => sum + Number(t.amount), 0);
 
     const categoryBreakdown = transactions
-      .filter((t) => t.type === 'DEBIT')
-      .reduce((acc, t) => {
-        acc[t.category] = (acc[t.category] || 0) + Number(t.amount);
-        return acc;
-      }, {} as Record<string, number>);
+      .filter((t) => t.type === "DEBIT")
+      .reduce(
+        (acc, t) => {
+          acc[t.category] = (acc[t.category] || 0) + Number(t.amount);
+          return acc;
+        },
+        {} as Record<string, number>,
+      );
 
     return {
       period_months: months,
@@ -312,7 +313,7 @@ export class FunctionExecutorService {
     });
 
     if (!goal) {
-      return { error: 'Goal not found' };
+      return { error: "Goal not found" };
     }
 
     const totalContributed = goal.contributions.reduce(
@@ -328,7 +329,9 @@ export class FunctionExecutorService {
       target_amount: Number(goal.targetAmount),
       current_amount: Math.round(totalContributed),
       progress_percentage: Math.round(progressPercentage),
-      remaining_amount: Math.round(Number(goal.targetAmount) - totalContributed),
+      remaining_amount: Math.round(
+        Number(goal.targetAmount) - totalContributed,
+      ),
       target_date: goal.targetDate,
       status: goal.status,
     };
@@ -356,7 +359,7 @@ export class FunctionExecutorService {
       total_invested: Math.round(totalInvested),
       future_value: Math.round(futureValue),
       returns: Math.round(returns),
-      return_percentage: ((returns / totalInvested) * 100).toFixed(2) + '%',
+      return_percentage: ((returns / totalInvested) * 100).toFixed(2) + "%",
     };
   }
 
@@ -370,7 +373,11 @@ export class FunctionExecutorService {
     } = args;
 
     // Calculate proposed EMI
-    const emiResult = this.calculateEMI({ principal: loan_amount, rate, tenure_months });
+    const emiResult = this.calculateEMI({
+      principal: loan_amount,
+      rate,
+      tenure_months,
+    });
     const proposedEMI = emiResult.emi;
 
     // Calculate FOIR (Fixed Obligation to Income Ratio)
@@ -386,11 +393,11 @@ export class FunctionExecutorService {
       existing_emis,
       total_monthly_emi: totalEMI,
       monthly_income,
-      foir: foir.toFixed(2) + '%',
+      foir: foir.toFixed(2) + "%",
       is_affordable: isAffordable,
       recommendation: isAffordable
-        ? 'Loan appears affordable based on standard FOIR guidelines'
-        : 'Loan may strain finances. Consider reducing loan amount or extending tenure',
+        ? "Loan appears affordable based on standard FOIR guidelines"
+        : "Loan may strain finances. Consider reducing loan amount or extending tenure",
       disposable_income: Math.round(monthly_income - totalEMI),
     };
   }
@@ -433,7 +440,8 @@ export class FunctionExecutorService {
       investment_amount,
       goal_horizon_years,
       recommended_allocation: portfolio,
-      rebalancing_frequency: risk_profile === 'aggressive' ? 'quarterly' : 'annually',
+      rebalancing_frequency:
+        risk_profile === "aggressive" ? "quarterly" : "annually",
     };
   }
 
@@ -449,7 +457,8 @@ export class FunctionExecutorService {
       promise,
       new Promise<T>((_, reject) =>
         setTimeout(
-          () => reject(new Error(`Function execution timeout (${timeoutMs}ms)`)),
+          () =>
+            reject(new Error(`Function execution timeout (${timeoutMs}ms)`)),
           timeoutMs,
         ),
       ),

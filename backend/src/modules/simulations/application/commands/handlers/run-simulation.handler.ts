@@ -1,17 +1,20 @@
-import { CommandHandler, ICommandHandler, EventBus } from '@nestjs/cqrs';
-import { Inject, Logger } from '@nestjs/common';
-import { RunSimulationCommand } from '../run-simulation.command';
-import { SimulationResponseDto } from '../../dto/simulation-response.dto';
+import { CommandHandler, ICommandHandler, EventBus } from "@nestjs/cqrs";
+import { Inject, Logger } from "@nestjs/common";
+import { RunSimulationCommand } from "../run-simulation.command";
+import { SimulationResponseDto } from "../../dto/simulation-response.dto";
 import {
   ISimulationRepository,
   SIMULATION_REPOSITORY,
-} from '../../../domain/repositories/simulation.repository.interface';
-import { Simulation, SimulationType } from '../../../domain/entities/simulation.entity';
+} from "../../../domain/repositories/simulation.repository.interface";
+import {
+  Simulation,
+  SimulationType,
+} from "../../../domain/entities/simulation.entity";
 import {
   SimulationStartedEvent,
   SimulationCompletedEvent,
   SimulationFailedEvent,
-} from '../../../domain/events/simulation.events';
+} from "../../../domain/events/simulation.events";
 
 @CommandHandler(RunSimulationCommand)
 export class RunSimulationHandler implements ICommandHandler<RunSimulationCommand> {
@@ -47,14 +50,19 @@ export class RunSimulationHandler implements ICommandHandler<RunSimulationComman
     await this.simulationRepository.save(simulation);
 
     this.eventBus.publish(
-      new SimulationStartedEvent(simulation.id, userId, simulation.type, simulation.name),
+      new SimulationStartedEvent(
+        simulation.id,
+        userId,
+        simulation.type,
+        simulation.name,
+      ),
     );
 
     try {
       simulation.markRunning();
 
       // Dispatch to the correct engine based on simulation type
-      let results: ReturnType<Simulation['runMonteCarloSimulation']>;
+      let results: ReturnType<Simulation["runMonteCarloSimulation"]>;
       switch (simulation.type) {
         case SimulationType.WHAT_IF:
           results = simulation.runWhatIfSimulation();

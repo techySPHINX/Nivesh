@@ -1,4 +1,4 @@
-import { GoalContribution } from '../entities/goal-contribution.entity';
+import { GoalContribution } from "../entities/goal-contribution.entity";
 
 /**
  * Goal Contribution Repository Interface
@@ -32,12 +32,19 @@ export interface IGoalContributionRepository {
   /**
    * Get recent contributions for a user
    */
-  getRecentContributions(userId: string, limit: number): Promise<GoalContribution[]>;
+  getRecentContributions(
+    userId: string,
+    limit: number,
+  ): Promise<GoalContribution[]>;
 
   /**
    * Get contributions for a date range
    */
-  findByDateRange(userId: string, startDate: Date, endDate: Date): Promise<GoalContribution[]>;
+  findByDateRange(
+    userId: string,
+    startDate: Date,
+    endDate: Date,
+  ): Promise<GoalContribution[]>;
 
   /**
    * Delete contribution
@@ -45,4 +52,6 @@ export interface IGoalContributionRepository {
   delete(id: string): Promise<void>;
 }
 
-export const GOAL_CONTRIBUTION_REPOSITORY = Symbol('GOAL_CONTRIBUTION_REPOSITORY');
+export const GOAL_CONTRIBUTION_REPOSITORY = Symbol(
+  "GOAL_CONTRIBUTION_REPOSITORY",
+);

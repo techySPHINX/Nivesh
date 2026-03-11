@@ -1,7 +1,7 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { HttpService } from '@nestjs/axios';
-import { ConfigService } from '@nestjs/config';
-import { firstValueFrom } from 'rxjs';
+import { Injectable, Logger } from "@nestjs/common";
+import { HttpService } from "@nestjs/axios";
+import { ConfigService } from "@nestjs/config";
+import { firstValueFrom } from "rxjs";
 
 export interface CategorizationResult {
   category: string;
@@ -32,10 +32,10 @@ export class MlCategorizationService {
     private readonly configService: ConfigService,
   ) {
     this.mlServiceUrl = this.configService.get<string>(
-      'ML_SERVICE_URL',
-      'http://ml-services:8000',
+      "ML_SERVICE_URL",
+      "http://ml-services:8000",
     );
-    this.apiKey = this.configService.get<string>('ML_API_KEY', '');
+    this.apiKey = this.configService.get<string>("ML_API_KEY", "");
   }
 
   /**
@@ -47,7 +47,7 @@ export class MlCategorizationService {
     amount: number,
   ): Promise<CategorizationResult> {
     if (!description?.trim()) {
-      return { category: 'Uncategorised', confidence: 0 };
+      return { category: "Uncategorised", confidence: 0 };
     }
 
     try {
@@ -57,7 +57,7 @@ export class MlCategorizationService {
           `${this.mlServiceUrl}/predict/intent`,
           { query },
           {
-            headers: { 'X-API-Key': this.apiKey },
+            headers: { "X-API-Key": this.apiKey },
             timeout: 3000, // 3 s — fail fast, non-blocking
           },
         ),
@@ -74,7 +74,7 @@ export class MlCategorizationService {
       this.logger.debug(
         `ML categorisation skipped for "${description}": ${error?.message}`,
       );
-      return { category: 'Uncategorised', confidence: 0 };
+      return { category: "Uncategorised", confidence: 0 };
     }
   }
 
@@ -85,28 +85,28 @@ export class MlCategorizationService {
   private mapIntentToCategory(intent: string): string {
     const intentCategoryMap: Record<string, string> = {
       // Intent labels produced by intent_classifier model
-      spending_analysis: 'Shopping',
-      food_dining: 'Food & Dining',
-      transportation: 'Transportation',
-      utilities: 'Utilities',
-      entertainment: 'Entertainment',
-      healthcare: 'Healthcare',
-      education: 'Education',
-      travel: 'Travel',
-      investment: 'Investment',
-      emi_loan: 'EMI & Loans',
-      insurance: 'Insurance',
-      rent: 'Rent',
-      salary_income: 'Salary',
-      freelance_income: 'Freelance',
+      spending_analysis: "Shopping",
+      food_dining: "Food & Dining",
+      transportation: "Transportation",
+      utilities: "Utilities",
+      entertainment: "Entertainment",
+      healthcare: "Healthcare",
+      education: "Education",
+      travel: "Travel",
+      investment: "Investment",
+      emi_loan: "EMI & Loans",
+      insurance: "Insurance",
+      rent: "Rent",
+      salary_income: "Salary",
+      freelance_income: "Freelance",
       // Fallback for unrecognised intents
-      affordability_check: 'Shopping',
-      goal_planning: 'Savings',
-      budget_query: 'Budget',
-      investment_advice: 'Investment',
-      transaction_search: 'Uncategorised',
+      affordability_check: "Shopping",
+      goal_planning: "Savings",
+      budget_query: "Budget",
+      investment_advice: "Investment",
+      transaction_search: "Uncategorised",
     };
 
-    return intentCategoryMap[intent] ?? 'Uncategorised';
+    return intentCategoryMap[intent] ?? "Uncategorised";
   }
 }

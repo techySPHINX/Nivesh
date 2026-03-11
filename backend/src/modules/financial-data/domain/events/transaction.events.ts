@@ -1,5 +1,11 @@
-import { BaseEvent, EventType } from '../../../../core/messaging/events/base.event';
-import { TransactionType, TransactionCategory } from '../entities/transaction.entity';
+import {
+  BaseEvent,
+  EventType,
+} from "../../../../core/messaging/events/base.event";
+import {
+  TransactionType,
+  TransactionCategory,
+} from "../entities/transaction.entity";
 
 export class TransactionCreatedEvent extends BaseEvent {
   constructor(
@@ -13,7 +19,7 @@ export class TransactionCreatedEvent extends BaseEvent {
     super({
       eventType: EventType.TRANSACTION_CREATED,
       aggregateId: transactionId,
-      aggregateType: 'Transaction',
+      aggregateType: "Transaction",
     });
   }
 }
@@ -27,7 +33,7 @@ export class TransactionUpdatedEvent extends BaseEvent {
     super({
       eventType: EventType.TRANSACTION_UPDATED,
       aggregateId: transactionId,
-      aggregateType: 'Transaction',
+      aggregateType: "Transaction",
     });
   }
 }
@@ -40,7 +46,7 @@ export class TransactionDeletedEvent extends BaseEvent {
     super({
       eventType: EventType.TRANSACTION_DELETED,
       aggregateId: transactionId,
-      aggregateType: 'Transaction',
+      aggregateType: "Transaction",
     });
   }
 }

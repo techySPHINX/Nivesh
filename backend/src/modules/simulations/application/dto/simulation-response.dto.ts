@@ -1,10 +1,10 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
 import {
   Simulation,
   SimulationType,
   SimulationStatus,
   SimulationResults,
-} from '../../domain/entities/simulation.entity';
+} from "../../domain/entities/simulation.entity";
 
 export class SimulationResponseDto {
   @ApiProperty()

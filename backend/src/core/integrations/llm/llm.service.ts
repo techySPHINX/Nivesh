@@ -13,9 +13,9 @@
  * - Token usage tracking
  * - Safety filtering for financial content
  */
-import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import { z } from 'zod';
+import { Injectable, Logger, OnModuleInit } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
+import { z } from "zod";
 
 // ==========================================
 // Interfaces
@@ -39,13 +39,13 @@ export interface FunctionDeclaration {
 }
 
 export interface LLMMessage {
-  role: 'user' | 'assistant' | 'system';
+  role: "user" | "assistant" | "system";
   content: string;
 }
 
 export interface LLMResponse {
   text: string;
-  finishReason: 'stop' | 'length' | 'error';
+  finishReason: "stop" | "length" | "error";
   usageMetadata: {
     promptTokenCount: number;
     candidatesTokenCount: number;
@@ -92,11 +92,14 @@ export class LLMService implements OnModuleInit {
 
   constructor(private readonly configService: ConfigService) {
     this.ollamaBaseUrl =
-      this.configService.get<string>('LLM_OLLAMA_BASE_URL') || 'http://localhost:11434';
+      this.configService.get<string>("LLM_OLLAMA_BASE_URL") ||
+      "http://localhost:11434";
     this.primaryModel =
-      this.configService.get<string>('LLM_PRIMARY_MODEL') || 'llama3:8b-instruct-q4_K_M';
+      this.configService.get<string>("LLM_PRIMARY_MODEL") ||
+      "llama3:8b-instruct-q4_K_M";
     this.fallbackModel =
-      this.configService.get<string>('LLM_FALLBACK_MODEL') || 'mistral:7b-instruct-q4_K_M';
+      this.configService.get<string>("LLM_FALLBACK_MODEL") ||
+      "mistral:7b-instruct-q4_K_M";
     this.activeModel = this.primaryModel;
   }
 
@@ -115,7 +118,7 @@ export class LLMService implements OnModuleInit {
     try {
       const res = await fetch(`${this.ollamaBaseUrl}/api/tags`);
       if (!res.ok) {
-        this.logger.warn('Ollama server responded with non-OK status');
+        this.logger.warn("Ollama server responded with non-OK status");
         this.isOllamaAvailable = false;
         return false;
       }
@@ -125,19 +128,19 @@ export class LLMService implements OnModuleInit {
 
       this.isOllamaAvailable = true;
       this.logger.log(
-        `Ollama connected. Available models: ${this.modelsAvailable.join(', ') || '(none)'}`,
+        `Ollama connected. Available models: ${this.modelsAvailable.join(", ") || "(none)"}`,
       );
 
       // Determine active model
-      if (this.modelsAvailable.some((m) => m.startsWith('llama3'))) {
+      if (this.modelsAvailable.some((m) => m.startsWith("llama3"))) {
         this.activeModel = this.primaryModel;
         this.logger.log(`Primary model active: ${this.primaryModel}`);
-      } else if (this.modelsAvailable.some((m) => m.startsWith('mistral'))) {
+      } else if (this.modelsAvailable.some((m) => m.startsWith("mistral"))) {
         this.activeModel = this.fallbackModel;
         this.logger.log(`Fallback model active: ${this.fallbackModel}`);
       } else {
         this.logger.warn(
-          'Neither LLaMA-3 nor Mistral models found. Run: ollama pull llama3:8b-instruct-q4_K_M',
+          "Neither LLaMA-3 nor Mistral models found. Run: ollama pull llama3:8b-instruct-q4_K_M",
         );
       }
 
@@ -155,15 +158,17 @@ export class LLMService implements OnModuleInit {
    * Pull a model from Ollama registry if not present
    */
   async ensureModelAvailable(modelName: string): Promise<boolean> {
-    if (this.modelsAvailable.some((m) => m.startsWith(modelName.split(':')[0]))) {
+    if (
+      this.modelsAvailable.some((m) => m.startsWith(modelName.split(":")[0]))
+    ) {
       return true;
     }
 
     this.logger.log(`Pulling model ${modelName}... This may take a while.`);
     try {
       const res = await fetch(`${this.ollamaBaseUrl}/api/pull`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name: modelName, stream: false }),
       });
 
@@ -188,7 +193,10 @@ export class LLMService implements OnModuleInit {
   /**
    * Generate text completion
    */
-  async generateText(prompt: string, config?: Partial<LLMConfig>): Promise<string> {
+  async generateText(
+    prompt: string,
+    config?: Partial<LLMConfig>,
+  ): Promise<string> {
     this.ensureAvailable();
 
     const model = config?.model || this.activeModel;
@@ -216,7 +224,7 @@ export class LLMService implements OnModuleInit {
   ): Promise<T> {
     this.ensureAvailable();
 
-    let schemaDescription = 'a valid JSON object';
+    let schemaDescription = "a valid JSON object";
     if (schema instanceof z.ZodObject) {
       schemaDescription = JSON.stringify(schema.shape, null, 2);
     }
@@ -229,7 +237,10 @@ export class LLMService implements OnModuleInit {
     });
 
     // Clean up response
-    let cleaned = text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+    let cleaned = text
+      .replace(/```json\n?/g, "")
+      .replace(/```\n?/g, "")
+      .trim();
 
     // Try to extract JSON from response if it has extra text
     const jsonMatch = cleaned.match(/\{[\s\S]*\}/);
@@ -259,7 +270,7 @@ export class LLMService implements OnModuleInit {
         (t) =>
           `- ${t.name}: ${t.description}\n  Parameters: ${JSON.stringify(t.parameters)}`,
       )
-      .join('\n');
+      .join("\n");
 
     const enhancedPrompt = `You have access to the following tools. If you need to call a tool, respond with JSON in this exact format:
 {"function_calls": [{"name": "tool_name", "args": {...}}]}
@@ -283,7 +294,9 @@ User request: ${prompt}`;
     // Try to parse function calls from response
     let functionCalls: Array<{ name: string; args: any }> | undefined;
     try {
-      const jsonMatch = response.text.match(/\{[\s\S]*"function_calls"[\s\S]*\}/);
+      const jsonMatch = response.text.match(
+        /\{[\s\S]*"function_calls"[\s\S]*\}/,
+      );
       if (jsonMatch) {
         const parsed = JSON.parse(jsonMatch[0]);
         if (parsed.function_calls && Array.isArray(parsed.function_calls)) {
@@ -329,8 +342,8 @@ User request: ${prompt}`;
     };
 
     const res = await fetch(`${this.ollamaBaseUrl}/api/chat`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
     });
 
@@ -339,7 +352,7 @@ User request: ${prompt}`;
     }
 
     const reader = res.body?.getReader();
-    if (!reader) throw new Error('No readable stream from Ollama');
+    if (!reader) throw new Error("No readable stream from Ollama");
 
     const decoder = new TextDecoder();
     let totalPromptTokens = 0;
@@ -350,7 +363,10 @@ User request: ${prompt}`;
         const { done, value } = await reader.read();
         if (done) break;
 
-        const lines = decoder.decode(value, { stream: true }).split('\n').filter(Boolean);
+        const lines = decoder
+          .decode(value, { stream: true })
+          .split("\n")
+          .filter(Boolean);
 
         for (const line of lines) {
           try {
@@ -362,7 +378,7 @@ User request: ${prompt}`;
               totalCompletionTokens = chunk.eval_count || 0;
 
               yield {
-                text: '',
+                text: "",
                 isComplete: true,
                 usageMetadata: {
                   promptTokenCount: totalPromptTokens,
@@ -393,11 +409,19 @@ User request: ${prompt}`;
   /**
    * Multi-turn chat
    */
-  async chat(messages: LLMMessage[], config?: Partial<LLMConfig>): Promise<string> {
+  async chat(
+    messages: LLMMessage[],
+    config?: Partial<LLMConfig>,
+  ): Promise<string> {
     this.ensureAvailable();
 
     const ollamaMessages = messages.map((msg) => ({
-      role: msg.role === 'assistant' ? 'assistant' : msg.role === 'system' ? 'system' : 'user',
+      role:
+        msg.role === "assistant"
+          ? "assistant"
+          : msg.role === "system"
+            ? "system"
+            : "user",
       content: msg.content,
     }));
 
@@ -419,8 +443,14 @@ User request: ${prompt}`;
     userProfile: any,
     transactionHistory: any[],
   ): Promise<string> {
-    const prompt = this.buildFinancialInsightPrompt(userProfile, transactionHistory);
-    return this.generateText(prompt, { temperature: 0.7, maxOutputTokens: 1000 });
+    const prompt = this.buildFinancialInsightPrompt(
+      userProfile,
+      transactionHistory,
+    );
+    return this.generateText(prompt, {
+      temperature: 0.7,
+      maxOutputTokens: 1000,
+    });
   }
 
   async generateInvestmentRecommendation(
@@ -433,7 +463,10 @@ User request: ${prompt}`;
       currentPortfolio,
       marketData,
     );
-    return this.generateText(prompt, { temperature: 0.5, maxOutputTokens: 1500 });
+    return this.generateText(prompt, {
+      temperature: 0.5,
+      maxOutputTokens: 1500,
+    });
   }
 
   async analyzeRiskProfile(
@@ -455,8 +488,15 @@ User request: ${prompt}`;
     currentSavings: number,
     monthlyIncome: number,
   ): Promise<string> {
-    const prompt = this.buildGoalPlanPrompt(goal, currentSavings, monthlyIncome);
-    return this.generateText(prompt, { temperature: 0.6, maxOutputTokens: 1200 });
+    const prompt = this.buildGoalPlanPrompt(
+      goal,
+      currentSavings,
+      monthlyIncome,
+    );
+    return this.generateText(prompt, {
+      temperature: 0.6,
+      maxOutputTokens: 1200,
+    });
   }
 
   // ==========================================
@@ -489,13 +529,13 @@ User request: ${prompt}`;
 
     return this.executeWithRetry(async () => {
       const res = await fetch(`${this.ollamaBaseUrl}/api/chat`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
       });
 
       if (!res.ok) {
-        const errorText = await res.text().catch(() => 'Unknown error');
+        const errorText = await res.text().catch(() => "Unknown error");
         throw new Error(`Ollama API error (${res.status}): ${errorText}`);
       }
 
@@ -505,8 +545,8 @@ User request: ${prompt}`;
       const completionTokens = data.eval_count || 0;
 
       return {
-        text: data.message?.content || '',
-        finishReason: data.done ? 'stop' : 'length',
+        text: data.message?.content || "",
+        finishReason: data.done ? "stop" : "length",
         usageMetadata: {
           promptTokenCount: promptTokens,
           candidatesTokenCount: completionTokens,
@@ -528,15 +568,15 @@ User request: ${prompt}`;
     const messages: Array<{ role: string; content: string }> = [];
 
     if (systemInstruction) {
-      messages.push({ role: 'system', content: systemInstruction });
+      messages.push({ role: "system", content: systemInstruction });
     } else {
       messages.push({
-        role: 'system',
+        role: "system",
         content: `You are a knowledgeable financial advisor AI specializing in Indian personal finance. You provide expert advice on budgeting, investments (mutual funds, stocks, PPF, NPS, EPF, fixed deposits), savings, loans, credit, insurance, taxation (Indian tax laws), and financial planning. Always use Indian currency (₹), reference Indian financial instruments, include risk warnings, and recommend consulting certified financial planners for complex decisions. Never guarantee returns.`,
       });
     }
 
-    messages.push({ role: 'user', content: prompt });
+    messages.push({ role: "user", content: prompt });
     return messages;
   }
 
@@ -544,7 +584,10 @@ User request: ${prompt}`;
   // Retry Logic
   // ==========================================
 
-  private async executeWithRetry<T>(fn: () => Promise<T>, retries = this.maxRetries): Promise<T> {
+  private async executeWithRetry<T>(
+    fn: () => Promise<T>,
+    retries = this.maxRetries,
+  ): Promise<T> {
     let lastError: Error | null = null;
 
     for (let attempt = 0; attempt <= retries; attempt++) {
@@ -565,7 +608,7 @@ User request: ${prompt}`;
             try {
               return await fn();
             } catch (fallbackError) {
-              this.logger.error('Fallback model also failed:', fallbackError);
+              this.logger.error("Fallback model also failed:", fallbackError);
               throw fallbackError;
             }
           }
@@ -573,26 +616,28 @@ User request: ${prompt}`;
         }
 
         const delay = this.baseDelay * Math.pow(2, attempt);
-        this.logger.warn(`Attempt ${attempt + 1} failed, retrying in ${delay}ms: ${error.message}`);
+        this.logger.warn(
+          `Attempt ${attempt + 1} failed, retrying in ${delay}ms: ${error.message}`,
+        );
         await this.sleep(delay);
       }
     }
 
-    throw lastError || new Error('Max retries exceeded');
+    throw lastError || new Error("Max retries exceeded");
   }
 
   private isRetryableError(error: any): boolean {
     if (!error) return false;
-    const message = (error.message || '').toLowerCase();
+    const message = (error.message || "").toLowerCase();
     return (
-      message.includes('network') ||
-      message.includes('timeout') ||
-      message.includes('econnrefused') ||
-      message.includes('econnreset') ||
-      message.includes('429') ||
-      message.includes('500') ||
-      message.includes('502') ||
-      message.includes('503')
+      message.includes("network") ||
+      message.includes("timeout") ||
+      message.includes("econnrefused") ||
+      message.includes("econnreset") ||
+      message.includes("429") ||
+      message.includes("500") ||
+      message.includes("502") ||
+      message.includes("503")
     );
   }
 
@@ -607,7 +652,7 @@ User request: ${prompt}`;
   private ensureAvailable(): void {
     if (!this.isOllamaAvailable) {
       throw new Error(
-        'Local LLM (Ollama) is not available. Ensure Ollama is running: https://ollama.ai',
+        "Local LLM (Ollama) is not available. Ensure Ollama is running: https://ollama.ai",
       );
     }
   }
@@ -628,7 +673,10 @@ User request: ${prompt}`;
   // Finance Prompt Builders
   // ==========================================
 
-  private buildFinancialInsightPrompt(userProfile: any, transactionHistory: any[]): string {
+  private buildFinancialInsightPrompt(
+    userProfile: any,
+    transactionHistory: any[],
+  ): string {
     return `Analyze the following user profile and transaction history:
 
 User Profile:
@@ -640,7 +688,7 @@ Recent Transactions (${transactionHistory.length}):
 ${transactionHistory
   .slice(0, 10)
   .map((t) => `- ${t.type}: ₹${t.amount} (${t.category})`)
-  .join('\n')}
+  .join("\n")}
 
 Provide personalized financial insights, spending patterns, and actionable recommendations for the Indian market.`;
   }
@@ -657,7 +705,7 @@ User Profile:
 - Current Portfolio Value: ₹${this.calculatePortfolioValue(currentPortfolio)}
 
 Current Portfolio:
-${currentPortfolio.map((inv) => `- ${inv.assetType}: ₹${inv.currentValue}`).join('\n')}
+${currentPortfolio.map((inv) => `- ${inv.assetType}: ₹${inv.currentValue}`).join("\n")}
 
 Market Conditions:
 ${JSON.stringify(marketData, null, 2)}
@@ -665,20 +713,27 @@ ${JSON.stringify(marketData, null, 2)}
 Provide specific Indian market investment recommendations with rationale. Include mutual funds, stocks, PPF, NPS, and other relevant instruments.`;
   }
 
-  private buildRiskProfilePrompt(transactions: any[], investments: any[]): string {
+  private buildRiskProfilePrompt(
+    transactions: any[],
+    investments: any[],
+  ): string {
     return `Analyze the following financial data to determine the user's risk profile:
 
 Transactions: ${transactions.length} total
 Investments: ${investments.length} total
 
 Investment Types:
-${investments.map((inv) => `- ${inv.assetType}: ₹${inv.currentValue}`).join('\n')}
+${investments.map((inv) => `- ${inv.assetType}: ₹${inv.currentValue}`).join("\n")}
 
 Classify the risk profile as: Conservative, Moderate, or Aggressive
 Provide detailed analysis explaining the classification.`;
   }
 
-  private buildGoalPlanPrompt(goal: any, currentSavings: number, monthlyIncome: number): string {
+  private buildGoalPlanPrompt(
+    goal: any,
+    currentSavings: number,
+    monthlyIncome: number,
+  ): string {
     return `Create a financial plan for the following goal:
 
 Goal: ${goal.name}
@@ -700,7 +755,10 @@ Provide a detailed step-by-step plan including:
     const birthDate = new Date(dateOfBirth);
     let age = today.getFullYear() - birthDate.getFullYear();
     const monthDiff = today.getMonth() - birthDate.getMonth();
-    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+    if (
+      monthDiff < 0 ||
+      (monthDiff === 0 && today.getDate() < birthDate.getDate())
+    ) {
       age--;
     }
     return age;
@@ -712,8 +770,8 @@ Provide a detailed step-by-step plan including:
 
   private extractRiskLevel(response: string): string {
     const lower = response.toLowerCase();
-    if (lower.includes('conservative')) return 'CONSERVATIVE';
-    if (lower.includes('aggressive')) return 'AGGRESSIVE';
-    return 'MODERATE';
+    if (lower.includes("conservative")) return "CONSERVATIVE";
+    if (lower.includes("aggressive")) return "AGGRESSIVE";
+    return "MODERATE";
   }
 }

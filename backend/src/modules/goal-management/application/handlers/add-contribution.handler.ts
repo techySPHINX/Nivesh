@@ -1,33 +1,53 @@
-import { CommandHandler, ICommandHandler, EventBus } from '@nestjs/cqrs';
-import { Inject, NotFoundException, ForbiddenException } from '@nestjs/common';
-import { AddContributionCommand } from '../commands/add-contribution.command';
-import { Goal } from '../../domain/entities/goal.entity';
-import { GoalContribution, ContributionType } from '../../domain/entities/goal-contribution.entity';
-import { IGoalRepository, GOAL_REPOSITORY } from '../../domain/repositories/goal.repository.interface';
-import { IGoalContributionRepository, GOAL_CONTRIBUTION_REPOSITORY } from '../../domain/repositories/goal-contribution.repository.interface';
-import { GoalContributionAddedEvent, GoalCompletedEvent } from '../../domain/events/goal.events';
-import { ContributionResponseDto } from '../dto/contribution-response.dto';
+import { CommandHandler, ICommandHandler, EventBus } from "@nestjs/cqrs";
+import { Inject, NotFoundException, ForbiddenException } from "@nestjs/common";
+import { AddContributionCommand } from "../commands/add-contribution.command";
+import { Goal } from "../../domain/entities/goal.entity";
+import {
+  GoalContribution,
+  ContributionType,
+} from "../../domain/entities/goal-contribution.entity";
+import {
+  IGoalRepository,
+  GOAL_REPOSITORY,
+} from "../../domain/repositories/goal.repository.interface";
+import {
+  IGoalContributionRepository,
+  GOAL_CONTRIBUTION_REPOSITORY,
+} from "../../domain/repositories/goal-contribution.repository.interface";
+import {
+  GoalContributionAddedEvent,
+  GoalCompletedEvent,
+} from "../../domain/events/goal.events";
+import { ContributionResponseDto } from "../dto/contribution-response.dto";
 
 @CommandHandler(AddContributionCommand)
-export class AddContributionHandler implements ICommandHandler<AddContributionCommand, ContributionResponseDto> {
+export class AddContributionHandler implements ICommandHandler<
+  AddContributionCommand,
+  ContributionResponseDto
+> {
   constructor(
     @Inject(GOAL_REPOSITORY) private readonly goalRepository: IGoalRepository,
-    @Inject(GOAL_CONTRIBUTION_REPOSITORY) private readonly contributionRepository: IGoalContributionRepository,
+    @Inject(GOAL_CONTRIBUTION_REPOSITORY)
+    private readonly contributionRepository: IGoalContributionRepository,
     private readonly eventBus: EventBus,
-  ) { }
+  ) {}
 
-  async execute(command: AddContributionCommand): Promise<ContributionResponseDto> {
+  async execute(
+    command: AddContributionCommand,
+  ): Promise<ContributionResponseDto> {
     const { userId, goalId, dto } = command;
 
     // Find goal
     const goal = await this.goalRepository.findById(goalId);
     if (!goal) {
-      throw new NotFoundException('Goal not found');
+      throw new NotFoundException("Goal not found");
     }
 
     // Check ownership
     if (goal.userId !== userId) {
-      throw new ForbiddenException('You do not have permission to contribute to this goal');
+      throw new ForbiddenException(
+        "You do not have permission to contribute to this goal",
+      );
     }
 
     // Create contribution entity
@@ -44,7 +64,8 @@ export class AddContributionHandler implements ICommandHandler<AddContributionCo
     });
 
     // Save contribution
-    const savedContribution = await this.contributionRepository.save(contribution);
+    const savedContribution =
+      await this.contributionRepository.save(contribution);
 
     // Add contribution to goal
     const previousStatus = goal.status;
@@ -80,7 +101,9 @@ export class AddContributionHandler implements ICommandHandler<AddContributionCo
     return this.toResponseDto(savedContribution);
   }
 
-  private toResponseDto(contribution: GoalContribution): ContributionResponseDto {
+  private toResponseDto(
+    contribution: GoalContribution,
+  ): ContributionResponseDto {
     return {
       id: contribution.id,
       goalId: contribution.goalId,

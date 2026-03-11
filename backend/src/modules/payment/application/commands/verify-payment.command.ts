@@ -1,4 +1,4 @@
-import { VerifyPaymentDto } from '../dto/verify-payment.dto';
+import { VerifyPaymentDto } from "../dto/verify-payment.dto";
 
 export class VerifyPaymentCommand {
   constructor(

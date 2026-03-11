@@ -5,9 +5,9 @@ import {
   HttpException,
   HttpStatus,
   Logger,
-} from '@nestjs/common';
-import { Request, Response } from 'express';
-import { BaseException } from './base.exception';
+} from "@nestjs/common";
+import { Request, Response } from "express";
+import { BaseException } from "./base.exception";
 
 @Catch()
 export class GlobalExceptionFilter implements ExceptionFilter {
@@ -37,28 +37,28 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       status = exception.getStatus();
       const exceptionResponse = exception.getResponse();
 
-      if (typeof exceptionResponse === 'object') {
+      if (typeof exceptionResponse === "object") {
         message = (exceptionResponse as any).message || exception.message;
-        code = (exceptionResponse as any).error || 'HTTP_EXCEPTION';
+        code = (exceptionResponse as any).error || "HTTP_EXCEPTION";
         details = exceptionResponse;
       } else {
         message = exceptionResponse as string;
-        code = 'HTTP_EXCEPTION';
+        code = "HTTP_EXCEPTION";
       }
       stack = exception.stack;
     }
     // Handle unknown errors
     else if (exception instanceof Error) {
       status = HttpStatus.INTERNAL_SERVER_ERROR;
-      message = exception.message || 'Internal server error';
-      code = 'INTERNAL_SERVER_ERROR';
+      message = exception.message || "Internal server error";
+      code = "INTERNAL_SERVER_ERROR";
       stack = exception.stack;
     }
     // Handle non-Error exceptions
     else {
       status = HttpStatus.INTERNAL_SERVER_ERROR;
-      message = 'Unknown error occurred';
-      code = 'UNKNOWN_ERROR';
+      message = "Unknown error occurred";
+      code = "UNKNOWN_ERROR";
     }
 
     // Log the error
@@ -70,13 +70,13 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       code,
       message,
       details,
-      stack: process.env.NODE_ENV === 'development' ? stack : undefined,
+      stack: process.env.NODE_ENV === "development" ? stack : undefined,
     };
 
     if (status >= 500) {
-      this.logger.error('Server Error', JSON.stringify(errorLog));
+      this.logger.error("Server Error", JSON.stringify(errorLog));
     } else {
-      this.logger.warn('Client Error', JSON.stringify(errorLog));
+      this.logger.warn("Client Error", JSON.stringify(errorLog));
     }
 
     // Send error response
@@ -89,7 +89,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       code,
       message,
       ...(details && { details }),
-      ...(process.env.NODE_ENV === 'development' && stack && { stack }),
+      ...(process.env.NODE_ENV === "development" && stack && { stack }),
     };
 
     response.status(status).json(errorResponse);

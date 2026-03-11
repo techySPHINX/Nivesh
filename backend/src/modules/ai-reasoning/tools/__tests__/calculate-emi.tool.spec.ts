@@ -1,8 +1,8 @@
-import { calculateEMITool } from '../calculate-emi.tool';
+import { calculateEMITool } from "../calculate-emi.tool";
 
-describe('Calculate EMI Tool', () => {
-  describe('schema validation', () => {
-    it('should validate correct input', () => {
+describe("Calculate EMI Tool", () => {
+  describe("schema validation", () => {
+    it("should validate correct input", () => {
       const input = {
         principal: 5000000, // ₹50 lakhs
         annualRate: 8.5,
@@ -13,7 +13,7 @@ describe('Calculate EMI Tool', () => {
       expect(isValid).toBe(true);
     });
 
-    it('should reject principal below minimum', () => {
+    it("should reject principal below minimum", () => {
       const input = {
         principal: 500, // Below ₹1000 minimum
         annualRate: 8.5,
@@ -24,7 +24,7 @@ describe('Calculate EMI Tool', () => {
       expect(isValid).toBe(false);
     });
 
-    it('should reject tenure above maximum', () => {
+    it("should reject tenure above maximum", () => {
       const input = {
         principal: 5000000,
         annualRate: 8.5,
@@ -35,7 +35,7 @@ describe('Calculate EMI Tool', () => {
       expect(isValid).toBe(false);
     });
 
-    it('should reject negative interest rate', () => {
+    it("should reject negative interest rate", () => {
       const input = {
         principal: 5000000,
         annualRate: -5,
@@ -47,8 +47,8 @@ describe('Calculate EMI Tool', () => {
     });
   });
 
-  describe('execute', () => {
-    it('should calculate EMI correctly for standard loan', async () => {
+  describe("execute", () => {
+    it("should calculate EMI correctly for standard loan", async () => {
       const input = {
         principal: 5000000, // ₹50 lakhs
         annualRate: 8.5, // 8.5%
@@ -61,9 +61,7 @@ describe('Calculate EMI Tool', () => {
       expect(result.emi).toBeGreaterThan(0);
       expect(result.totalPayment).toBeGreaterThan(input.principal);
       expect(result.totalInterest).toBeGreaterThan(0);
-      expect(result.totalInterest).toBe(
-        result.totalPayment - input.principal,
-      );
+      expect(result.totalInterest).toBe(result.totalPayment - input.principal);
 
       // EMI formula verification: EMI = [P × R × (1+R)^N] / [(1+R)^N-1]
       const monthlyRate = input.annualRate / 12 / 100;
@@ -76,7 +74,7 @@ describe('Calculate EMI Tool', () => {
       expect(result.emi).toBeCloseTo(expectedEMI, 2);
     });
 
-    it('should generate amortization schedule', async () => {
+    it("should generate amortization schedule", async () => {
       const input = {
         principal: 1000000, // ₹10 lakhs
         annualRate: 10,
@@ -98,9 +96,7 @@ describe('Calculate EMI Tool', () => {
         result.emi,
         2,
       );
-      expect(firstMonth.balance).toBe(
-        input.principal - firstMonth.principal,
-      );
+      expect(firstMonth.balance).toBe(input.principal - firstMonth.principal);
 
       // Check last month
       const lastMonth = result.amortization[11];
@@ -108,7 +104,7 @@ describe('Calculate EMI Tool', () => {
       expect(lastMonth.balance).toBeCloseTo(0, 2);
     });
 
-    it('should handle zero interest rate', async () => {
+    it("should handle zero interest rate", async () => {
       const input = {
         principal: 1000000,
         annualRate: 0,
@@ -121,7 +117,7 @@ describe('Calculate EMI Tool', () => {
       expect(result.totalInterest).toBe(0);
     });
 
-    it('should handle short tenure (1 month)', async () => {
+    it("should handle short tenure (1 month)", async () => {
       const input = {
         principal: 100000,
         annualRate: 12,
@@ -134,7 +130,7 @@ describe('Calculate EMI Tool', () => {
       expect(result.amortization[0].balance).toBeCloseTo(0, 2);
     });
 
-    it('should show increasing principal payment over time', async () => {
+    it("should show increasing principal payment over time", async () => {
       const input = {
         principal: 5000000,
         annualRate: 9,
@@ -145,8 +141,7 @@ describe('Calculate EMI Tool', () => {
 
       const firstMonthPrincipal = result.amortization[0].principal;
       const midMonthPrincipal = result.amortization[60].principal;
-      const lastMonthPrincipal =
-        result.amortization[119].principal;
+      const lastMonthPrincipal = result.amortization[119].principal;
 
       // Principal payment should increase over time
       expect(midMonthPrincipal).toBeGreaterThan(firstMonthPrincipal);
@@ -159,11 +154,11 @@ describe('Calculate EMI Tool', () => {
     });
   });
 
-  describe('metadata', () => {
-    it('should have correct tool metadata', () => {
-      expect(calculateEMITool.name).toBe('calculate_emi');
-      expect(calculateEMITool.description).toContain('EMI');
-      expect(calculateEMITool.category).toBe('financial_calculation');
+  describe("metadata", () => {
+    it("should have correct tool metadata", () => {
+      expect(calculateEMITool.name).toBe("calculate_emi");
+      expect(calculateEMITool.description).toContain("EMI");
+      expect(calculateEMITool.category).toBe("financial_calculation");
     });
   });
 });

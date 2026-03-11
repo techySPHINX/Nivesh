@@ -1,5 +1,8 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { LLMService, StreamChunk } from '../../../../core/integrations/llm/llm.service';
+import { Injectable, Logger } from "@nestjs/common";
+import {
+  LLMService,
+  StreamChunk,
+} from "../../../../core/integrations/llm/llm.service";
 
 export interface StreamOptions {
   userId: string;
@@ -10,7 +13,7 @@ export interface StreamOptions {
 
 /**
  * Streaming Response Service
- * 
+ *
  * Handles:
  * - Real-time streaming from local LLM (LLaMA-3 / Mistral-7B)
  * - Sentence-based chunking for smooth UX
@@ -32,7 +35,7 @@ export class StreamingResponseService {
     try {
       const stream = this.llmService.generateContentStream(prompt, config);
 
-      let buffer = '';
+      let buffer = "";
       let chunkCount = 0;
 
       for await (const chunk of stream) {
@@ -60,7 +63,7 @@ export class StreamingResponseService {
         }
       }
     } catch (error) {
-      this.logger.error('Streaming error:', error);
+      this.logger.error("Streaming error:", error);
       throw error;
     }
   }
@@ -70,7 +73,7 @@ export class StreamingResponseService {
    */
   private extractCompleteSentences(buffer: string): string[] {
     const sentences: string[] = [];
-    
+
     // Match sentences ending with . ! ? followed by space or newline
     const sentencePattern = /[^.!?\n]+[.!?]+(?:\s|\n|$)/g;
     let match;

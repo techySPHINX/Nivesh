@@ -1,19 +1,19 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { readFileSync } from 'fs';
-import { join } from 'path';
-import { FinancialContext } from '../../domain/value-objects/financial-context.vo';
+import { Injectable, Logger } from "@nestjs/common";
+import { readFileSync } from "fs";
+import { join } from "path";
+import { FinancialContext } from "../../domain/value-objects/financial-context.vo";
 
 export enum PromptType {
-  AFFORDABILITY = 'AFFORDABILITY',
-  GOAL_PROJECTION = 'GOAL_PROJECTION',
-  BUDGET_OPTIMIZATION = 'BUDGET_OPTIMIZATION',
-  GENERAL_ADVICE = 'GENERAL_ADVICE',
+  AFFORDABILITY = "AFFORDABILITY",
+  GOAL_PROJECTION = "GOAL_PROJECTION",
+  BUDGET_OPTIMIZATION = "BUDGET_OPTIMIZATION",
+  GENERAL_ADVICE = "GENERAL_ADVICE",
 }
 
 /**
  * Prompt Template Service
  * Manages AI prompt construction with context injection
- * 
+ *
  * Features:
  * - Template-based prompt generation
  * - Context variable substitution
@@ -36,7 +36,7 @@ export class PromptTemplateService {
     context: FinancialContext;
     expenseDescription: string;
     amount: number;
-    frequency: 'one-time' | 'daily' | 'weekly' | 'monthly' | 'yearly';
+    frequency: "one-time" | "daily" | "weekly" | "monthly" | "yearly";
   }): string {
     const { context, expenseDescription, amount, frequency } = params;
 
@@ -47,7 +47,7 @@ export class PromptTemplateService {
 ${contextStr}
 
 **Question:**
-Can the user afford: ${expenseDescription} costing ₹${amount.toLocaleString('en-IN')} (${frequency})?
+Can the user afford: ${expenseDescription} costing ₹${amount.toLocaleString("en-IN")} (${frequency})?
 
 **Analysis Required:**
 1. Calculate monthly budget impact
@@ -77,7 +77,13 @@ Can the user afford: ${expenseDescription} costing ₹${amount.toLocaleString('e
     currentAmount: number;
     monthlyContribution: number;
   }): string {
-    const { context, goalName, targetAmount, currentAmount, monthlyContribution } = params;
+    const {
+      context,
+      goalName,
+      targetAmount,
+      currentAmount,
+      monthlyContribution,
+    } = params;
 
     const contextStr = this.formatFinancialContext(context);
     const remaining = targetAmount - currentAmount;
@@ -88,10 +94,10 @@ ${contextStr}
 
 **Goal Details:**
 - Goal Name: ${goalName}
-- Target Amount: ₹${targetAmount.toLocaleString('en-IN')}
-- Current Savings: ₹${currentAmount.toLocaleString('en-IN')}
-- Remaining: ₹${remaining.toLocaleString('en-IN')}
-- Monthly Contribution: ₹${monthlyContribution.toLocaleString('en-IN')}
+- Target Amount: ₹${targetAmount.toLocaleString("en-IN")}
+- Current Savings: ₹${currentAmount.toLocaleString("en-IN")}
+- Remaining: ₹${remaining.toLocaleString("en-IN")}
+- Monthly Contribution: ₹${monthlyContribution.toLocaleString("en-IN")}
 
 **Analysis Required:**
 1. Calculate months to goal completion
@@ -126,8 +132,8 @@ ${contextStr}
 ${contextStr}
 
 **Current Situation:**
-- Monthly Income: ₹${snapshot.totalIncome.toLocaleString('en-IN')}
-- Monthly Expenses: ₹${snapshot.totalExpenses.toLocaleString('en-IN')}
+- Monthly Income: ₹${snapshot.totalIncome.toLocaleString("en-IN")}
+- Monthly Expenses: ₹${snapshot.totalExpenses.toLocaleString("en-IN")}
 - Current Savings Rate: ${snapshot.savingsRate}%
 - Target Savings Rate: ${targetSavingsRate}%
 - Top Spending Categories: ${this.formatTopCategories(snapshot.categorySpending)}
@@ -186,14 +192,14 @@ Suggest alternatives when appropriate.
 
   private loadSystemPrompt(): void {
     try {
-      const promptsPath = join(__dirname, '../prompts/system-prompts.md');
-      const content = readFileSync(promptsPath, 'utf-8');
+      const promptsPath = join(__dirname, "../prompts/system-prompts.md");
+      const content = readFileSync(promptsPath, "utf-8");
 
       // Extract base financial advisor prompt (first section)
-      const sections = content.split('---');
+      const sections = content.split("---");
       this.systemPrompt = sections[0].trim();
 
-      this.logger.log('System prompt loaded successfully');
+      this.logger.log("System prompt loaded successfully");
     } catch (error) {
       this.logger.error(`Failed to load system prompt: ${error.message}`);
       // Fallback to inline prompt
@@ -206,12 +212,12 @@ Suggest alternatives when appropriate.
 
     return `
 **Financial Snapshot:**
-- Monthly Income: ₹${snapshot.totalIncome.toLocaleString('en-IN')}
-- Monthly Expenses: ₹${snapshot.totalExpenses.toLocaleString('en-IN')}
-- Monthly Savings: ₹${snapshot.totalSavings.toLocaleString('en-IN')}
+- Monthly Income: ₹${snapshot.totalIncome.toLocaleString("en-IN")}
+- Monthly Expenses: ₹${snapshot.totalExpenses.toLocaleString("en-IN")}
+- Monthly Savings: ₹${snapshot.totalSavings.toLocaleString("en-IN")}
 - Savings Rate: ${snapshot.savingsRate}%
-- Total Investments: ₹${snapshot.totalInvestments.toLocaleString('en-IN')}
-- Total Debt: ₹${snapshot.totalDebt.toLocaleString('en-IN')}
+- Total Investments: ₹${snapshot.totalInvestments.toLocaleString("en-IN")}
+- Total Debt: ₹${snapshot.totalDebt.toLocaleString("en-IN")}
 - Debt-to-Income Ratio: ${snapshot.debtToIncomeRatio}%
 
 **Goals Summary:**
@@ -229,35 +235,49 @@ ${this.formatCategorySpending(snapshot.categorySpending)}
 `.trim();
   }
 
-  private formatGoals(goals: Array<{ name: string; target: number; current: number; onTrack: boolean }>): string {
+  private formatGoals(
+    goals: Array<{
+      name: string;
+      target: number;
+      current: number;
+      onTrack: boolean;
+    }>,
+  ): string {
     if (goals.length === 0) {
-      return '- No active goals';
+      return "- No active goals";
     }
 
     return goals
       .map((goal) => {
         const progress = (goal.current / goal.target) * 100;
-        const status = goal.onTrack ? '✓ On track' : '⚠ At risk';
-        return `- ${goal.name}: ₹${goal.current.toLocaleString('en-IN')} / ₹${goal.target.toLocaleString('en-IN')} (${progress.toFixed(0)}%) - ${status}`;
+        const status = goal.onTrack ? "✓ On track" : "⚠ At risk";
+        return `- ${goal.name}: ₹${goal.current.toLocaleString("en-IN")} / ₹${goal.target.toLocaleString("en-IN")} (${progress.toFixed(0)}%) - ${status}`;
       })
-      .join('\n');
+      .join("\n");
   }
 
-  private formatCategorySpending(spending: Array<{ category: string; amount: number; percentage: number }>): string {
+  private formatCategorySpending(
+    spending: Array<{ category: string; amount: number; percentage: number }>,
+  ): string {
     if (spending.length === 0) {
-      return '- No spending data available';
+      return "- No spending data available";
     }
 
     return spending
-      .map((item) => `- ${item.category}: ₹${item.amount.toLocaleString('en-IN')} (${item.percentage.toFixed(1)}%)`)
-      .join('\n');
+      .map(
+        (item) =>
+          `- ${item.category}: ₹${item.amount.toLocaleString("en-IN")} (${item.percentage.toFixed(1)}%)`,
+      )
+      .join("\n");
   }
 
-  private formatTopCategories(spending: Array<{ category: string; amount: number; percentage: number }>): string {
+  private formatTopCategories(
+    spending: Array<{ category: string; amount: number; percentage: number }>,
+  ): string {
     return spending
       .slice(0, 3)
       .map((item) => item.category)
-      .join(', ');
+      .join(", ");
   }
 
   private getFallbackSystemPrompt(): string {

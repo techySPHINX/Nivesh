@@ -1,8 +1,8 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { BaseAgent } from './base.agent';
-import { AgentMessage, AgentResponse, AgentType } from '../types/agent.types';
-import { ToolRegistry } from '../services/tool-registry.service';
-import { DecisionTraceService } from '../services/decision-trace.service';
+import { Injectable, Logger } from "@nestjs/common";
+import { BaseAgent } from "./base.agent";
+import { AgentMessage, AgentResponse, AgentType } from "../types/agent.types";
+import { ToolRegistry } from "../services/tool-registry.service";
+import { DecisionTraceService } from "../services/decision-trace.service";
 
 /**
  * Asset Allocation Interface
@@ -22,13 +22,21 @@ interface AssetAllocation {
  */
 interface InvestmentProduct {
   name: string;
-  type: 'equity_mutual_fund' | 'debt_mutual_fund' | 'etf' | 'fd' | 'ppf' | 'nps' | 'ulip' | 'bond';
+  type:
+    | "equity_mutual_fund"
+    | "debt_mutual_fund"
+    | "etf"
+    | "fd"
+    | "ppf"
+    | "nps"
+    | "ulip"
+    | "bond";
   monthlyAmount: number;
   expectedReturn: number; // Annual %
-  riskLevel: 'low' | 'medium' | 'high';
+  riskLevel: "low" | "medium" | "high";
   taxBenefit?: string; // e.g., "80C deduction"
   lockInPeriod?: number; // Years
-  liquidity: 'high' | 'medium' | 'low';
+  liquidity: "high" | "medium" | "low";
   rationale: string;
 }
 
@@ -144,16 +152,16 @@ export class InvestmentAdvisorAgent extends BaseAgent {
       // Route to appropriate handler
       let result;
       switch (task) {
-        case 'recommend_allocation':
+        case "recommend_allocation":
           result = await this.recommendAllocation(context, traceId);
           break;
-        case 'suggest_products':
+        case "suggest_products":
           result = await this.suggestProducts(context, traceId);
           break;
-        case 'project_returns':
+        case "project_returns":
           result = await this.projectReturns(context, traceId);
           break;
-        case 'rebalance_portfolio':
+        case "rebalance_portfolio":
           result = await this.rebalancePortfolio(context, traceId);
           break;
         default:
@@ -177,7 +185,7 @@ export class InvestmentAdvisorAgent extends BaseAgent {
     context: any,
     traceId?: string,
   ): Promise<AgentResponse> {
-    const riskProfile = context.riskProfile || 'moderate';
+    const riskProfile = context.riskProfile || "moderate";
     const goalTimeline = context.goalTimeline || 5;
     const reasoning: string[] = [];
     const toolsUsed: string[] = [];
@@ -235,9 +243,9 @@ export class InvestmentAdvisorAgent extends BaseAgent {
       toolsUsed,
       0.88,
       [
-        'Suggest specific investment products',
-        'Project returns over timeline',
-        'Set up automated SIP',
+        "Suggest specific investment products",
+        "Project returns over timeline",
+        "Set up automated SIP",
       ],
     );
   }
@@ -261,32 +269,32 @@ export class InvestmentAdvisorAgent extends BaseAgent {
       `Allocating ₹${monthlyAmount.toLocaleString()} across asset classes`,
     );
 
-    await this.recordReasoning('Selecting investment products', traceId);
+    await this.recordReasoning("Selecting investment products", traceId);
 
     // Equity products
     const equityAmount = (monthlyAmount * allocation.equity) / 100;
     if (equityAmount > 0) {
       products.push({
-        name: 'Large Cap Equity Mutual Fund',
-        type: 'equity_mutual_fund',
+        name: "Large Cap Equity Mutual Fund",
+        type: "equity_mutual_fund",
         monthlyAmount: equityAmount * 0.6,
         expectedReturn: 0.14,
-        riskLevel: 'medium',
-        taxBenefit: '80C deduction (ELSS)',
+        riskLevel: "medium",
+        taxBenefit: "80C deduction (ELSS)",
         lockInPeriod: 3,
-        liquidity: 'high',
+        liquidity: "high",
         rationale:
-          'Diversified large-cap exposure with professional management',
+          "Diversified large-cap exposure with professional management",
       });
 
       products.push({
-        name: 'Nifty 50 Index ETF',
-        type: 'etf',
+        name: "Nifty 50 Index ETF",
+        type: "etf",
         monthlyAmount: equityAmount * 0.4,
         expectedReturn: 0.13,
-        riskLevel: 'medium',
-        liquidity: 'high',
-        rationale: 'Low-cost passive exposure to top 50 companies',
+        riskLevel: "medium",
+        liquidity: "high",
+        rationale: "Low-cost passive exposure to top 50 companies",
       });
 
       reasoning.push(
@@ -298,25 +306,25 @@ export class InvestmentAdvisorAgent extends BaseAgent {
     const debtAmount = (monthlyAmount * allocation.debt) / 100;
     if (debtAmount > 0) {
       products.push({
-        name: 'Debt Mutual Fund (Short-term)',
-        type: 'debt_mutual_fund',
+        name: "Debt Mutual Fund (Short-term)",
+        type: "debt_mutual_fund",
         monthlyAmount: debtAmount * 0.5,
         expectedReturn: 0.08,
-        riskLevel: 'low',
-        liquidity: 'high',
-        rationale: 'Better than FD with tax efficiency after 3 years',
+        riskLevel: "low",
+        liquidity: "high",
+        rationale: "Better than FD with tax efficiency after 3 years",
       });
 
       products.push({
-        name: 'Public Provident Fund (PPF)',
-        type: 'ppf',
+        name: "Public Provident Fund (PPF)",
+        type: "ppf",
         monthlyAmount: Math.min(debtAmount * 0.5, 12500), // Max ₹1.5L/year
         expectedReturn: 0.071,
-        riskLevel: 'low',
-        taxBenefit: '80C deduction + tax-free returns',
+        riskLevel: "low",
+        taxBenefit: "80C deduction + tax-free returns",
         lockInPeriod: 15,
-        liquidity: 'low',
-        rationale: 'Triple tax benefit with government backing',
+        liquidity: "low",
+        rationale: "Triple tax benefit with government backing",
       });
 
       reasoning.push(
@@ -328,13 +336,13 @@ export class InvestmentAdvisorAgent extends BaseAgent {
     const goldAmount = (monthlyAmount * allocation.gold) / 100;
     if (goldAmount > 0) {
       products.push({
-        name: 'Gold ETF',
-        type: 'etf',
+        name: "Gold ETF",
+        type: "etf",
         monthlyAmount: goldAmount,
         expectedReturn: 0.06,
-        riskLevel: 'low',
-        liquidity: 'high',
-        rationale: 'Hedge against inflation and currency risk',
+        riskLevel: "low",
+        liquidity: "high",
+        rationale: "Hedge against inflation and currency risk",
       });
 
       reasoning.push(
@@ -364,9 +372,9 @@ export class InvestmentAdvisorAgent extends BaseAgent {
       [],
       0.85,
       [
-        'Project returns over investment timeline',
-        'Set up automated monthly SIPs',
-        'Review annually for rebalancing',
+        "Project returns over investment timeline",
+        "Set up automated monthly SIPs",
+        "Review annually for rebalancing",
       ],
     );
   }
@@ -397,7 +405,7 @@ export class InvestmentAdvisorAgent extends BaseAgent {
 
     // Call calculate_returns tool
     const projection = await this.callTool(
-      'calculate_returns',
+      "calculate_returns",
       {
         monthlyInvestment: monthlyAmount,
         years: timeline,
@@ -407,7 +415,7 @@ export class InvestmentAdvisorAgent extends BaseAgent {
       traceId,
     );
 
-    toolsUsed.push('calculate_returns');
+    toolsUsed.push("calculate_returns");
 
     reasoning.push(
       `Expected annualized return: ${(expectedReturn * 100).toFixed(1)}%`,
@@ -427,16 +435,10 @@ export class InvestmentAdvisorAgent extends BaseAgent {
       traceId,
     );
 
-    return this.createSuccessResponse(
-      projection,
-      reasoning,
-      toolsUsed,
-      0.82,
-      [
-        'Run simulation for downside scenarios',
-        'Review allocation if target not met',
-      ],
-    );
+    return this.createSuccessResponse(projection, reasoning, toolsUsed, 0.82, [
+      "Run simulation for downside scenarios",
+      "Review allocation if target not met",
+    ]);
   }
 
   /**
@@ -453,53 +455,53 @@ export class InvestmentAdvisorAgent extends BaseAgent {
 
     const reasoning: string[] = [];
 
-    reasoning.push('Current portfolio:');
+    reasoning.push("Current portfolio:");
     reasoning.push(
       `  Equity: ${currentPortfolio.equity}%, Debt: ${currentPortfolio.debt}%, Gold: ${currentPortfolio.gold}%`,
     );
-    reasoning.push('Target allocation:');
+    reasoning.push("Target allocation:");
     reasoning.push(
       `  Equity: ${targetAllocation.equity}%, Debt: ${targetAllocation.debt}%, Gold: ${targetAllocation.gold}%`,
     );
 
-    await this.recordReasoning('Calculating rebalancing actions', traceId);
+    await this.recordReasoning("Calculating rebalancing actions", traceId);
 
     // Calculate rebalancing actions
-    const actions = [];
+    const actions: Array<{ action: string; asset: string; percentage: number; rationale: string }> = [];
 
     if (currentPortfolio.equity > targetAllocation.equity) {
       const diff = currentPortfolio.equity - targetAllocation.equity;
       actions.push({
-        action: 'sell',
-        asset: 'equity',
+        action: "sell",
+        asset: "equity",
         percentage: diff,
-        rationale: 'Reduce equity exposure to target level',
+        rationale: "Reduce equity exposure to target level",
       });
     } else if (currentPortfolio.equity < targetAllocation.equity) {
       const diff = targetAllocation.equity - currentPortfolio.equity;
       actions.push({
-        action: 'buy',
-        asset: 'equity',
+        action: "buy",
+        asset: "equity",
         percentage: diff,
-        rationale: 'Increase equity to target allocation',
+        rationale: "Increase equity to target allocation",
       });
     }
 
     if (currentPortfolio.debt > targetAllocation.debt) {
       const diff = currentPortfolio.debt - targetAllocation.debt;
       actions.push({
-        action: 'sell',
-        asset: 'debt',
+        action: "sell",
+        asset: "debt",
         percentage: diff,
-        rationale: 'Reduce debt exposure',
+        rationale: "Reduce debt exposure",
       });
     } else if (currentPortfolio.debt < targetAllocation.debt) {
       const diff = targetAllocation.debt - currentPortfolio.debt;
       actions.push({
-        action: 'buy',
-        asset: 'debt',
+        action: "buy",
+        asset: "debt",
         percentage: diff,
-        rationale: 'Increase debt for stability',
+        rationale: "Increase debt for stability",
       });
     }
 
@@ -528,21 +530,19 @@ export class InvestmentAdvisorAgent extends BaseAgent {
       reasoning,
       [],
       0.9,
-      ['Execute rebalancing trades', 'Set quarterly rebalancing reminder'],
+      ["Execute rebalancing trades", "Set quarterly rebalancing reminder"],
     );
   }
 
   /**
    * Get base allocation for risk profile
    */
-  private getBaseAllocation(
-    riskProfile: string,
-  ): AssetAllocation {
+  private getBaseAllocation(riskProfile: string): AssetAllocation {
     const profile = riskProfile.toLowerCase();
 
-    if (profile === 'conservative' || profile === 'low') {
+    if (profile === "conservative" || profile === "low") {
       return { ...this.ALLOCATIONS.conservative };
-    } else if (profile === 'aggressive' || profile === 'high') {
+    } else if (profile === "aggressive" || profile === "high") {
       return { ...this.ALLOCATIONS.aggressive };
     } else {
       return { ...this.ALLOCATIONS.moderate };
@@ -593,7 +593,7 @@ export class InvestmentAdvisorAgent extends BaseAgent {
     const taxRate = 0.3; // Assume 30% bracket
 
     const annualDeductions = products
-      .filter((p) => p.taxBenefit?.includes('80C'))
+      .filter((p) => p.taxBenefit?.includes("80C"))
       .reduce((sum, p) => sum + p.monthlyAmount * 12, 0);
 
     return Math.min(annualDeductions, 150000) * taxRate; // 80C limit is ₹1.5L
@@ -617,16 +617,16 @@ export class InvestmentAdvisorAgent extends BaseAgent {
    * Validate context based on task
    */
   private validateContext(context: any, task: string): void {
-    if (task === 'suggest_products' && !context.monthlyAmount) {
-      throw new Error('Missing required context: monthlyAmount');
+    if (task === "suggest_products" && !context.monthlyAmount) {
+      throw new Error("Missing required context: monthlyAmount");
     }
 
-    if (task === 'project_returns' && !context.monthlyAmount) {
-      throw new Error('Missing required context: monthlyAmount');
+    if (task === "project_returns" && !context.monthlyAmount) {
+      throw new Error("Missing required context: monthlyAmount");
     }
 
-    if (task === 'rebalance_portfolio' && !context.currentPortfolio) {
-      throw new Error('Missing required context: currentPortfolio');
+    if (task === "rebalance_portfolio" && !context.currentPortfolio) {
+      throw new Error("Missing required context: currentPortfolio");
     }
   }
 }

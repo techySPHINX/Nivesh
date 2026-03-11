@@ -1,9 +1,19 @@
-import { IsString, IsEnum, IsOptional, IsBoolean, IsObject } from 'class-validator';
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { AlertRuleType, AlertRuleConditions, AlertRuleActions } from '../../domain/entities/alert-rule.entity';
+import {
+  IsString,
+  IsEnum,
+  IsOptional,
+  IsBoolean,
+  IsObject,
+} from "class-validator";
+import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
+import {
+  AlertRuleType,
+  AlertRuleConditions,
+  AlertRuleActions,
+} from "../../domain/entities/alert-rule.entity";
 
 export class CreateAlertRuleDto {
-  @ApiProperty({ description: 'Rule name', example: 'Budget 90% threshold' })
+  @ApiProperty({ description: "Rule name", example: "Budget 90% threshold" })
   @IsString()
   name: string;
 
@@ -12,14 +22,19 @@ export class CreateAlertRuleDto {
   ruleType: AlertRuleType;
 
   @ApiProperty({
-    description: 'Rule conditions',
-    example: { threshold: 90, metric: 'spending_percentage', operator: 'gte', value: 90 },
+    description: "Rule conditions",
+    example: {
+      threshold: 90,
+      metric: "spending_percentage",
+      operator: "gte",
+      value: 90,
+    },
   })
   @IsObject()
   conditions: AlertRuleConditions;
 
   @ApiProperty({
-    description: 'Rule actions on trigger',
+    description: "Rule actions on trigger",
     example: { notifyPush: true, notifyEmail: true, notifySms: false },
   })
   @IsObject()

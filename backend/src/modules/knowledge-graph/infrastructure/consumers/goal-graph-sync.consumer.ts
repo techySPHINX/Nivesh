@@ -1,17 +1,17 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { EventsHandler, IEventHandler } from '@nestjs/cqrs';
-import { GoalCreatedEvent } from '../../../goal-management/domain/events/goal.events';
+import { Injectable, Logger } from "@nestjs/common";
+import { EventsHandler, IEventHandler } from "@nestjs/cqrs";
+import { GoalCreatedEvent } from "../../../goal-management/domain/events/goal.events";
 import {
   GraphNode,
   GraphRelationship,
   NodeType,
   RelationshipType,
-} from '../../domain';
+} from "../../domain";
 
 /**
  * Kafka Consumer for Goal Graph Synchronization
  * Handles goal lifecycle events and maintains goal nodes + relationships
- * 
+ *
  * Creates:
  * - Goal nodes
  * - User -[HAS_GOAL]-> Goal
@@ -22,10 +22,10 @@ import {
 export class GoalGraphSyncConsumer implements IEventHandler<GoalCreatedEvent> {
   private readonly logger = new Logger(GoalGraphSyncConsumer.name);
 
-  constructor(
+  constructor() {
     // Will inject IKnowledgeGraphRepository in next commit
     // private readonly graphRepository: IKnowledgeGraphRepository,
-  ) {}
+  }
 
   /**
    * Handle goal created event
@@ -62,7 +62,7 @@ export class GoalGraphSyncConsumer implements IEventHandler<GoalCreatedEvent> {
       category: event.category,
       daysRemaining: this.calculateDaysRemaining(event.targetDate),
       metadata: {
-        source: 'goal-service',
+        source: "goal-service",
         synced: true,
       },
     });
@@ -108,7 +108,7 @@ export class GoalGraphSyncConsumer implements IEventHandler<GoalCreatedEvent> {
 
       this.logger.debug(`Created HAS_GOAL relationship for ${event.goalId}`);
     } catch (error) {
-      this.logger.error('Failed to create user-goal relationship', error.stack);
+      this.logger.error("Failed to create user-goal relationship", error.stack);
     }
   }
 
@@ -131,8 +131,8 @@ export class GoalGraphSyncConsumer implements IEventHandler<GoalCreatedEvent> {
       //     targetDate: event.targetDate,
       //     priority: event.priority,
       //     status: event.status,
-      //     progress: event.targetAmount > 0 
-      //       ? (event.currentAmount / event.targetAmount) * 100 
+      //     progress: event.targetAmount > 0
+      //       ? (event.currentAmount / event.targetAmount) * 100
       //       : 0,
       //     daysRemaining: this.calculateDaysRemaining(event.targetDate),
       //   });
@@ -165,7 +165,7 @@ export class GoalGraphSyncConsumer implements IEventHandler<GoalCreatedEvent> {
       //     event.accountId,
       //     'outgoing',
       //   );
-      //   
+      //
       //   const existingRel = existingRels.find(
       //     (r) =>
       //       r.type === RelationshipType.CONTRIBUTES_TO_GOAL &&
@@ -204,7 +204,7 @@ export class GoalGraphSyncConsumer implements IEventHandler<GoalCreatedEvent> {
         `Recorded contribution for goal ${event.goalId}: ${event.amount}`,
       );
     } catch (error) {
-      this.logger.error('Failed to record goal contribution', error.stack);
+      this.logger.error("Failed to record goal contribution", error.stack);
     }
   }
 

@@ -1,6 +1,6 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { IKnowledgeGraphRepository } from '../../domain';
-import { RecommendationDto } from '../dto/graph-analytics.dto';
+import { Injectable, Logger } from "@nestjs/common";
+import { IKnowledgeGraphRepository } from "../../domain";
+import { RecommendationDto } from "../dto/graph-analytics.dto";
 
 /**
  * Service for generating personalized recommendations based on graph analysis
@@ -10,12 +10,12 @@ import { RecommendationDto } from '../dto/graph-analytics.dto';
 export class RecommendationService {
   private readonly logger = new Logger(RecommendationService.name);
 
-  constructor(
+  constructor() {
     // private readonly graphRepository: IKnowledgeGraphRepository,
     // private readonly patternDetector: SpendingPatternDetector,
     // private readonly categoryService: CategoryInsightsService,
     // private readonly merchantService: MerchantNetworkService,
-  ) {}
+  }
 
   /**
    * Generate all recommendations for a user

@@ -1,5 +1,3 @@
 export class GetGoalStatisticsQuery {
-  constructor(
-    public readonly userId: string,
-  ) { }
+  constructor(public readonly userId: string) {}
 }

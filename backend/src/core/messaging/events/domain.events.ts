@@ -1,4 +1,4 @@
-import { BaseEvent, EventType } from './base.event';
+import { BaseEvent, EventType } from "./base.event";
 
 // User Events
 export class UserCreatedEvent extends BaseEvent {
@@ -11,7 +11,7 @@ export class UserCreatedEvent extends BaseEvent {
     super({
       eventType: EventType.USER_CREATED,
       aggregateId: userId,
-      aggregateType: 'User',
+      aggregateType: "User",
     });
   }
 }
@@ -24,7 +24,7 @@ export class UserUpdatedEvent extends BaseEvent {
     super({
       eventType: EventType.USER_UPDATED,
       aggregateId: userId,
-      aggregateType: 'User',
+      aggregateType: "User",
     });
   }
 }
@@ -41,7 +41,7 @@ export class TransactionCreatedEvent extends BaseEvent {
     super({
       eventType: EventType.TRANSACTION_CREATED,
       aggregateId: transactionId,
-      aggregateType: 'Transaction',
+      aggregateType: "Transaction",
     });
   }
 }
@@ -58,7 +58,7 @@ export class GoalCreatedEvent extends BaseEvent {
     super({
       eventType: EventType.GOAL_CREATED,
       aggregateId: goalId,
-      aggregateType: 'Goal',
+      aggregateType: "Goal",
     });
   }
 }
@@ -72,7 +72,7 @@ export class GoalProgressUpdatedEvent extends BaseEvent {
     super({
       eventType: EventType.GOAL_PROGRESS_UPDATED,
       aggregateId: goalId,
-      aggregateType: 'Goal',
+      aggregateType: "Goal",
     });
   }
 }
@@ -88,7 +88,7 @@ export class AIQueryReceivedEvent extends BaseEvent {
     super({
       eventType: EventType.AI_QUERY_RECEIVED,
       aggregateId: queryId,
-      aggregateType: 'AIQuery',
+      aggregateType: "AIQuery",
     });
   }
 }
@@ -104,7 +104,7 @@ export class AIResponseGeneratedEvent extends BaseEvent {
     super({
       eventType: EventType.AI_RESPONSE_GENERATED,
       aggregateId: queryId,
-      aggregateType: 'AIQuery',
+      aggregateType: "AIQuery",
     });
   }
 }
@@ -121,7 +121,7 @@ export class AlertTriggeredEvent extends BaseEvent {
     super({
       eventType: EventType.ALERT_TRIGGERED,
       aggregateId: alertId,
-      aggregateType: 'Alert',
+      aggregateType: "Alert",
     });
   }
 }

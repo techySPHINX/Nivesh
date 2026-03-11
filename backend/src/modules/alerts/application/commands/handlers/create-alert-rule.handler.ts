@@ -1,13 +1,13 @@
-import { CommandHandler, ICommandHandler, EventBus } from '@nestjs/cqrs';
-import { Inject, Logger } from '@nestjs/common';
-import { CreateAlertRuleCommand } from '../create-alert-rule.command';
-import { AlertRuleResponseDto } from '../../dto/alert-rule-response.dto';
+import { CommandHandler, ICommandHandler, EventBus } from "@nestjs/cqrs";
+import { Inject, Logger } from "@nestjs/common";
+import { CreateAlertRuleCommand } from "../create-alert-rule.command";
+import { AlertRuleResponseDto } from "../../dto/alert-rule-response.dto";
 import {
   IAlertRuleRepository,
   ALERT_RULE_REPOSITORY,
-} from '../../../domain/repositories/alert-rule.repository.interface';
-import { AlertRule } from '../../../domain/entities/alert-rule.entity';
-import { AlertRuleCreatedEvent } from '../../../domain/events/alert.events';
+} from "../../../domain/repositories/alert-rule.repository.interface";
+import { AlertRule } from "../../../domain/entities/alert-rule.entity";
+import { AlertRuleCreatedEvent } from "../../../domain/events/alert.events";
 
 @CommandHandler(CreateAlertRuleCommand)
 export class CreateAlertRuleHandler implements ICommandHandler<CreateAlertRuleCommand> {
@@ -19,7 +19,9 @@ export class CreateAlertRuleHandler implements ICommandHandler<CreateAlertRuleCo
     private readonly eventBus: EventBus,
   ) {}
 
-  async execute(command: CreateAlertRuleCommand): Promise<AlertRuleResponseDto> {
+  async execute(
+    command: CreateAlertRuleCommand,
+  ): Promise<AlertRuleResponseDto> {
     const { userId, createAlertRuleDto } = command;
 
     const rule = AlertRule.create({
@@ -35,7 +37,12 @@ export class CreateAlertRuleHandler implements ICommandHandler<CreateAlertRuleCo
     const savedRule = await this.alertRuleRepository.save(rule);
 
     this.eventBus.publish(
-      new AlertRuleCreatedEvent(savedRule.id, userId, savedRule.ruleType, savedRule.name),
+      new AlertRuleCreatedEvent(
+        savedRule.id,
+        userId,
+        savedRule.ruleType,
+        savedRule.name,
+      ),
     );
 
     this.logger.log(`Alert rule created: ${savedRule.id} for user ${userId}`);

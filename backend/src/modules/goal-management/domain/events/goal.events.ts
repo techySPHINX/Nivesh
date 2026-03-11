@@ -1,5 +1,12 @@
-import { BaseEvent, EventType } from '../../../../core/messaging/events/base.event';
-import { GoalStatus, GoalPriority, GoalCategory } from '../entities/goal.entity';
+import {
+  BaseEvent,
+  EventType,
+} from "../../../../core/messaging/events/base.event";
+import {
+  GoalStatus,
+  GoalPriority,
+  GoalCategory,
+} from "../entities/goal.entity";
 
 /**
  * Goal Created Event
@@ -16,7 +23,7 @@ export class GoalCreatedEvent extends BaseEvent {
     super({
       eventType: EventType.GOAL_CREATED,
       aggregateId: goalId,
-      aggregateType: 'Goal',
+      aggregateType: "Goal",
     });
   }
 }
@@ -36,7 +43,7 @@ export class GoalContributionAddedEvent extends BaseEvent {
     super({
       eventType: EventType.GOAL_CONTRIBUTION_ADDED,
       aggregateId: goalId,
-      aggregateType: 'Goal',
+      aggregateType: "Goal",
     });
   }
 }
@@ -55,7 +62,7 @@ export class GoalCompletedEvent extends BaseEvent {
     super({
       eventType: EventType.GOAL_COMPLETED,
       aggregateId: goalId,
-      aggregateType: 'Goal',
+      aggregateType: "Goal",
     });
   }
 }
@@ -72,7 +79,7 @@ export class GoalUpdatedEvent extends BaseEvent {
     super({
       eventType: EventType.GOAL_UPDATED,
       aggregateId: goalId,
-      aggregateType: 'Goal',
+      aggregateType: "Goal",
     });
   }
 }
@@ -89,7 +96,7 @@ export class GoalCancelledEvent extends BaseEvent {
     super({
       eventType: EventType.GOAL_CANCELLED,
       aggregateId: goalId,
-      aggregateType: 'Goal',
+      aggregateType: "Goal",
     });
   }
 }
@@ -108,7 +115,7 @@ export class GoalExpiredEvent extends BaseEvent {
     super({
       eventType: EventType.GOAL_EXPIRED,
       aggregateId: goalId,
-      aggregateType: 'Goal',
+      aggregateType: "Goal",
     });
   }
 }

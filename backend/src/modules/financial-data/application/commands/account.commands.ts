@@ -1,5 +1,5 @@
-import { AccountType } from '../../domain/entities/account.entity';
-import { Currency } from '../../domain/value-objects/money.vo';
+import { AccountType } from "../../domain/entities/account.entity";
+import { Currency } from "../../domain/value-objects/money.vo";
 
 export class CreateAccountCommand {
   constructor(
@@ -11,7 +11,7 @@ export class CreateAccountCommand {
     public readonly balance: number,
     public readonly currency: Currency,
     public readonly ifscCode?: string,
-  ) { }
+  ) {}
 }
 
 export class UpdateAccountCommand {
@@ -23,19 +23,19 @@ export class UpdateAccountCommand {
       balance?: number;
       status?: string;
     },
-  ) { }
+  ) {}
 }
 
 export class DeleteAccountCommand {
   constructor(
     public readonly accountId: string,
     public readonly userId: string,
-  ) { }
+  ) {}
 }
 
 export class LinkAccountCommand {
   constructor(
     public readonly accountId: string,
     public readonly userId: string,
-  ) { }
+  ) {}
 }

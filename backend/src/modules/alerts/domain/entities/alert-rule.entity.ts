@@ -2,11 +2,11 @@
  * Alert Rule Type Enum
  */
 export enum AlertRuleType {
-  BUDGET_THRESHOLD = 'BUDGET_THRESHOLD',
-  GOAL_DEADLINE = 'GOAL_DEADLINE',
-  ANOMALY = 'ANOMALY',
-  PRICE_ALERT = 'PRICE_ALERT',
-  CUSTOM = 'CUSTOM',
+  BUDGET_THRESHOLD = "BUDGET_THRESHOLD",
+  GOAL_DEADLINE = "GOAL_DEADLINE",
+  ANOMALY = "ANOMALY",
+  PRICE_ALERT = "PRICE_ALERT",
+  CUSTOM = "CUSTOM",
 }
 
 /**
@@ -14,7 +14,7 @@ export enum AlertRuleType {
  */
 export interface AlertRuleConditions {
   metric?: string;
-  operator?: 'gt' | 'gte' | 'lt' | 'lte' | 'eq';
+  operator?: "gt" | "gte" | "lt" | "lte" | "eq";
   value?: number;
   threshold?: number;
   budgetId?: string;

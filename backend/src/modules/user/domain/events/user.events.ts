@@ -1,4 +1,7 @@
-import { BaseEvent, EventType } from '../../../../core/messaging/events/base.event';
+import {
+  BaseEvent,
+  EventType,
+} from "../../../../core/messaging/events/base.event";
 
 /**
  * User Created Event
@@ -12,7 +15,7 @@ export class UserCreatedEvent extends BaseEvent {
     super({
       eventType: EventType.USER_CREATED,
       aggregateId: userId,
-      aggregateType: 'User',
+      aggregateType: "User",
     });
   }
 }
@@ -28,7 +31,7 @@ export class UserUpdatedEvent extends BaseEvent {
     super({
       eventType: EventType.USER_UPDATED,
       aggregateId: userId,
-      aggregateType: 'User',
+      aggregateType: "User",
     });
   }
 }
@@ -37,13 +40,11 @@ export class UserUpdatedEvent extends BaseEvent {
  * User Deleted Event
  */
 export class UserDeletedEvent extends BaseEvent {
-  constructor(
-    public readonly userId: string,
-  ) {
+  constructor(public readonly userId: string) {
     super({
       eventType: EventType.USER_DELETED,
       aggregateId: userId,
-      aggregateType: 'User',
+      aggregateType: "User",
     });
   }
 }

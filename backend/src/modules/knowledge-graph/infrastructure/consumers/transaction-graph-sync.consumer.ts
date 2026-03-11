@@ -1,33 +1,32 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { EventsHandler, IEventHandler } from '@nestjs/cqrs';
-import { TransactionCreatedEvent } from '../../../financial-data/domain/events/transaction.events';
+import { Injectable, Logger } from "@nestjs/common";
+import { EventsHandler, IEventHandler } from "@nestjs/cqrs";
+import { TransactionCreatedEvent } from "../../../financial-data/domain/events/transaction.events";
 import {
   GraphNode,
   GraphRelationship,
   NodeType,
   RelationshipType,
-} from '../../domain';
+} from "../../domain";
 
 /**
  * Kafka Consumer for Transaction Graph Synchronization
  * Listens to transaction events and creates nodes + relationships in Neo4j
- * 
+ *
  * Creates:
  * - Transaction nodes
  * - Relationships: MADE_TRANSACTION, BELONGS_TO_CATEGORY, AT_MERCHANT, etc.
- * 
+ *
  * This is the most critical consumer as transactions are the core of the graph
  */
 @EventsHandler(TransactionCreatedEvent)
 @Injectable()
-export class TransactionGraphSyncConsumer
-  implements IEventHandler<TransactionCreatedEvent> {
+export class TransactionGraphSyncConsumer implements IEventHandler<TransactionCreatedEvent> {
   private readonly logger = new Logger(TransactionGraphSyncConsumer.name);
 
-  constructor(
+  constructor() {
     // Will inject IKnowledgeGraphRepository in next commit
     // private readonly graphRepository: IKnowledgeGraphRepository,
-  ) { }
+  }
 
   /**
    * Handle transaction created event
@@ -73,7 +72,7 @@ export class TransactionGraphSyncConsumer
       category: event.category,
       confidence: 1.0, // Manual transactions have 100% confidence
       metadata: {
-        source: 'transaction-service',
+        source: "transaction-service",
         synced: true,
       },
     });
@@ -110,7 +109,7 @@ export class TransactionGraphSyncConsumer
         `Created MADE_TRANSACTION relationship for ${event.transactionId}`,
       );
     } catch (error) {
-      this.logger.error('Failed to create account relationship', error.stack);
+      this.logger.error("Failed to create account relationship", error.stack);
     }
   }
 
@@ -141,7 +140,7 @@ export class TransactionGraphSyncConsumer
         `Created BELONGS_TO_CATEGORY relationship for ${event.transactionId}`,
       );
     } catch (error) {
-      this.logger.error('Failed to create category relationship', error.stack);
+      this.logger.error("Failed to create category relationship", error.stack);
     }
   }
 
@@ -171,7 +170,7 @@ export class TransactionGraphSyncConsumer
         `Created AT_MERCHANT relationship for ${event.transactionId}`,
       );
     } catch (error) {
-      this.logger.error('Failed to create merchant relationship', error.stack);
+      this.logger.error("Failed to create merchant relationship", error.stack);
     }
   }
 
@@ -201,7 +200,7 @@ export class TransactionGraphSyncConsumer
         `Created AT_LOCATION relationship for ${event.transactionId}`,
       );
     } catch (error) {
-      this.logger.error('Failed to create location relationship', error.stack);
+      this.logger.error("Failed to create location relationship", error.stack);
     }
   }
 

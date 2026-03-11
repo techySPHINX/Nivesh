@@ -1,15 +1,15 @@
-import { IQueryHandler, QueryHandler } from '@nestjs/cqrs';
-import { Inject, Logger } from '@nestjs/common';
-import { GetFinancialContextQuery } from '../get-financial-context.query';
-import { FinancialContextBuilderService } from '../../domain/services/context-builder.service';
+import { IQueryHandler, QueryHandler } from "@nestjs/cqrs";
+import { Inject, Logger } from "@nestjs/common";
+import { GetFinancialContextQuery } from "../get-financial-context.query";
+import { FinancialContextBuilderService } from "../../../domain/services/context-builder.service";
 import {
   IAccountRepository,
   ACCOUNT_REPOSITORY,
-} from '../../../financial-data/domain/repositories/account.repository.interface';
+} from "../../../../financial-data/domain/repositories/account.repository.interface";
 import {
   ITransactionRepository,
   TRANSACTION_REPOSITORY,
-} from '../../../financial-data/domain/repositories/transaction.repository.interface';
+} from "../../../../financial-data/domain/repositories/transaction.repository.interface";
 
 /**
  * GetFinancialContextQueryHandler
@@ -21,15 +21,15 @@ import {
  *   - top spending categories
  */
 @QueryHandler(GetFinancialContextQuery)
-export class GetFinancialContextQueryHandler
-  implements IQueryHandler<GetFinancialContextQuery>
-{
+export class GetFinancialContextQueryHandler implements IQueryHandler<GetFinancialContextQuery> {
   private readonly logger = new Logger(GetFinancialContextQueryHandler.name);
 
   constructor(
     private readonly contextBuilder: FinancialContextBuilderService,
-    @Inject(ACCOUNT_REPOSITORY) private readonly accountRepository: IAccountRepository,
-    @Inject(TRANSACTION_REPOSITORY) private readonly transactionRepository: ITransactionRepository,
+    @Inject(ACCOUNT_REPOSITORY)
+    private readonly accountRepository: IAccountRepository,
+    @Inject(TRANSACTION_REPOSITORY)
+    private readonly transactionRepository: ITransactionRepository,
   ) {}
 
   async execute(query: GetFinancialContextQuery): Promise<Record<string, any>> {

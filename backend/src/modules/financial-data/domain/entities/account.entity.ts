@@ -1,22 +1,22 @@
-import { v4 as uuidv4 } from 'uuid';
-import { DomainException } from '../../../../core/exceptions/base.exception';
-import { AccountNumber } from '../value-objects/account-number.vo';
-import { IFSCCode } from '../value-objects/ifsc-code.vo';
-import { Money, Currency } from '../value-objects/money.vo';
+import { v4 as uuidv4 } from "uuid";
+import { DomainException } from "../../../../core/exceptions/base.exception";
+import { AccountNumber } from "../value-objects/account-number.vo";
+import { IFSCCode } from "../value-objects/ifsc-code.vo";
+import { Money, Currency } from "../value-objects/money.vo";
 
 export enum AccountType {
-  SAVINGS = 'SAVINGS',
-  CURRENT = 'CURRENT',
-  CREDIT_CARD = 'CREDIT_CARD',
-  INVESTMENT = 'INVESTMENT',
-  LOAN = 'LOAN',
+  SAVINGS = "SAVINGS",
+  CURRENT = "CURRENT",
+  CREDIT_CARD = "CREDIT_CARD",
+  INVESTMENT = "INVESTMENT",
+  LOAN = "LOAN",
 }
 
 export enum AccountStatus {
-  ACTIVE = 'ACTIVE',
-  INACTIVE = 'INACTIVE',
-  FROZEN = 'FROZEN',
-  CLOSED = 'CLOSED',
+  ACTIVE = "ACTIVE",
+  INACTIVE = "INACTIVE",
+  FROZEN = "FROZEN",
+  CLOSED = "CLOSED",
 }
 
 export interface CreateAccountProps {
@@ -61,7 +61,7 @@ export class Account {
     private lastSyncedAt: Date | undefined,
     private readonly createdAt: Date,
     private updatedAt: Date,
-  ) { }
+  ) {}
 
   // Factory method for creating new account
   static create(props: CreateAccountProps): Account {
@@ -111,11 +111,11 @@ export class Account {
   // Business methods
   updateBalance(newBalance: Money): void {
     if (this.status === AccountStatus.CLOSED) {
-      throw new DomainException('Cannot update balance of closed account');
+      throw new DomainException("Cannot update balance of closed account");
     }
 
     if (newBalance.getCurrency() !== this.balance.getCurrency()) {
-      throw new DomainException('Currency mismatch');
+      throw new DomainException("Currency mismatch");
     }
 
     this.balance = newBalance;
@@ -128,9 +128,12 @@ export class Account {
   }
 
   debit(amount: Money): void {
-    if (this.accountType === AccountType.SAVINGS || this.accountType === AccountType.CURRENT) {
+    if (
+      this.accountType === AccountType.SAVINGS ||
+      this.accountType === AccountType.CURRENT
+    ) {
       if (amount.isGreaterThan(this.balance)) {
-        throw new DomainException('Insufficient balance');
+        throw new DomainException("Insufficient balance");
       }
     }
 
@@ -140,7 +143,7 @@ export class Account {
 
   linkAccount(): void {
     if (this.isLinked) {
-      throw new DomainException('Account is already linked');
+      throw new DomainException("Account is already linked");
     }
     this.isLinked = true;
     this.updatedAt = new Date();
@@ -148,7 +151,7 @@ export class Account {
 
   unlinkAccount(): void {
     if (!this.isLinked) {
-      throw new DomainException('Account is not linked');
+      throw new DomainException("Account is not linked");
     }
     this.isLinked = false;
     this.lastSyncedAt = undefined;
@@ -162,7 +165,7 @@ export class Account {
 
   activate(): void {
     if (this.status === AccountStatus.CLOSED) {
-      throw new DomainException('Cannot activate closed account');
+      throw new DomainException("Cannot activate closed account");
     }
     this.status = AccountStatus.ACTIVE;
     this.updatedAt = new Date();
@@ -180,7 +183,7 @@ export class Account {
 
   close(): void {
     if (!this.balance.isZero()) {
-      throw new DomainException('Cannot close account with non-zero balance');
+      throw new DomainException("Cannot close account with non-zero balance");
     }
     this.status = AccountStatus.CLOSED;
     this.updatedAt = new Date();
@@ -188,10 +191,10 @@ export class Account {
 
   rename(newName: string): void {
     if (!newName || newName.trim().length === 0) {
-      throw new DomainException('Account name cannot be empty');
+      throw new DomainException("Account name cannot be empty");
     }
     if (newName.length > 100) {
-      throw new DomainException('Account name too long (max 100 characters)');
+      throw new DomainException("Account name too long (max 100 characters)");
     }
     this.accountName = newName.trim();
     this.updatedAt = new Date();
@@ -267,7 +270,8 @@ export class Account {
     if (!this.isLinked) return false;
     if (!this.lastSyncedAt) return true;
 
-    const hoursSinceSync = (Date.now() - this.lastSyncedAt.getTime()) / (1000 * 60 * 60);
+    const hoursSinceSync =
+      (Date.now() - this.lastSyncedAt.getTime()) / (1000 * 60 * 60);
     return hoursSinceSync > 24; // Needs sync if > 24 hours
   }
 

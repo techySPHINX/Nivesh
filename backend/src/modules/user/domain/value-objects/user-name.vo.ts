@@ -1,4 +1,4 @@
-import { ValidationException } from '../../../../core/exceptions/base.exception';
+import { ValidationException } from "../../../../core/exceptions/base.exception";
 
 export class UserName {
   private readonly firstName: string;
@@ -12,21 +12,27 @@ export class UserName {
 
   private validate(firstName: string, lastName: string): void {
     if (!firstName || !lastName) {
-      throw new ValidationException('First name and last name are required');
+      throw new ValidationException("First name and last name are required");
     }
 
     if (firstName.length < 2 || firstName.length > 50) {
-      throw new ValidationException('First name must be between 2 and 50 characters');
+      throw new ValidationException(
+        "First name must be between 2 and 50 characters",
+      );
     }
 
     if (lastName.length < 2 || lastName.length > 50) {
-      throw new ValidationException('Last name must be between 2 and 50 characters');
+      throw new ValidationException(
+        "Last name must be between 2 and 50 characters",
+      );
     }
 
     // Only letters, spaces, hyphens, and apostrophes allowed
     const nameRegex = /^[a-zA-Z\s'-]+$/;
     if (!nameRegex.test(firstName) || !nameRegex.test(lastName)) {
-      throw new ValidationException('Names can only contain letters, spaces, hyphens, and apostrophes');
+      throw new ValidationException(
+        "Names can only contain letters, spaces, hyphens, and apostrophes",
+      );
     }
   }
 
@@ -34,9 +40,9 @@ export class UserName {
     // Trim and capitalize first letter of each word
     return name
       .trim()
-      .split(' ')
+      .split(" ")
       .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-      .join(' ');
+      .join(" ");
   }
 
   getFirstName(): string {
@@ -52,7 +58,9 @@ export class UserName {
   }
 
   equals(other: UserName): boolean {
-    return this.firstName === other.firstName && this.lastName === other.lastName;
+    return (
+      this.firstName === other.firstName && this.lastName === other.lastName
+    );
   }
 
   toString(): string {

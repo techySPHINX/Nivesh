@@ -1,10 +1,10 @@
-import { IQueryHandler, QueryHandler } from '@nestjs/cqrs';
-import { Inject } from '@nestjs/common';
-import { GetUnreadCountQuery } from '../get-unread-count.query';
+import { IQueryHandler, QueryHandler } from "@nestjs/cqrs";
+import { Inject } from "@nestjs/common";
+import { GetUnreadCountQuery } from "../get-unread-count.query";
 import {
   IAlertRepository,
   ALERT_REPOSITORY,
-} from '../../../domain/repositories/alert.repository.interface';
+} from "../../../domain/repositories/alert.repository.interface";
 
 @QueryHandler(GetUnreadCountQuery)
 export class GetUnreadCountHandler implements IQueryHandler<GetUnreadCountQuery> {

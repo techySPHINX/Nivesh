@@ -1,6 +1,6 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { PrismaService } from '../../../core/database/postgres/prisma.service';
-import { AgentMessage, AgentResponse, AgentType } from '../types/agent.types';
+import { Injectable, Logger } from "@nestjs/common";
+import { PrismaService } from "../../../core/database/postgres/prisma.service";
+import { AgentMessage, AgentResponse, AgentType } from "../types/agent.types";
 
 /**
  * Conversation Context Interface
@@ -26,10 +26,10 @@ interface ConversationContext {
  */
 interface UserPreferences {
   userId: string;
-  riskTolerance: 'conservative' | 'moderate' | 'aggressive';
-  investmentStyle: 'active' | 'passive';
+  riskTolerance: "conservative" | "moderate" | "aggressive";
+  investmentStyle: "active" | "passive";
   preferredAgents: AgentType[];
-  communicationStyle: 'detailed' | 'concise';
+  communicationStyle: "detailed" | "concise";
   notificationPreferences: {
     email: boolean;
     push: boolean;
@@ -37,7 +37,7 @@ interface UserPreferences {
   };
   financialGoals: Array<{
     type: string;
-    priority: 'high' | 'medium' | 'low';
+    priority: "high" | "medium" | "low";
   }>;
   lastUpdated: Date;
 }
@@ -130,7 +130,7 @@ export class AgentMemoryService {
 
     // Persist to database (async, don't await)
     this.persistConversation(conversation).catch((error) =>
-      this.logger.error('Failed to persist conversation', error.stack),
+      this.logger.error("Failed to persist conversation", error.stack),
     );
   }
 
@@ -194,7 +194,7 @@ export class AgentMemoryService {
         return context;
       }
     } catch (error) {
-      this.logger.error('Failed to retrieve conversation', error.stack);
+      this.logger.error("Failed to retrieve conversation", error.stack);
     }
 
     return null;
@@ -233,7 +233,7 @@ export class AgentMemoryService {
         return preferences;
       }
     } catch (error) {
-      this.logger.error('Failed to retrieve preferences', error.stack);
+      this.logger.error("Failed to retrieve preferences", error.stack);
     }
 
     return null;
@@ -285,7 +285,7 @@ export class AgentMemoryService {
         },
       });
     } catch (error) {
-      this.logger.error('Failed to update preferences', error.stack);
+      this.logger.error("Failed to update preferences", error.stack);
       throw error;
     }
   }
@@ -303,12 +303,12 @@ export class AgentMemoryService {
         where: {
           userId,
           metadata: {
-            path: ['topics'],
+            path: ["topics"],
             array_contains: topic,
           },
         },
         orderBy: {
-          lastUpdatedAt: 'desc',
+          lastUpdatedAt: "desc",
         },
         take: limit,
       });
@@ -323,7 +323,10 @@ export class AgentMemoryService {
         metadata: conv.metadata as any,
       }));
     } catch (error) {
-      this.logger.error('Failed to retrieve relevant conversations', error.stack);
+      this.logger.error(
+        "Failed to retrieve relevant conversations",
+        error.stack,
+      );
       return [];
     }
   }
@@ -368,7 +371,7 @@ export class AgentMemoryService {
 
       return memoryCleanedCount + result.count;
     } catch (error) {
-      this.logger.error('Cleanup failed', error.stack);
+      this.logger.error("Cleanup failed", error.stack);
       return memoryCleanedCount;
     }
   }
@@ -450,7 +453,7 @@ export class AgentMemoryService {
         topTopics,
       };
     } catch (error) {
-      this.logger.error('Failed to get conversation stats', error.stack);
+      this.logger.error("Failed to get conversation stats", error.stack);
       return {
         totalConversations: 0,
         averageMessagesPerConversation: 0,

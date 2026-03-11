@@ -2,10 +2,10 @@
  * Budget Status Enum
  */
 export enum BudgetStatus {
-  ACTIVE = 'ACTIVE',
-  EXCEEDED = 'EXCEEDED',
-  COMPLETED = 'COMPLETED',
-  PAUSED = 'PAUSED',
+  ACTIVE = "ACTIVE",
+  EXCEEDED = "EXCEEDED",
+  COMPLETED = "COMPLETED",
+  PAUSED = "PAUSED",
 }
 
 /**
@@ -22,9 +22,9 @@ export enum AlertThreshold {
  * Budget Period Enum
  */
 export enum BudgetPeriod {
-  MONTHLY = 'MONTHLY',
-  QUARTERLY = 'QUARTERLY',
-  YEARLY = 'YEARLY',
+  MONTHLY = "MONTHLY",
+  QUARTERLY = "QUARTERLY",
+  YEARLY = "YEARLY",
 }
 
 /**
@@ -38,7 +38,7 @@ export class CategoryBudget {
     public readonly spent: number = 0,
   ) {
     if (limit <= 0) {
-      throw new Error('Budget limit must be positive');
+      throw new Error("Budget limit must be positive");
     }
   }
 
@@ -101,7 +101,7 @@ export class Budget {
     public metadata: Record<string, any> | null,
     public readonly createdAt: Date,
     public updatedAt: Date,
-  ) { }
+  ) {}
 
   /**
    * Factory method to create a new budget
@@ -121,11 +121,11 @@ export class Budget {
     metadata?: Record<string, any>;
   }): Budget {
     if (params.totalLimit <= 0) {
-      throw new Error('Total budget limit must be positive');
+      throw new Error("Total budget limit must be positive");
     }
 
     if (params.endDate <= params.startDate) {
-      throw new Error('End date must be after start date');
+      throw new Error("End date must be after start date");
     }
 
     return new Budget(
@@ -159,7 +159,7 @@ export class Budget {
    */
   addSpending(amount: number, category: string): void {
     if (amount <= 0) {
-      throw new Error('Spending amount must be positive');
+      throw new Error("Spending amount must be positive");
     }
 
     // Update total spent
@@ -184,12 +184,15 @@ export class Budget {
    */
   setCategoryBudget(category: string, limit: number): void {
     if (limit <= 0) {
-      throw new Error('Category budget limit must be positive');
+      throw new Error("Category budget limit must be positive");
     }
 
     const existing = this.categoryBudgets.get(category);
     const spent = existing ? existing.spent : 0;
-    this.categoryBudgets.set(category, new CategoryBudget(category, limit, spent));
+    this.categoryBudgets.set(
+      category,
+      new CategoryBudget(category, limit, spent),
+    );
     this.updatedAt = new Date();
   }
 
@@ -220,7 +223,7 @@ export class Budget {
 
     if (params.totalLimit !== undefined) {
       if (params.totalLimit <= 0) {
-        throw new Error('Total budget limit must be positive');
+        throw new Error("Total budget limit must be positive");
       }
       this.totalLimit = params.totalLimit;
 
@@ -292,7 +295,10 @@ export class Budget {
    * Check if budget is exceeded
    */
   isExceeded(): boolean {
-    return this.status === BudgetStatus.EXCEEDED || this.totalSpent >= this.totalLimit;
+    return (
+      this.status === BudgetStatus.EXCEEDED ||
+      this.totalSpent >= this.totalLimit
+    );
   }
 
   /**
@@ -351,7 +357,7 @@ export class Budget {
    * Get exceeded categories
    */
   getExceededCategories(): CategoryBudget[] {
-    return this.getCategoryBudgetsArray().filter(cb => cb.isExceeded());
+    return this.getCategoryBudgetsArray().filter((cb) => cb.isExceeded());
   }
 
   /**
@@ -360,19 +366,23 @@ export class Budget {
   static fromPersistence(data: any): Budget {
     const categoryBudgetsMap = new Map<string, CategoryBudget>();
     if (data.categoryBudgets) {
-      if (typeof data.categoryBudgets === 'object') {
-        Object.entries(data.categoryBudgets).forEach(([category, budget]: [string, any]) => {
-          categoryBudgetsMap.set(
-            category,
-            new CategoryBudget(category, budget.limit, budget.spent),
-          );
-        });
+      if (typeof data.categoryBudgets === "object") {
+        Object.entries(data.categoryBudgets).forEach(
+          ([category, budget]: [string, any]) => {
+            categoryBudgetsMap.set(
+              category,
+              new CategoryBudget(category, budget.limit, budget.spent),
+            );
+          },
+        );
       }
     }
 
     const alertsSentSet = new Set<number>();
     if (Array.isArray(data.alertsSent)) {
-      data.alertsSent.forEach((threshold: number) => alertsSentSet.add(threshold));
+      data.alertsSent.forEach((threshold: number) =>
+        alertsSentSet.add(threshold),
+      );
     }
 
     return new Budget(

@@ -1,5 +1,8 @@
-import { TransactionType, TransactionCategory } from '../../domain/entities/transaction.entity';
-import { Currency } from '../../domain/value-objects/money.vo';
+import {
+  TransactionType,
+  TransactionCategory,
+} from "../../domain/entities/transaction.entity";
+import { Currency } from "../../domain/value-objects/money.vo";
 
 export class CreateTransactionCommand {
   constructor(
@@ -13,7 +16,7 @@ export class CreateTransactionCommand {
     public readonly transactionDate: Date,
     public readonly merchantName?: string,
     public readonly referenceNumber?: string,
-  ) { }
+  ) {}
 }
 
 export class UpdateTransactionCommand {
@@ -25,12 +28,12 @@ export class UpdateTransactionCommand {
       description?: string;
       status?: string;
     },
-  ) { }
+  ) {}
 }
 
 export class DeleteTransactionCommand {
   constructor(
     public readonly transactionId: string,
     public readonly userId: string,
-  ) { }
+  ) {}
 }

@@ -1,27 +1,30 @@
-import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { Inject, Logger } from '@nestjs/common';
-import { ProcessQueryCommand } from '../commands/process-query.command';
-import { FinancialContextBuilderService } from '../../domain/services/context-builder.service';
-import { DecisionEngineService } from '../../domain/services/decision-engine.service';
-import { LLMReasoningService } from '../../infrastructure/services/llm-reasoning.service';
-import { PromptTemplateService } from '../../infrastructure/services/prompt-template.service';
-import { Decision, ConfidenceLevel } from '../../domain/value-objects/decision.vo';
+import { CommandHandler, ICommandHandler } from "@nestjs/cqrs";
+import { Inject, Logger } from "@nestjs/common";
+import { ProcessQueryCommand } from "../commands/process-query.command";
+import { FinancialContextBuilderService } from "../../domain/services/context-builder.service";
+import { DecisionEngineService } from "../../domain/services/decision-engine.service";
+import { LLMReasoningService } from "../../infrastructure/services/llm-reasoning.service";
+import { PromptTemplateService } from "../../infrastructure/services/prompt-template.service";
+import {
+  Decision,
+  ConfidenceLevel,
+} from "../../domain/value-objects/decision.vo";
 import {
   IAccountRepository,
-  ACCOUNT_REPOSITORY
-} from '../../../financial-data/domain/repositories/account.repository.interface';
+  ACCOUNT_REPOSITORY,
+} from "../../../financial-data/domain/repositories/account.repository.interface";
 import {
   ITransactionRepository,
-  TRANSACTION_REPOSITORY
-} from '../../../financial-data/domain/repositories/transaction.repository.interface';
-import { SemanticRetrieverService } from '../../../rag-pipeline/application/services/semantic-retriever.service';
-import { ContextBuilderService as RAGContextBuilder } from '../../../rag-pipeline/application/services/context-builder.service';
-import { VectorIndexerService } from '../../../rag-pipeline/application/services/vector-indexer.service';
+  TRANSACTION_REPOSITORY,
+} from "../../../financial-data/domain/repositories/transaction.repository.interface";
+import { SemanticRetrieverService } from "../../../rag-pipeline/application/services/semantic-retriever.service";
+import { ContextBuilderService as RAGContextBuilder } from "../../../rag-pipeline/application/services/context-builder.service";
+import { VectorIndexerService } from "../../../rag-pipeline/application/services/vector-indexer.service";
 
 /**
  * Process Query Handler
  * Orchestrates AI reasoning for user financial queries
- * 
+ *
  * Flow:
  * 1. Build financial context from user data
  * 2. Check if rule-based engine can handle (simple cases)
@@ -40,9 +43,11 @@ export class ProcessQueryHandler implements ICommandHandler<ProcessQueryCommand>
     private readonly semanticRetriever: SemanticRetrieverService,
     private readonly ragContextBuilder: RAGContextBuilder,
     private readonly vectorIndexer: VectorIndexerService,
-    @Inject(ACCOUNT_REPOSITORY) private readonly accountRepository: IAccountRepository,
-    @Inject(TRANSACTION_REPOSITORY) private readonly transactionRepository: ITransactionRepository,
-  ) { }
+    @Inject(ACCOUNT_REPOSITORY)
+    private readonly accountRepository: IAccountRepository,
+    @Inject(TRANSACTION_REPOSITORY)
+    private readonly transactionRepository: ITransactionRepository,
+  ) {}
 
   async execute(command: ProcessQueryCommand): Promise<Decision> {
     const { userId, query, queryType, context } = command;
@@ -56,7 +61,7 @@ export class ProcessQueryHandler implements ICommandHandler<ProcessQueryCommand>
         this.transactionRepository.getRecentTransactions(userId, 90),
       ]);
 
-      const accountsData = accounts.map(acc => ({
+      const accountsData = accounts.map((acc) => ({
         id: acc.Id,
         userId: acc.UserId,
         accountType: acc.AccountType,
@@ -65,7 +70,7 @@ export class ProcessQueryHandler implements ICommandHandler<ProcessQueryCommand>
         status: acc.Status,
       }));
 
-      const transactionsData = recentTransactions.map(txn => ({
+      const transactionsData = recentTransactions.map((txn) => ({
         id: txn.Id,
         userId: txn.UserId,
         accountId: txn.AccountId,
@@ -84,17 +89,21 @@ export class ProcessQueryHandler implements ICommandHandler<ProcessQueryCommand>
       });
 
       // Step 2: Check if rule-based engine can handle
-      if (queryType === 'affordability' && context?.amount && context?.frequency) {
-        this.logger.debug('Using rule-based affordability engine');
+      if (
+        queryType === "affordability" &&
+        context?.amount &&
+        context?.frequency
+      ) {
+        this.logger.debug("Using rule-based affordability engine");
         return this.decisionEngine.evaluateAffordability(financialContext, {
           amount: context.amount,
-          frequency: context.frequency === 'one-time' ? 'once' : 'monthly',
-          description: context.description || 'Expense',
+          frequency: context.frequency === "one-time" ? "once" : "monthly",
+          description: context.description || "Expense",
         });
       }
 
-      if (queryType === 'goal_projection' && context?.goalName) {
-        this.logger.debug('Using rule-based goal projection engine');
+      if (queryType === "goal_projection" && context?.goalName) {
+        this.logger.debug("Using rule-based goal projection engine");
         return this.decisionEngine.projectGoal(financialContext, {
           targetAmount: context.targetAmount || 0,
           currentAmount: context.currentAmount || 0,
@@ -103,10 +112,16 @@ export class ProcessQueryHandler implements ICommandHandler<ProcessQueryCommand>
       }
 
       // Step 3: Use AI for complex queries
-      this.logger.debug('Using AI reasoning for complex query');
-      return await this.processWithAI(financialContext, query, queryType, context);
+      this.logger.debug("Using AI reasoning for complex query");
+      return await this.processWithAI(
+        financialContext,
+        query,
+        queryType,
+        context,
+      );
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown error occurred";
       const errorStack = error instanceof Error ? error.stack : undefined;
       this.logger.error(`Failed to process query: ${errorMessage}`, errorStack);
       throw error;
@@ -124,7 +139,7 @@ export class ProcessQueryHandler implements ICommandHandler<ProcessQueryCommand>
     // ========================================
     // RAG PIPELINE: Retrieve relevant context
     // ========================================
-    this.logger.debug('Starting RAG retrieval for query');
+    this.logger.debug("Starting RAG retrieval for query");
     const retrievedContext = await this.semanticRetriever.retrieveContext(
       query,
       financialContext.userId,
@@ -152,16 +167,16 @@ export class ProcessQueryHandler implements ICommandHandler<ProcessQueryCommand>
     let structuredPrompt: string;
 
     switch (queryType) {
-      case 'affordability':
+      case "affordability":
         structuredPrompt = this.promptService.buildAffordabilityPrompt({
           context: financialContext,
           expenseDescription: context?.description || query,
           amount: context?.amount || 0,
-          frequency: context?.frequency || 'monthly',
+          frequency: context?.frequency || "monthly",
         });
         break;
 
-      case 'goal_projection':
+      case "goal_projection":
         structuredPrompt = this.promptService.buildGoalProjectionPrompt({
           context: financialContext,
           goalName: context?.goalName || query,
@@ -171,7 +186,7 @@ export class ProcessQueryHandler implements ICommandHandler<ProcessQueryCommand>
         });
         break;
 
-      case 'budget_optimization':
+      case "budget_optimization":
         structuredPrompt = this.promptService.buildBudgetOptimizationPrompt({
           context: financialContext,
           targetSavingsRate: context?.targetSavingsRate || 20,
@@ -185,7 +200,7 @@ export class ProcessQueryHandler implements ICommandHandler<ProcessQueryCommand>
 
     // Combine structured prompt with RAG context for hybrid approach
     const finalPrompt =
-      queryType === 'general'
+      queryType === "general"
         ? ragEnrichedPrompt
         : `${structuredPrompt}\n\n--- Additional Context from RAG Retrieval ---\n${this.formatRetrievedContext(retrievedContext)}`;
 
@@ -238,7 +253,7 @@ export class ProcessQueryHandler implements ICommandHandler<ProcessQueryCommand>
         intent: queryType,
         contextUsed: retrievedContext.map((r) => r.id),
       })
-      .catch((err) => this.logger.warn('Failed to index conversation:', err));
+      .catch((err) => this.logger.warn("Failed to index conversation:", err));
 
     return decision;
   }
@@ -247,13 +262,13 @@ export class ProcessQueryHandler implements ICommandHandler<ProcessQueryCommand>
    * Format retrieved context for inclusion in prompt
    */
   private formatRetrievedContext(retrievedDocs: any[]): string {
-    if (retrievedDocs.length === 0) return 'No additional context available.';
+    if (retrievedDocs.length === 0) return "No additional context available.";
 
     return retrievedDocs
       .map((doc, idx) => {
         return `[${idx + 1}] ${doc.text} (Relevance: ${(doc.score * 100).toFixed(0)}%, Source: ${doc.collection})`;
       })
-      .join('\n\n');
+      .join("\n\n");
   }
 
   /**
@@ -261,11 +276,13 @@ export class ProcessQueryHandler implements ICommandHandler<ProcessQueryCommand>
    */
   private buildCitations(retrievedDocs: any[]): string[] {
     const citations: string[] = [
-      `Based on user's financial snapshot as of ${new Date().toLocaleDateString('en-IN')}`,
+      `Based on user's financial snapshot as of ${new Date().toLocaleDateString("en-IN")}`,
     ];
 
     // Add citations from knowledge base
-    const knowledgeDocs = retrievedDocs.filter((d) => d.collection === 'knowledge');
+    const knowledgeDocs = retrievedDocs.filter(
+      (d) => d.collection === "knowledge",
+    );
     if (knowledgeDocs.length > 0) {
       citations.push(
         `Referenced ${knowledgeDocs.length} financial knowledge article(s)`,
@@ -273,15 +290,19 @@ export class ProcessQueryHandler implements ICommandHandler<ProcessQueryCommand>
     }
 
     // Add citations from user context
-    const userDocs = retrievedDocs.filter((d) => d.collection === 'user_context');
+    const userDocs = retrievedDocs.filter(
+      (d) => d.collection === "user_context",
+    );
     if (userDocs.length > 0) {
       const transactions = userDocs.filter(
-        (d) => d.metadata.contextType === 'transaction',
+        (d) => d.metadata.contextType === "transaction",
       );
-      const goals = userDocs.filter((d) => d.metadata.contextType === 'goal');
+      const goals = userDocs.filter((d) => d.metadata.contextType === "goal");
 
       if (transactions.length > 0) {
-        citations.push(`Analyzed ${transactions.length} relevant transaction(s)`);
+        citations.push(
+          `Analyzed ${transactions.length} relevant transaction(s)`,
+        );
       }
       if (goals.length > 0) {
         citations.push(`Considered ${goals.length} active goal(s)`);
@@ -290,10 +311,12 @@ export class ProcessQueryHandler implements ICommandHandler<ProcessQueryCommand>
 
     // Add citations from conversation history
     const conversationDocs = retrievedDocs.filter(
-      (d) => d.collection === 'conversation',
+      (d) => d.collection === "conversation",
     );
     if (conversationDocs.length > 0) {
-      citations.push(`Referenced ${conversationDocs.length} previous conversation(s)`);
+      citations.push(
+        `Referenced ${conversationDocs.length} previous conversation(s)`,
+      );
     }
 
     return citations;
@@ -301,69 +324,80 @@ export class ProcessQueryHandler implements ICommandHandler<ProcessQueryCommand>
 
   private extractAnswer(content: string): string {
     // Extract first paragraph or sentence as the direct answer
-    const lines = content.split('\n').filter((line) => line.trim().length > 0);
+    const lines = content.split("\n").filter((line) => line.trim().length > 0);
     return lines[0] || content.substring(0, 200);
   }
 
-  private extractReasoning(content: string): Array<{ step: string; data: string }> {
+  private extractReasoning(
+    content: string,
+  ): Array<{ step: string; data: string }> {
     // Parse numbered steps or bullet points
     const steps: Array<{ step: string; data: string }> = [];
-    const lines = content.split('\n');
+    const lines = content.split("\n");
 
-    let currentStep = '';
+    let currentStep = "";
     for (const line of lines) {
       const trimmed = line.trim();
       if (trimmed.match(/^\d+\./)) {
         if (currentStep) {
-          steps.push({ step: currentStep, data: '' });
+          steps.push({ step: currentStep, data: "" });
         }
         currentStep = trimmed;
-      } else if (trimmed.startsWith('-')) {
+      } else if (trimmed.startsWith("-")) {
         if (currentStep) {
-          steps.push({ step: currentStep, data: '' });
+          steps.push({ step: currentStep, data: "" });
         }
         currentStep = trimmed.substring(1).trim();
       }
     }
 
     if (currentStep) {
-      steps.push({ step: currentStep, data: '' });
+      steps.push({ step: currentStep, data: "" });
     }
 
-    return steps.length > 0 ? steps : [{ step: content, data: '' }];
+    return steps.length > 0 ? steps : [{ step: content, data: "" }];
   }
 
   private extractRecommendations(content: string): string[] {
     // Look for recommendation sections
     const recommendations: string[] = [];
-    const lines = content.split('\n');
+    const lines = content.split("\n");
 
     let inRecommendationSection = false;
     for (const line of lines) {
       const lower = line.toLowerCase();
-      if (lower.includes('recommend') || lower.includes('suggest') || lower.includes('advice')) {
+      if (
+        lower.includes("recommend") ||
+        lower.includes("suggest") ||
+        lower.includes("advice")
+      ) {
         inRecommendationSection = true;
       }
 
-      if (inRecommendationSection && (line.startsWith('-') || line.match(/^\d+\./))) {
+      if (
+        inRecommendationSection &&
+        (line.startsWith("-") || line.match(/^\d+\./))
+      ) {
         recommendations.push(line.trim());
       }
     }
 
-    return recommendations.length > 0 ? recommendations : ['Review the detailed analysis above'];
+    return recommendations.length > 0
+      ? recommendations
+      : ["Review the detailed analysis above"];
   }
 
   private extractWarnings(content: string): string[] {
     const warnings: string[] = [];
-    const lines = content.split('\n');
+    const lines = content.split("\n");
 
     for (const line of lines) {
       const lower = line.toLowerCase();
       if (
-        lower.includes('warning') ||
-        lower.includes('risk') ||
-        lower.includes('caution') ||
-        lower.includes('note:')
+        lower.includes("warning") ||
+        lower.includes("risk") ||
+        lower.includes("caution") ||
+        lower.includes("note:")
       ) {
         warnings.push(line.trim());
       }
@@ -375,11 +409,15 @@ export class ProcessQueryHandler implements ICommandHandler<ProcessQueryCommand>
   private determineConfidence(content: string): ConfidenceLevel {
     const lower = content.toLowerCase();
 
-    if (lower.includes('strongly recommend') || lower.includes('definitely')) {
+    if (lower.includes("strongly recommend") || lower.includes("definitely")) {
       return ConfidenceLevel.HIGH;
     }
 
-    if (lower.includes('might') || lower.includes('possibly') || lower.includes('uncertain')) {
+    if (
+      lower.includes("might") ||
+      lower.includes("possibly") ||
+      lower.includes("uncertain")
+    ) {
       return ConfidenceLevel.LOW;
     }
 

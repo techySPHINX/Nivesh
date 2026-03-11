@@ -11,8 +11,8 @@
  * - Error handling and structured response wrapping
  * - Request/response logging
  */
-import { Injectable, Logger } from '@nestjs/common';
-import { LLMService } from '../../../../core/integrations/llm/llm.service';
+import { Injectable, Logger } from "@nestjs/common";
+import { LLMService } from "../../../../core/integrations/llm/llm.service";
 
 export interface LLMReasoningRequest {
   systemPrompt: string;
@@ -41,23 +41,29 @@ export class LLMReasoningService {
    * Retry/backoff and primary→fallback model switching are handled internally
    * by `LLMService` (via `executeWithRetry` in `callOllama`).
    */
-  async generateResponse(request: LLMReasoningRequest): Promise<LLMReasoningResponse> {
-    this.logger.debug(`Generating AI response with temperature: ${request.temperature || 0.7}`);
+  async generateResponse(
+    request: LLMReasoningRequest,
+  ): Promise<LLMReasoningResponse> {
+    this.logger.debug(
+      `Generating AI response with temperature: ${request.temperature || 0.7}`,
+    );
 
     try {
       const startTime = Date.now();
 
-      const response = await this.llmService.generateText(
-        request.userPrompt,
-        {
-          systemInstruction: request.systemPrompt,
-          temperature: request.temperature ?? 0.7,
-          maxOutputTokens: request.maxTokens ?? 2048,
-        },
-      );
+      const response = await this.llmService.generateText(request.userPrompt, {
+        systemInstruction: request.systemPrompt,
+        temperature: request.temperature ?? 0.7,
+        maxOutputTokens: request.maxTokens ?? 2048,
+      });
 
       const duration = Date.now() - startTime;
-      const tokensUsed = Math.ceil((request.systemPrompt.length + request.userPrompt.length + response.length) / 4);
+      const tokensUsed = Math.ceil(
+        (request.systemPrompt.length +
+          request.userPrompt.length +
+          response.length) /
+          4,
+      );
 
       this.logger.log(
         `LLM response generated successfully (${duration}ms, ~${tokensUsed} tokens, model: ${this.llmService.getActiveModel()})`,
@@ -72,10 +78,10 @@ export class LLMReasoningService {
     } catch (error) {
       this.logger.error(`LLM reasoning failed: ${error.message}`);
       return {
-        content: '',
+        content: "",
         tokensUsed: 0,
         success: false,
-        error: error.message || 'Unknown error occurred',
+        error: error.message || "Unknown error occurred",
       };
     }
   }
@@ -85,18 +91,18 @@ export class LLMReasoningService {
    */
   validateResponse(content: string): { valid: boolean; reason?: string } {
     if (!content || content.trim().length === 0) {
-      return { valid: false, reason: 'Empty response' };
+      return { valid: false, reason: "Empty response" };
     }
 
     if (content.length < 20) {
-      return { valid: false, reason: 'Response too short' };
+      return { valid: false, reason: "Response too short" };
     }
 
     const blockedPhrases = [
-      'I cannot assist',
+      "I cannot assist",
       "I'm unable to help",
       "I don't have access",
-      'blocked by safety',
+      "blocked by safety",
     ];
 
     for (const phrase of blockedPhrases) {
@@ -113,13 +119,13 @@ export class LLMReasoningService {
    */
   hasFinancialWarnings(content: string): boolean {
     const warningKeywords = [
-      'risk',
-      'volatile',
-      'consult',
-      'advisor',
-      'not guaranteed',
-      'past performance',
-      'investment risk',
+      "risk",
+      "volatile",
+      "consult",
+      "advisor",
+      "not guaranteed",
+      "past performance",
+      "investment risk",
     ];
 
     const lowerContent = content.toLowerCase();

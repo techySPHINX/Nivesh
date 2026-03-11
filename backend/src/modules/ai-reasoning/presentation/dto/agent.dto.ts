@@ -1,26 +1,37 @@
-import { IsString, IsObject, IsOptional, ValidateNested } from 'class-validator';
-import { Type } from 'class-transformer';
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import {
+  IsString,
+  IsObject,
+  IsOptional,
+  ValidateNested,
+} from "class-validator";
+import { Type } from "class-transformer";
+import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
 
 /**
  * UserContext DTO
  */
 export class UserContextDto {
-  @ApiProperty({ description: 'User ID' })
+  @ApiProperty({ description: "User ID" })
   @IsString()
   userId: string;
 
-  @ApiPropertyOptional({ description: 'Risk tolerance', enum: ['conservative', 'moderate', 'aggressive'] })
+  @ApiPropertyOptional({
+    description: "Risk tolerance",
+    enum: ["conservative", "moderate", "aggressive"],
+  })
   @IsOptional()
   @IsString()
   riskTolerance?: string;
 
-  @ApiPropertyOptional({ description: 'Investment style', enum: ['value', 'growth', 'balanced', 'income'] })
+  @ApiPropertyOptional({
+    description: "Investment style",
+    enum: ["value", "growth", "balanced", "income"],
+  })
   @IsOptional()
   @IsString()
   investmentStyle?: string;
 
-  @ApiPropertyOptional({ description: 'Financial goals', type: Object })
+  @ApiPropertyOptional({ description: "Financial goals", type: Object })
   @IsOptional()
   @IsObject()
   financialGoals?: any;
@@ -30,21 +41,26 @@ export class UserContextDto {
  * Agent Request DTO
  */
 export class AgentRequestDto {
-  @ApiProperty({ description: 'User query or task description' })
+  @ApiProperty({ description: "User query or task description" })
   @IsString()
   query: string;
 
-  @ApiProperty({ description: 'User context information', type: UserContextDto })
+  @ApiProperty({
+    description: "User context information",
+    type: UserContextDto,
+  })
   @ValidateNested()
   @Type(() => UserContextDto)
   userContext: UserContextDto;
 
-  @ApiPropertyOptional({ description: 'Additional context data', type: Object })
+  @ApiPropertyOptional({ description: "Additional context data", type: Object })
   @IsOptional()
   @IsObject()
   additionalContext?: any;
 
-  @ApiPropertyOptional({ description: 'Conversation ID for context continuity' })
+  @ApiPropertyOptional({
+    description: "Conversation ID for context continuity",
+  })
   @IsOptional()
   @IsString()
   conversationId?: string;
@@ -54,15 +70,18 @@ export class AgentRequestDto {
  * Agent Feedback DTO
  */
 export class AgentFeedbackDto {
-  @ApiProperty({ description: 'Feedback type', enum: ['positive', 'negative', 'neutral'] })
+  @ApiProperty({
+    description: "Feedback type",
+    enum: ["positive", "negative", "neutral"],
+  })
   @IsString()
-  feedback: 'positive' | 'negative' | 'neutral';
+  feedback: "positive" | "negative" | "neutral";
 
-  @ApiProperty({ description: 'Rating from 1-5' })
+  @ApiProperty({ description: "Rating from 1-5" })
   @IsOptional()
   rating?: number;
 
-  @ApiPropertyOptional({ description: 'User comment' })
+  @ApiPropertyOptional({ description: "User comment" })
   @IsOptional()
   @IsString()
   comment?: string;

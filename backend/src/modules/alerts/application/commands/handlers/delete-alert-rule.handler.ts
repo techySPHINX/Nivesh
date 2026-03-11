@@ -1,10 +1,15 @@
-import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { Inject, NotFoundException, ForbiddenException, Logger } from '@nestjs/common';
-import { DeleteAlertRuleCommand } from '../delete-alert-rule.command';
+import { CommandHandler, ICommandHandler } from "@nestjs/cqrs";
+import {
+  Inject,
+  NotFoundException,
+  ForbiddenException,
+  Logger,
+} from "@nestjs/common";
+import { DeleteAlertRuleCommand } from "../delete-alert-rule.command";
 import {
   IAlertRuleRepository,
   ALERT_RULE_REPOSITORY,
-} from '../../../domain/repositories/alert-rule.repository.interface';
+} from "../../../domain/repositories/alert-rule.repository.interface";
 
 @CommandHandler(DeleteAlertRuleCommand)
 export class DeleteAlertRuleHandler implements ICommandHandler<DeleteAlertRuleCommand> {
@@ -23,7 +28,7 @@ export class DeleteAlertRuleHandler implements ICommandHandler<DeleteAlertRuleCo
       throw new NotFoundException(`Alert rule ${ruleId} not found`);
     }
     if (rule.userId !== userId) {
-      throw new ForbiddenException('Access denied');
+      throw new ForbiddenException("Access denied");
     }
 
     await this.alertRuleRepository.delete(ruleId);

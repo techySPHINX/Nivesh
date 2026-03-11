@@ -1,4 +1,4 @@
-import { Tool } from '../types/agent.types';
+import { Tool } from "../types/agent.types";
 
 /**
  * Investment Returns Calculation Tool
@@ -24,26 +24,26 @@ import { Tool } from '../types/agent.types';
  */
 
 interface ReturnsCalculationInput {
-  lumpSum?: number;              // Initial lump sum investment
-  monthlySIP?: number;           // Monthly SIP amount
-  annualReturn: number;          // Expected annual return (%)
-  timelineYears: number;         // Investment duration in years
-  taxRate?: number;              // Tax rate on gains (%) (optional)
-  inflationRate?: number;        // Annual inflation rate (%) (optional)
+  lumpSum?: number; // Initial lump sum investment
+  monthlySIP?: number; // Monthly SIP amount
+  annualReturn: number; // Expected annual return (%)
+  timelineYears: number; // Investment duration in years
+  taxRate?: number; // Tax rate on gains (%) (optional)
+  inflationRate?: number; // Annual inflation rate (%) (optional)
 }
 
 interface ReturnsCalculationResult {
-  finalCorpus: number;                    // Total corpus at maturity
-  totalInvestment: number;                // Total amount invested
-  totalReturns: number;                   // Total returns earned
-  returnsPercentage: number;              // Returns as % of investment
-  postTaxCorpus: number;                  // Corpus after tax
-  inflationAdjustedCorpus: number;        // Real value after inflation
+  finalCorpus: number; // Total corpus at maturity
+  totalInvestment: number; // Total amount invested
+  totalReturns: number; // Total returns earned
+  returnsPercentage: number; // Returns as % of investment
+  postTaxCorpus: number; // Corpus after tax
+  inflationAdjustedCorpus: number; // Real value after inflation
   breakdown: {
-    lumpSumContribution: number;          // Final value from lump sum
-    sipContribution: number;              // Final value from SIP
-    lumpSumInvested: number;              // Initial lump sum
-    sipInvested: number;                  // Total SIP invested
+    lumpSumContribution: number; // Final value from lump sum
+    sipContribution: number; // Final value from SIP
+    lumpSumInvested: number; // Initial lump sum
+    sipInvested: number; // Total SIP invested
   };
   yearlyGrowth: Array<{
     year: number;
@@ -51,57 +51,60 @@ interface ReturnsCalculationResult {
     corpus: number;
     returns: number;
   }>;
-  cagr: number;                           // Compound Annual Growth Rate
+  cagr: number; // Compound Annual Growth Rate
 }
 
 export const calculateReturnsTool: Tool = {
-  name: 'calculate_returns',
-  description: 'Calculate investment returns with compound interest for lump sum and/or SIP investments',
+  name: "calculate_returns",
+  description:
+    "Calculate investment returns with compound interest for lump sum and/or SIP investments",
   schema: {
-    type: 'object',
+    type: "object",
     properties: {
       lumpSum: {
-        type: 'number',
-        description: 'Initial lump sum investment in rupees (optional)',
+        type: "number",
+        description: "Initial lump sum investment in rupees (optional)",
         minimum: 0,
         default: 0,
       },
       monthlySIP: {
-        type: 'number',
-        description: 'Monthly SIP amount in rupees (optional)',
+        type: "number",
+        description: "Monthly SIP amount in rupees (optional)",
         minimum: 0,
         default: 0,
       },
       annualReturn: {
-        type: 'number',
-        description: 'Expected annual return in percentage (e.g., 12 for 12%)',
+        type: "number",
+        description: "Expected annual return in percentage (e.g., 12 for 12%)",
         minimum: -50,
         maximum: 100,
       },
       timelineYears: {
-        type: 'number',
-        description: 'Investment duration in years',
+        type: "number",
+        description: "Investment duration in years",
         minimum: 0.1,
         maximum: 50,
       },
       taxRate: {
-        type: 'number',
-        description: 'Tax rate on capital gains in percentage (optional)',
+        type: "number",
+        description: "Tax rate on capital gains in percentage (optional)",
         minimum: 0,
         maximum: 50,
         default: 0,
       },
       inflationRate: {
-        type: 'number',
-        description: 'Annual inflation rate in percentage (optional)',
+        type: "number",
+        description: "Annual inflation rate in percentage (optional)",
         minimum: 0,
         maximum: 20,
         default: 6,
       },
     },
-    required: ['annualReturn', 'timelineYears'],
+    required: ["annualReturn", "timelineYears"],
   },
-  handler: async (args: ReturnsCalculationInput): Promise<ReturnsCalculationResult> => {
+  handler: async (
+    args: ReturnsCalculationInput,
+  ): Promise<ReturnsCalculationResult> => {
     const {
       lumpSum = 0,
       monthlySIP = 0,
@@ -113,17 +116,18 @@ export const calculateReturnsTool: Tool = {
 
     // Validate inputs
     if (lumpSum === 0 && monthlySIP === 0) {
-      throw new Error('Either lumpSum or monthlySIP must be provided');
+      throw new Error("Either lumpSum or monthlySIP must be provided");
     }
     if (timelineYears <= 0) {
-      throw new Error('Timeline must be greater than 0');
+      throw new Error("Timeline must be greater than 0");
     }
 
     const monthlyReturnRate = annualReturn / 12 / 100;
     const totalMonths = timelineYears * 12;
 
     // Calculate lump sum growth: FV = PV × (1 + r)^n
-    const lumpSumFutureValue = lumpSum * Math.pow(1 + monthlyReturnRate, totalMonths);
+    const lumpSumFutureValue =
+      lumpSum * Math.pow(1 + monthlyReturnRate, totalMonths);
 
     // Calculate SIP growth: FV = PMT × [((1 + r)^n - 1) / r]
     let sipFutureValue = 0;
@@ -132,7 +136,8 @@ export const calculateReturnsTool: Tool = {
     } else {
       sipFutureValue =
         monthlySIP *
-        ((Math.pow(1 + monthlyReturnRate, totalMonths) - 1) / monthlyReturnRate);
+        ((Math.pow(1 + monthlyReturnRate, totalMonths) - 1) /
+          monthlyReturnRate);
     }
 
     const finalCorpus = lumpSumFutureValue + sipFutureValue;
@@ -154,7 +159,7 @@ export const calculateReturnsTool: Tool = {
       (Math.pow(finalCorpus / totalInvestment, 1 / timelineYears) - 1) * 100;
 
     // Generate yearly growth projection
-    const yearlyGrowth = [];
+    const yearlyGrowth: Array<{ year: number; invested: number; corpus: number; returns: number }> = [];
     let currentLumpSum = lumpSum;
     let currentSIPValue = 0;
     let totalSIPInvested = 0;
@@ -167,7 +172,8 @@ export const calculateReturnsTool: Tool = {
 
       // Add SIP contributions and growth for this year
       for (let month = 1; month <= monthsInYear; month++) {
-        currentSIPValue = currentSIPValue * (1 + monthlyReturnRate) + monthlySIP;
+        currentSIPValue =
+          currentSIPValue * (1 + monthlyReturnRate) + monthlySIP;
         totalSIPInvested += monthlySIP;
       }
 

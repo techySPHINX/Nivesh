@@ -1,4 +1,8 @@
-import { GoalStatus, GoalPriority, GoalCategory } from '../../domain/entities/goal.entity';
+import {
+  GoalStatus,
+  GoalPriority,
+  GoalCategory,
+} from "../../domain/entities/goal.entity";
 
 export class GoalResponseDto {
   id: string;

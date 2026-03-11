@@ -2,23 +2,23 @@
  * Alert Type Enum
  */
 export enum AlertType {
-  OVERSPENDING = 'overspending',
-  GOAL_AT_RISK = 'goal_at_risk',
-  INVESTMENT_ALERT = 'investment_alert',
-  ANOMALY = 'anomaly',
-  RECOMMENDATION = 'recommendation',
-  BUDGET_THRESHOLD = 'budget_threshold',
-  GOAL_DEADLINE = 'goal_deadline',
-  PRICE_ALERT = 'price_alert',
+  OVERSPENDING = "overspending",
+  GOAL_AT_RISK = "goal_at_risk",
+  INVESTMENT_ALERT = "investment_alert",
+  ANOMALY = "anomaly",
+  RECOMMENDATION = "recommendation",
+  BUDGET_THRESHOLD = "budget_threshold",
+  GOAL_DEADLINE = "goal_deadline",
+  PRICE_ALERT = "price_alert",
 }
 
 /**
  * Alert Severity Enum
  */
 export enum AlertSeverity {
-  INFO = 'info',
-  WARNING = 'warning',
-  CRITICAL = 'critical',
+  INFO = "info",
+  WARNING = "warning",
+  CRITICAL = "critical",
 }
 
 /**

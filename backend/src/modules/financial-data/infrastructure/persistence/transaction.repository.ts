@@ -1,17 +1,20 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { PrismaService } from '../../../../core/database/postgres/prisma.service';
+import { Injectable, Logger } from "@nestjs/common";
+import { PrismaService } from "../../../../core/database/postgres/prisma.service";
 import {
   ITransactionRepository,
   TransactionFilters,
-} from '../../domain/repositories/transaction.repository.interface';
-import { Transaction, TransactionCategory } from '../../domain/entities/transaction.entity';
-import { Money, Currency } from '../../domain/value-objects/money.vo';
+} from "../../domain/repositories/transaction.repository.interface";
+import {
+  Transaction,
+  TransactionCategory,
+} from "../../domain/entities/transaction.entity";
+import { Money, Currency } from "../../domain/value-objects/money.vo";
 
 @Injectable()
 export class TransactionRepository implements ITransactionRepository {
   private readonly logger = new Logger(TransactionRepository.name);
 
-  constructor(private readonly prisma: PrismaService) { }
+  constructor(private readonly prisma: PrismaService) {}
 
   async save(transaction: Transaction): Promise<Transaction> {
     const data = transaction.toPersistence();
@@ -33,29 +36,36 @@ export class TransactionRepository implements ITransactionRepository {
   }
 
   async findById(id: string): Promise<Transaction | null> {
-    const transaction = await this.prisma.transaction.findUnique({ where: { id } });
+    const transaction = await this.prisma.transaction.findUnique({
+      where: { id },
+    });
     return transaction ? this.toDomain(transaction) : null;
   }
 
   async findByUserId(userId: string, limit?: number): Promise<Transaction[]> {
     const transactions = await this.prisma.transaction.findMany({
       where: { userId },
-      orderBy: { transactionDate: 'desc' },
+      orderBy: { transactionDate: "desc" },
       take: limit || 50,
     });
     return transactions.map((t) => this.toDomain(t));
   }
 
-  async findByAccountId(accountId: string, limit?: number): Promise<Transaction[]> {
+  async findByAccountId(
+    accountId: string,
+    limit?: number,
+  ): Promise<Transaction[]> {
     const transactions = await this.prisma.transaction.findMany({
       where: { accountId },
-      orderBy: { transactionDate: 'desc' },
+      orderBy: { transactionDate: "desc" },
       take: limit || 50,
     });
     return transactions.map((t) => this.toDomain(t));
   }
 
-  async findByReferenceNumber(referenceNumber: string): Promise<Transaction | null> {
+  async findByReferenceNumber(
+    referenceNumber: string,
+  ): Promise<Transaction | null> {
     const transaction = await this.prisma.transaction.findFirst({
       where: { referenceNumber },
     });
@@ -66,24 +76,29 @@ export class TransactionRepository implements ITransactionRepository {
     skip?: number;
     take?: number;
     filters?: TransactionFilters;
-    sortBy?: 'transactionDate' | 'amount' | 'createdAt';
-    sortOrder?: 'asc' | 'desc';
+    sortBy?: "transactionDate" | "amount" | "createdAt";
+    sortOrder?: "asc" | "desc";
   }): Promise<{ transactions: Transaction[]; total: number }> {
     const where: any = {};
 
     if (options.filters) {
       if (options.filters.userId) where.userId = options.filters.userId;
-      if (options.filters.accountId) where.accountId = options.filters.accountId;
+      if (options.filters.accountId)
+        where.accountId = options.filters.accountId;
       if (options.filters.category) where.category = options.filters.category;
       if (options.filters.startDate || options.filters.endDate) {
         where.transactionDate = {};
-        if (options.filters.startDate) where.transactionDate.gte = options.filters.startDate;
-        if (options.filters.endDate) where.transactionDate.lte = options.filters.endDate;
+        if (options.filters.startDate)
+          where.transactionDate.gte = options.filters.startDate;
+        if (options.filters.endDate)
+          where.transactionDate.lte = options.filters.endDate;
       }
       if (options.filters.minAmount || options.filters.maxAmount) {
         where.amount = {};
-        if (options.filters.minAmount) where.amount.gte = options.filters.minAmount;
-        if (options.filters.maxAmount) where.amount.lte = options.filters.maxAmount;
+        if (options.filters.minAmount)
+          where.amount.gte = options.filters.minAmount;
+        if (options.filters.maxAmount)
+          where.amount.lte = options.filters.maxAmount;
       }
     }
 
@@ -92,7 +107,9 @@ export class TransactionRepository implements ITransactionRepository {
         where,
         skip: options.skip || 0,
         take: options.take || 50,
-        orderBy: { [options.sortBy || 'transactionDate']: options.sortOrder || 'desc' },
+        orderBy: {
+          [options.sortBy || "transactionDate"]: options.sortOrder || "desc",
+        },
       }),
       this.prisma.transaction.count({ where }),
     ]);
@@ -109,36 +126,40 @@ export class TransactionRepository implements ITransactionRepository {
     endDate: Date,
   ): Promise<Array<{ category: string; total: number }>> {
     const result = await this.prisma.transaction.groupBy({
-      by: ['category'],
+      by: ["category"],
       where: {
         userId,
         transactionDate: { gte: startDate, lte: endDate },
-        status: 'COMPLETED',
+        status: "COMPLETED",
       },
       _sum: { amount: true },
     });
 
     return result.map((r) => ({
       category: r.category,
-      total: parseFloat(r._sum.amount?.toString() || '0'),
+      total: parseFloat(r._sum.amount?.toString() || "0"),
     }));
   }
 
-  async getMonthlySpending(userId: string, year: number, month: number): Promise<number> {
+  async getMonthlySpending(
+    userId: string,
+    year: number,
+    month: number,
+  ): Promise<number> {
     const startDate = new Date(year, month - 1, 1);
     const endDate = new Date(year, month, 0, 23, 59, 59);
 
     const result = await this.prisma.transaction.aggregate({
       where: {
         userId,
-        type: 'DEBIT',
+        type: "DEBIT",
         transactionDate: { gte: startDate, lte: endDate },
-        status: 'COMPLETED',
+        status: "COMPLETED",
       },
       _sum: { amount: true },
     });
 
-    return parseFloat(result._sum.amount?.toString() || '0');
+    return parseFloat(result._sum.amount?.toString() || "0");
   }
 
   async getRecentTransactions(
@@ -154,7 +175,7 @@ export class TransactionRepository implements ITransactionRepository {
         userId,
         transactionDate: { gte: sinceDate },
       },
-      orderBy: { transactionDate: 'desc' },
+      orderBy: { transactionDate: "desc" },
       take: limit || 20,
     });
 

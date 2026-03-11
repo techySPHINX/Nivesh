@@ -1,73 +1,84 @@
-import { IsEmail, IsNotEmpty, IsOptional, IsString, MinLength, MaxLength, IsDateString } from 'class-validator';
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import {
+  IsEmail,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  MinLength,
+  MaxLength,
+  IsDateString,
+} from "class-validator";
+import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
 
 export class CreateUserDto {
-  @ApiProperty({ example: 'john.doe@example.com' })
+  @ApiProperty({ example: "john.doe@example.com" })
   @IsEmail()
   @IsNotEmpty()
   email: string;
 
-  @ApiProperty({ example: 'John' })
+  @ApiProperty({ example: "John" })
   @IsString()
   @IsNotEmpty()
   @MinLength(2)
   @MaxLength(50)
   firstName: string;
 
-  @ApiProperty({ example: 'Doe' })
+  @ApiProperty({ example: "Doe" })
   @IsString()
   @IsNotEmpty()
   @MinLength(2)
   @MaxLength(50)
   lastName: string;
 
-  @ApiPropertyOptional({ example: '+919876543210' })
+  @ApiPropertyOptional({ example: "+919876543210" })
   @IsOptional()
   @IsString()
   phoneNumber?: string;
 
-  @ApiPropertyOptional({ example: '1990-01-15' })
+  @ApiPropertyOptional({ example: "1990-01-15" })
   @IsOptional()
   @IsDateString()
   dateOfBirth?: string;
 
-  @ApiPropertyOptional({ example: 'firebase-uid-123' })
+  @ApiPropertyOptional({ example: "firebase-uid-123" })
   @IsOptional()
   @IsString()
   firebaseUid?: string;
 }
 
 export class UpdateUserDto {
-  @ApiPropertyOptional({ example: 'John' })
+  @ApiPropertyOptional({ example: "John" })
   @IsOptional()
   @IsString()
   @MinLength(2)
   @MaxLength(50)
   firstName?: string;
 
-  @ApiPropertyOptional({ example: 'Doe' })
+  @ApiPropertyOptional({ example: "Doe" })
   @IsOptional()
   @IsString()
   @MinLength(2)
   @MaxLength(50)
   lastName?: string;
 
-  @ApiPropertyOptional({ example: '+919876543210' })
+  @ApiPropertyOptional({ example: "+919876543210" })
   @IsOptional()
   @IsString()
   phoneNumber?: string;
 
-  @ApiPropertyOptional({ example: '1990-01-15' })
+  @ApiPropertyOptional({ example: "1990-01-15" })
   @IsOptional()
   @IsDateString()
   dateOfBirth?: string;
 
-  @ApiPropertyOptional({ example: 'https://example.com/photo.jpg' })
+  @ApiPropertyOptional({ example: "https://example.com/photo.jpg" })
   @IsOptional()
   @IsString()
   profilePicture?: string;
 
-  @ApiPropertyOptional({ example: 'moderate', enum: ['conservative', 'moderate', 'aggressive'] })
+  @ApiPropertyOptional({
+    example: "moderate",
+    enum: ["conservative", "moderate", "aggressive"],
+  })
   @IsOptional()
   @IsString()
   riskProfile?: string;

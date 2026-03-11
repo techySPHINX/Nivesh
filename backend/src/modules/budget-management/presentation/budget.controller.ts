@@ -11,8 +11,8 @@ import {
   Request,
   HttpCode,
   HttpStatus,
-} from '@nestjs/common';
-import { CommandBus, QueryBus } from '@nestjs/cqrs';
+} from "@nestjs/common";
+import { CommandBus, QueryBus } from "@nestjs/cqrs";
 import {
   ApiTags,
   ApiOperation,
@@ -20,28 +20,28 @@ import {
   ApiBearerAuth,
   ApiParam,
   ApiQuery,
-} from '@nestjs/swagger';
+} from "@nestjs/swagger";
 import {
   CreateBudgetDto,
   UpdateBudgetDto,
   BudgetResponseDto,
   BudgetSpendingDto,
-} from '../application/dto';
+} from "../application/dto";
 import {
   CreateBudgetCommand,
   UpdateBudgetCommand,
   DeleteBudgetCommand,
-} from '../application/commands';
+} from "../application/commands";
 import {
   GetBudgetQuery,
   GetUserBudgetsQuery,
   GetBudgetSpendingQuery,
-} from '../application/queries';
-import { JwtAuthGuard } from '../../core/security/guards/jwt-auth.guard';
+} from "../application/queries";
+import { JwtAuthGuard } from "../../../core/security/auth/guards/jwt-auth.guard";
 
-@ApiTags('Budgets')
+@ApiTags("Budgets")
 @ApiBearerAuth()
-@Controller('budgets')
+@Controller("budgets")
 @UseGuards(JwtAuthGuard)
 export class BudgetController {
   constructor(
@@ -50,14 +50,14 @@ export class BudgetController {
   ) {}
 
   @Post()
-  @ApiOperation({ summary: 'Create a new budget' })
+  @ApiOperation({ summary: "Create a new budget" })
   @ApiResponse({
     status: HttpStatus.CREATED,
-    description: 'Budget created successfully',
+    description: "Budget created successfully",
     type: BudgetResponseDto,
   })
-  @ApiResponse({ status: HttpStatus.BAD_REQUEST, description: 'Invalid input' })
-  @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized' })
+  @ApiResponse({ status: HttpStatus.BAD_REQUEST, description: "Invalid input" })
+  @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: "Unauthorized" })
   async createBudget(
     @Request() req,
     @Body() createBudgetDto: CreateBudgetDto,
@@ -68,79 +68,89 @@ export class BudgetController {
   }
 
   @Get()
-  @ApiOperation({ summary: 'Get all budgets for the current user' })
-  @ApiQuery({ name: 'isActive', required: false, type: Boolean })
+  @ApiOperation({ summary: "Get all budgets for the current user" })
+  @ApiQuery({ name: "isActive", required: false, type: Boolean })
   @ApiResponse({
     status: HttpStatus.OK,
-    description: 'Budgets retrieved successfully',
+    description: "Budgets retrieved successfully",
     type: [BudgetResponseDto],
   })
-  @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized' })
+  @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: "Unauthorized" })
   async getUserBudgets(
     @Request() req,
-    @Query('isActive') isActive?: string,
+    @Query("isActive") isActive?: string,
   ): Promise<BudgetResponseDto[]> {
     const userId = req.user.sub || req.user.userId;
-    const isActiveBoolean = isActive === 'true' ? true : isActive === 'false' ? false : undefined;
+    const isActiveBoolean =
+      isActive === "true" ? true : isActive === "false" ? false : undefined;
     const query = new GetUserBudgetsQuery(userId, isActiveBoolean);
     return this.queryBus.execute(query);
   }
 
-  @Get(':id')
-  @ApiOperation({ summary: 'Get budget by ID' })
-  @ApiParam({ name: 'id', description: 'Budget ID' })
+  @Get(":id")
+  @ApiOperation({ summary: "Get budget by ID" })
+  @ApiParam({ name: "id", description: "Budget ID" })
   @ApiResponse({
     status: HttpStatus.OK,
-    description: 'Budget retrieved successfully',
+    description: "Budget retrieved successfully",
     type: BudgetResponseDto,
   })
-  @ApiResponse({ status: HttpStatus.NOT_FOUND, description: 'Budget not found' })
-  @ApiResponse({ status: HttpStatus.FORBIDDEN, description: 'Access denied' })
-  @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized' })
+  @ApiResponse({
+    status: HttpStatus.NOT_FOUND,
+    description: "Budget not found",
+  })
+  @ApiResponse({ status: HttpStatus.FORBIDDEN, description: "Access denied" })
+  @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: "Unauthorized" })
   async getBudget(
     @Request() req,
-    @Param('id') budgetId: string,
+    @Param("id") budgetId: string,
   ): Promise<BudgetResponseDto> {
     const userId = req.user.sub || req.user.userId;
     const query = new GetBudgetQuery(budgetId, userId);
     return this.queryBus.execute(query);
   }
 
-  @Get(':id/spending')
-  @ApiOperation({ summary: 'Get budget spending analysis' })
-  @ApiParam({ name: 'id', description: 'Budget ID' })
+  @Get(":id/spending")
+  @ApiOperation({ summary: "Get budget spending analysis" })
+  @ApiParam({ name: "id", description: "Budget ID" })
   @ApiResponse({
     status: HttpStatus.OK,
-    description: 'Budget spending retrieved successfully',
+    description: "Budget spending retrieved successfully",
     type: BudgetSpendingDto,
   })
-  @ApiResponse({ status: HttpStatus.NOT_FOUND, description: 'Budget not found' })
-  @ApiResponse({ status: HttpStatus.FORBIDDEN, description: 'Access denied' })
-  @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized' })
+  @ApiResponse({
+    status: HttpStatus.NOT_FOUND,
+    description: "Budget not found",
+  })
+  @ApiResponse({ status: HttpStatus.FORBIDDEN, description: "Access denied" })
+  @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: "Unauthorized" })
   async getBudgetSpending(
     @Request() req,
-    @Param('id') budgetId: string,
+    @Param("id") budgetId: string,
   ): Promise<BudgetSpendingDto> {
     const userId = req.user.sub || req.user.userId;
     const query = new GetBudgetSpendingQuery(budgetId, userId);
     return this.queryBus.execute(query);
   }
 
-  @Patch(':id')
-  @ApiOperation({ summary: 'Update budget' })
-  @ApiParam({ name: 'id', description: 'Budget ID' })
+  @Patch(":id")
+  @ApiOperation({ summary: "Update budget" })
+  @ApiParam({ name: "id", description: "Budget ID" })
   @ApiResponse({
     status: HttpStatus.OK,
-    description: 'Budget updated successfully',
+    description: "Budget updated successfully",
     type: BudgetResponseDto,
   })
-  @ApiResponse({ status: HttpStatus.NOT_FOUND, description: 'Budget not found' })
-  @ApiResponse({ status: HttpStatus.BAD_REQUEST, description: 'Invalid input' })
-  @ApiResponse({ status: HttpStatus.FORBIDDEN, description: 'Access denied' })
-  @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized' })
+  @ApiResponse({
+    status: HttpStatus.NOT_FOUND,
+    description: "Budget not found",
+  })
+  @ApiResponse({ status: HttpStatus.BAD_REQUEST, description: "Invalid input" })
+  @ApiResponse({ status: HttpStatus.FORBIDDEN, description: "Access denied" })
+  @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: "Unauthorized" })
   async updateBudget(
     @Request() req,
-    @Param('id') budgetId: string,
+    @Param("id") budgetId: string,
     @Body() updateBudgetDto: UpdateBudgetDto,
   ): Promise<BudgetResponseDto> {
     const userId = req.user.sub || req.user.userId;
@@ -148,17 +158,23 @@ export class BudgetController {
     return this.commandBus.execute(command);
   }
 
-  @Delete(':id')
+  @Delete(":id")
   @HttpCode(HttpStatus.NO_CONTENT)
-  @ApiOperation({ summary: 'Delete budget' })
-  @ApiParam({ name: 'id', description: 'Budget ID' })
-  @ApiResponse({ status: HttpStatus.NO_CONTENT, description: 'Budget deleted successfully' })
-  @ApiResponse({ status: HttpStatus.NOT_FOUND, description: 'Budget not found' })
-  @ApiResponse({ status: HttpStatus.FORBIDDEN, description: 'Access denied' })
-  @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized' })
+  @ApiOperation({ summary: "Delete budget" })
+  @ApiParam({ name: "id", description: "Budget ID" })
+  @ApiResponse({
+    status: HttpStatus.NO_CONTENT,
+    description: "Budget deleted successfully",
+  })
+  @ApiResponse({
+    status: HttpStatus.NOT_FOUND,
+    description: "Budget not found",
+  })
+  @ApiResponse({ status: HttpStatus.FORBIDDEN, description: "Access denied" })
+  @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: "Unauthorized" })
   async deleteBudget(
     @Request() req,
-    @Param('id') budgetId: string,
+    @Param("id") budgetId: string,
   ): Promise<void> {
     const userId = req.user.sub || req.user.userId;
     const command = new DeleteBudgetCommand(budgetId, userId);

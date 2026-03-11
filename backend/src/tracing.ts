@@ -5,22 +5,25 @@
  * Initialises the NodeSDK with OTLP exporters for traces and metrics,
  * automatic HTTP/Express instrumentation, and Kafka propagation.
  */
-import { NodeSDK } from '@opentelemetry/sdk-node';
-import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http';
-import { OTLPMetricExporter } from '@opentelemetry/exporter-metrics-otlp-http';
-import { getNodeAutoInstrumentations } from '@opentelemetry/auto-instrumentations-node';
-import { Resource } from '@opentelemetry/resources';
-import { ATTR_SERVICE_NAME, ATTR_SERVICE_VERSION } from '@opentelemetry/semantic-conventions';
-import { PeriodicExportingMetricReader } from '@opentelemetry/sdk-metrics';
+import { NodeSDK } from "@opentelemetry/sdk-node";
+import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-http";
+import { OTLPMetricExporter } from "@opentelemetry/exporter-metrics-otlp-http";
+import { getNodeAutoInstrumentations } from "@opentelemetry/auto-instrumentations-node";
+import { Resource } from "@opentelemetry/resources";
+import {
+  ATTR_SERVICE_NAME,
+  ATTR_SERVICE_VERSION,
+} from "@opentelemetry/semantic-conventions";
+import { PeriodicExportingMetricReader } from "@opentelemetry/sdk-metrics";
 
 const OTLP_ENDPOINT =
-  process.env.OTEL_EXPORTER_OTLP_ENDPOINT || 'http://localhost:4318';
+  process.env.OTEL_EXPORTER_OTLP_ENDPOINT || "http://localhost:4318";
 
 const sdk = new NodeSDK({
   resource: new Resource({
-    [ATTR_SERVICE_NAME]: process.env.OTEL_SERVICE_NAME || 'nivesh-backend',
-    [ATTR_SERVICE_VERSION]: process.env.npm_package_version || '0.0.1',
-    'deployment.environment': process.env.NODE_ENV || 'development',
+    [ATTR_SERVICE_NAME]: process.env.OTEL_SERVICE_NAME || "nivesh-backend",
+    [ATTR_SERVICE_VERSION]: process.env.npm_package_version || "0.0.1",
+    "deployment.environment": process.env.NODE_ENV || "development",
   }),
   traceExporter: new OTLPTraceExporter({
     url: `${OTLP_ENDPOINT}/v1/traces`,
@@ -30,25 +33,25 @@ const sdk = new NodeSDK({
       url: `${OTLP_ENDPOINT}/v1/metrics`,
     }),
     exportIntervalMillis: 15_000,
-  }),
+  }) as any,
   instrumentations: [
     getNodeAutoInstrumentations({
-      '@opentelemetry/instrumentation-http': {
+      "@opentelemetry/instrumentation-http": {
         ignoreIncomingRequestHook: (req) =>
-          req.url === '/health' || req.url === '/metrics',
+          req.url === "/health" || req.url === "/metrics",
       },
-      '@opentelemetry/instrumentation-fs': { enabled: false },
+      "@opentelemetry/instrumentation-fs": { enabled: false },
     }),
   ],
 });
 
 sdk.start();
 
-process.on('SIGTERM', () => {
+process.on("SIGTERM", () => {
   sdk
     .shutdown()
-    .then(() => console.log('OpenTelemetry SDK shut down'))
-    .catch((err) => console.error('Error shutting down OTel SDK', err))
+    .then(() => console.log("OpenTelemetry SDK shut down"))
+    .catch((err) => console.error("Error shutting down OTel SDK", err))
     .finally(() => process.exit(0));
 });
 

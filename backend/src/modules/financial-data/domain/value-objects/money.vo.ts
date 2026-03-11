@@ -1,10 +1,10 @@
-import { DomainException } from '../../../../core/exceptions/base.exception';
+import { DomainException } from "../../../../core/exceptions/base.exception";
 
 export enum Currency {
-  INR = 'INR',
-  USD = 'USD',
-  EUR = 'EUR',
-  GBP = 'GBP',
+  INR = "INR",
+  USD = "USD",
+  EUR = "EUR",
+  GBP = "GBP",
 }
 
 export class Money {
@@ -19,20 +19,20 @@ export class Money {
 
   private validate(amount: number): void {
     if (amount === null || amount === undefined) {
-      throw new DomainException('Amount cannot be null or undefined');
+      throw new DomainException("Amount cannot be null or undefined");
     }
 
     if (isNaN(amount)) {
-      throw new DomainException('Amount must be a valid number');
+      throw new DomainException("Amount must be a valid number");
     }
 
     if (amount < 0) {
-      throw new DomainException('Amount cannot be negative');
+      throw new DomainException("Amount cannot be negative");
     }
 
     // Max amount: 1 billion (for safety)
     if (amount > 1_000_000_000) {
-      throw new DomainException('Amount exceeds maximum limit');
+      throw new DomainException("Amount exceeds maximum limit");
     }
   }
 
@@ -54,14 +54,14 @@ export class Money {
     this.assertSameCurrency(other);
     const newAmount = this.amount - other.amount;
     if (newAmount < 0) {
-      throw new DomainException('Subtraction results in negative amount');
+      throw new DomainException("Subtraction results in negative amount");
     }
     return new Money(newAmount, this.currency);
   }
 
   multiply(factor: number): Money {
     if (factor < 0) {
-      throw new DomainException('Factor cannot be negative');
+      throw new DomainException("Factor cannot be negative");
     }
     return new Money(this.amount * factor, this.currency);
   }
@@ -87,8 +87,8 @@ export class Money {
 
   // Format for display
   format(): string {
-    const formatter = new Intl.NumberFormat('en-IN', {
-      style: 'currency',
+    const formatter = new Intl.NumberFormat("en-IN", {
+      style: "currency",
       currency: this.currency,
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,

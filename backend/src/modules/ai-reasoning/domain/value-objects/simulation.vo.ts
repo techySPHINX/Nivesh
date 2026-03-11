@@ -4,12 +4,12 @@
  */
 
 export enum ScenarioType {
-  NEW_EXPENSE = 'NEW_EXPENSE',
-  INCOME_CHANGE = 'INCOME_CHANGE',
-  GOAL_ADDITION = 'GOAL_ADDITION',
-  INVESTMENT_INCREASE = 'INVESTMENT_INCREASE',
-  DEBT_PAYOFF = 'DEBT_PAYOFF',
-  LIFESTYLE_CHANGE = 'LIFESTYLE_CHANGE',
+  NEW_EXPENSE = "NEW_EXPENSE",
+  INCOME_CHANGE = "INCOME_CHANGE",
+  GOAL_ADDITION = "GOAL_ADDITION",
+  INVESTMENT_INCREASE = "INVESTMENT_INCREASE",
+  DEBT_PAYOFF = "DEBT_PAYOFF",
+  LIFESTYLE_CHANGE = "LIFESTYLE_CHANGE",
 }
 
 export interface ScenarioParameters {
@@ -32,15 +32,15 @@ export class SimulationResult {
     public readonly scenarioType: ScenarioType,
     public readonly parameters: ScenarioParameters,
     public readonly outcomes: ProjectedOutcome[],
-    public readonly impact: 'positive' | 'neutral' | 'negative',
-    public readonly feasibility: 'feasible' | 'challenging' | 'unfeasible',
+    public readonly impact: "positive" | "neutral" | "negative",
+    public readonly feasibility: "feasible" | "challenging" | "unfeasible",
     public readonly insights: string[],
     public readonly alternatives: string[],
     public readonly generatedAt: Date = new Date(),
-  ) { }
+  ) {}
 
   isViable(): boolean {
-    return this.feasibility !== 'unfeasible' && this.impact !== 'negative';
+    return this.feasibility !== "unfeasible" && this.impact !== "negative";
   }
 
   getKeyImpacts(): ProjectedOutcome[] {

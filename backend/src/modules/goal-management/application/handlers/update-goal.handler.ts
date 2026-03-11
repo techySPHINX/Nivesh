@@ -1,17 +1,23 @@
-import { CommandHandler, ICommandHandler, EventBus } from '@nestjs/cqrs';
-import { Inject, NotFoundException, ForbiddenException } from '@nestjs/common';
-import { UpdateGoalCommand } from '../commands/update-goal.command';
-import { Goal } from '../../domain/entities/goal.entity';
-import { IGoalRepository, GOAL_REPOSITORY } from '../../domain/repositories/goal.repository.interface';
-import { GoalUpdatedEvent } from '../../domain/events/goal.events';
-import { GoalResponseDto } from '../dto/goal-response.dto';
+import { CommandHandler, ICommandHandler, EventBus } from "@nestjs/cqrs";
+import { Inject, NotFoundException, ForbiddenException } from "@nestjs/common";
+import { UpdateGoalCommand } from "../commands/update-goal.command";
+import { Goal } from "../../domain/entities/goal.entity";
+import {
+  IGoalRepository,
+  GOAL_REPOSITORY,
+} from "../../domain/repositories/goal.repository.interface";
+import { GoalUpdatedEvent } from "../../domain/events/goal.events";
+import { GoalResponseDto } from "../dto/goal-response.dto";
 
 @CommandHandler(UpdateGoalCommand)
-export class UpdateGoalHandler implements ICommandHandler<UpdateGoalCommand, GoalResponseDto> {
+export class UpdateGoalHandler implements ICommandHandler<
+  UpdateGoalCommand,
+  GoalResponseDto
+> {
   constructor(
     @Inject(GOAL_REPOSITORY) private readonly goalRepository: IGoalRepository,
     private readonly eventBus: EventBus,
-  ) { }
+  ) {}
 
   async execute(command: UpdateGoalCommand): Promise<GoalResponseDto> {
     const { userId, goalId, dto } = command;
@@ -19,12 +25,14 @@ export class UpdateGoalHandler implements ICommandHandler<UpdateGoalCommand, Goa
     // Find existing goal
     const goal = await this.goalRepository.findById(goalId);
     if (!goal) {
-      throw new NotFoundException('Goal not found');
+      throw new NotFoundException("Goal not found");
     }
 
     // Check ownership
     if (goal.userId !== userId) {
-      throw new ForbiddenException('You do not have permission to update this goal');
+      throw new ForbiddenException(
+        "You do not have permission to update this goal",
+      );
     }
 
     // Update goal
@@ -38,8 +46,17 @@ export class UpdateGoalHandler implements ICommandHandler<UpdateGoalCommand, Goa
 
     // Update auto-contribution settings if provided
     if (dto.autoContribute !== undefined) {
-      if (dto.autoContribute && dto.contributionAmount && dto.contributionFrequency && dto.linkedAccountId) {
-        goal.enableAutoContribution(dto.contributionAmount, dto.contributionFrequency, dto.linkedAccountId);
+      if (
+        dto.autoContribute &&
+        dto.contributionAmount &&
+        dto.contributionFrequency &&
+        dto.linkedAccountId
+      ) {
+        goal.enableAutoContribution(
+          dto.contributionAmount,
+          dto.contributionFrequency,
+          dto.linkedAccountId,
+        );
       } else if (!dto.autoContribute) {
         goal.disableAutoContribution();
       }

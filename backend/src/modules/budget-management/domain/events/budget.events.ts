@@ -1,5 +1,8 @@
-import { BaseEvent, EventType } from '../../../../core/messaging/events/base.event';
-import { BudgetPeriod, AlertThreshold } from '../entities/budget.entity';
+import {
+  BaseEvent,
+  EventType,
+} from "../../../../core/messaging/events/base.event";
+import { BudgetPeriod, AlertThreshold } from "../entities/budget.entity";
 
 /**
  * Budget Created Event
@@ -17,7 +20,7 @@ export class BudgetCreatedEvent extends BaseEvent {
     super({
       eventType: EventType.BUDGET_CREATED,
       aggregateId: budgetId,
-      aggregateType: 'Budget',
+      aggregateType: "Budget",
     });
   }
 }
@@ -37,7 +40,7 @@ export class BudgetExceededEvent extends BaseEvent {
     super({
       eventType: EventType.BUDGET_EXCEEDED,
       aggregateId: budgetId,
-      aggregateType: 'Budget',
+      aggregateType: "Budget",
     });
   }
 }
@@ -58,7 +61,7 @@ export class BudgetThresholdReachedEvent extends BaseEvent {
     super({
       eventType: EventType.BUDGET_THRESHOLD_REACHED,
       aggregateId: budgetId,
-      aggregateType: 'Budget',
+      aggregateType: "Budget",
     });
   }
 }
@@ -78,7 +81,7 @@ export class CategoryBudgetExceededEvent extends BaseEvent {
     super({
       eventType: EventType.CATEGORY_BUDGET_EXCEEDED,
       aggregateId: budgetId,
-      aggregateType: 'Budget',
+      aggregateType: "Budget",
     });
   }
 }
@@ -95,7 +98,7 @@ export class BudgetUpdatedEvent extends BaseEvent {
     super({
       eventType: EventType.BUDGET_UPDATED,
       aggregateId: budgetId,
-      aggregateType: 'Budget',
+      aggregateType: "Budget",
     });
   }
 }
@@ -115,7 +118,7 @@ export class BudgetCompletedEvent extends BaseEvent {
     super({
       eventType: EventType.BUDGET_COMPLETED,
       aggregateId: budgetId,
-      aggregateType: 'Budget',
+      aggregateType: "Budget",
     });
   }
 }

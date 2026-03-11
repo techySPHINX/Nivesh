@@ -1,13 +1,18 @@
-import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import { QdrantClient } from '@qdrant/qdrant-js';
-import { v4 as uuidv4 } from 'uuid';
-import { IVectorStore, VectorSearchOptions, VectorSearchResult, VectorSearchFilter } from '../../domain/interfaces/vector-store.interface';
-import { VectorDocument } from '../../domain/entities/vector-document.entity';
+import { Injectable, Logger, OnModuleInit } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
+import { QdrantClient } from "@qdrant/qdrant-js";
+import { v4 as uuidv4 } from "uuid";
+import {
+  IVectorStore,
+  VectorSearchOptions,
+  VectorSearchResult,
+  VectorSearchFilter,
+} from "../../domain/interfaces/vector-store.interface";
+import { VectorDocument } from "../../domain/entities/vector-document.entity";
 
 /**
  * Qdrant Vector Store Implementation
- * 
+ *
  * Manages vector database operations using Qdrant
  * - Collection management
  * - Document indexing (single & batch)
@@ -20,8 +25,8 @@ export class QdrantService implements IVectorStore, OnModuleInit {
   private client: QdrantClient;
 
   constructor(private readonly configService: ConfigService) {
-    const qdrantUrl = this.configService.get<string>('qdrant.url');
-    const apiKey = this.configService.get<string>('qdrant.apiKey');
+    const qdrantUrl = this.configService.get<string>("qdrant.url");
+    const apiKey = this.configService.get<string>("qdrant.apiKey");
 
     this.client = new QdrantClient({
       url: qdrantUrl,
@@ -35,8 +40,8 @@ export class QdrantService implements IVectorStore, OnModuleInit {
    * Initialize collections on module startup
    */
   async onModuleInit() {
-    const collections = this.configService.get('qdrant.collections');
-    
+    const collections = this.configService.get("qdrant.collections");
+
     try {
       await this.ensureCollection(
         collections.userContext.name,
@@ -56,9 +61,9 @@ export class QdrantService implements IVectorStore, OnModuleInit {
         collections.conversations.distance,
       );
 
-      this.logger.log('All Qdrant collections initialized successfully');
+      this.logger.log("All Qdrant collections initialized successfully");
     } catch (error) {
-      this.logger.error('Failed to initialize Qdrant collections:', error);
+      this.logger.error("Failed to initialize Qdrant collections:", error);
       throw error;
     }
   }
@@ -69,7 +74,7 @@ export class QdrantService implements IVectorStore, OnModuleInit {
   async ensureCollection(
     name: string,
     vectorSize: number,
-    distance: 'Cosine' | 'Euclid' | 'Dot',
+    distance: "Cosine" | "Euclid" | "Dot",
   ): Promise<void> {
     try {
       const exists = await this.client.collectionExists(name);
@@ -79,7 +84,9 @@ export class QdrantService implements IVectorStore, OnModuleInit {
         return;
       }
 
-      this.logger.log(`Creating collection: ${name} (size: ${vectorSize}, distance: ${distance})`);
+      this.logger.log(
+        `Creating collection: ${name} (size: ${vectorSize}, distance: ${distance})`,
+      );
 
       await this.client.createCollection(name, {
         vectors: {
@@ -103,13 +110,13 @@ export class QdrantService implements IVectorStore, OnModuleInit {
    */
   private async createPayloadIndices(collection: string): Promise<void> {
     const commonIndices = [
-      { field: 'userId', type: 'keyword' },
-      { field: 'contextType', type: 'keyword' },
-      { field: 'category', type: 'keyword' },
-      { field: 'date', type: 'datetime' },
-      { field: 'amount', type: 'float' },
-      { field: 'knowledgeType', type: 'keyword' },
-      { field: 'tags', type: 'keyword' },
+      { field: "userId", type: "keyword" },
+      { field: "contextType", type: "keyword" },
+      { field: "category", type: "keyword" },
+      { field: "date", type: "datetime" },
+      { field: "amount", type: "float" },
+      { field: "knowledgeType", type: "keyword" },
+      { field: "tags", type: "keyword" },
     ];
 
     for (const index of commonIndices) {
@@ -168,7 +175,7 @@ export class QdrantService implements IVectorStore, OnModuleInit {
   ): Promise<string[]> {
     if (documents.length === 0) return [];
 
-    const ids = documents.map(doc => doc.id || uuidv4());
+    const ids = documents.map((doc) => doc.id || uuidv4());
     const points = documents.map((doc, i) => ({
       id: ids[i],
       vector: doc.vector,
@@ -185,7 +192,9 @@ export class QdrantService implements IVectorStore, OnModuleInit {
         points,
       });
 
-      this.logger.log(`Batch indexed ${documents.length} documents in collection '${collection}'`);
+      this.logger.log(
+        `Batch indexed ${documents.length} documents in collection '${collection}'`,
+      );
       return ids;
     } catch (error) {
       this.logger.error(`Failed to batch index in '${collection}':`, error);
@@ -218,7 +227,7 @@ export class QdrantService implements IVectorStore, OnModuleInit {
         with_payload: true,
       });
 
-      return results.map(result => ({
+      return results.map((result) => ({
         id: result.id.toString(),
         score: result.score,
         payload: result.payload as Record<string, any>,
@@ -239,35 +248,35 @@ export class QdrantService implements IVectorStore, OnModuleInit {
 
     if (filter.userId) {
       must.push({
-        key: 'userId',
+        key: "userId",
         match: { value: filter.userId },
       });
     }
 
     if (filter.contextType) {
       must.push({
-        key: 'contextType',
+        key: "contextType",
         match: { value: filter.contextType },
       });
     }
 
     if (filter.categories && filter.categories.length > 0) {
       must.push({
-        key: 'category',
+        key: "category",
         match: { any: filter.categories },
       });
     }
 
     if (filter.tags && filter.tags.length > 0) {
       must.push({
-        key: 'tags',
+        key: "tags",
         match: { any: filter.tags },
       });
     }
 
     if (filter.dateRange) {
       must.push({
-        key: 'date',
+        key: "date",
         range: {
           gte: filter.dateRange.from.toISOString(),
           lte: filter.dateRange.to.toISOString(),
@@ -279,9 +288,9 @@ export class QdrantService implements IVectorStore, OnModuleInit {
       const range: any = {};
       if (filter.minAmount !== undefined) range.gte = filter.minAmount;
       if (filter.maxAmount !== undefined) range.lte = filter.maxAmount;
-      
+
       must.push({
-        key: 'amount',
+        key: "amount",
         range,
       });
     }
@@ -302,7 +311,10 @@ export class QdrantService implements IVectorStore, OnModuleInit {
   /**
    * Get document by ID
    */
-  async getDocument(collection: string, id: string): Promise<VectorDocument | null> {
+  async getDocument(
+    collection: string,
+    id: string,
+  ): Promise<VectorDocument | null> {
     try {
       const results = await this.client.retrieve(collection, {
         ids: [id],
@@ -319,10 +331,15 @@ export class QdrantService implements IVectorStore, OnModuleInit {
         vector: point.vector as number[],
         metadata: point.payload as Record<string, any>,
         createdAt: new Date((point.payload as any).createdAt),
-        updatedAt: (point.payload as any).updatedAt ? new Date((point.payload as any).updatedAt) : undefined,
+        updatedAt: (point.payload as any).updatedAt
+          ? new Date((point.payload as any).updatedAt)
+          : undefined,
       });
     } catch (error) {
-      this.logger.error(`Failed to get document ${id} from '${collection}':`, error);
+      this.logger.error(
+        `Failed to get document ${id} from '${collection}':`,
+        error,
+      );
       return null;
     }
   }
@@ -338,7 +355,9 @@ export class QdrantService implements IVectorStore, OnModuleInit {
     try {
       const existing = await this.getDocument(collection, id);
       if (!existing) {
-        throw new Error(`Document ${id} not found in collection '${collection}'`);
+        throw new Error(
+          `Document ${id} not found in collection '${collection}'`,
+        );
       }
 
       const updated = new VectorDocument({
@@ -377,7 +396,9 @@ export class QdrantService implements IVectorStore, OnModuleInit {
       await this.client.delete(collection, {
         points: [id],
       });
-      this.logger.debug(`Deleted document ${id} from collection '${collection}'`);
+      this.logger.debug(
+        `Deleted document ${id} from collection '${collection}'`,
+      );
     } catch (error) {
       this.logger.error(`Failed to delete document ${id}:`, error);
       throw error;
@@ -387,7 +408,10 @@ export class QdrantService implements IVectorStore, OnModuleInit {
   /**
    * Delete multiple documents matching filter
    */
-  async deleteBatch(collection: string, filter: VectorSearchFilter): Promise<number> {
+  async deleteBatch(
+    collection: string,
+    filter: VectorSearchFilter,
+  ): Promise<number> {
     try {
       const qdrantFilter = this.buildQdrantFilter(filter);
       const result = await this.client.delete(collection, {
@@ -395,7 +419,7 @@ export class QdrantService implements IVectorStore, OnModuleInit {
       });
 
       this.logger.log(`Deleted documents from collection '${collection}'`);
-      return result.status === 'acknowledged' ? 1 : 0;
+      return result.status === "acknowledged" ? 1 : 0;
     } catch (error) {
       this.logger.error(`Failed to delete batch in '${collection}':`, error);
       throw error;
@@ -405,7 +429,10 @@ export class QdrantService implements IVectorStore, OnModuleInit {
   /**
    * Count documents in collection
    */
-  async count(collection: string, filter?: VectorSearchFilter): Promise<number> {
+  async count(
+    collection: string,
+    filter?: VectorSearchFilter,
+  ): Promise<number> {
     try {
       const qdrantFilter = this.buildQdrantFilter(filter);
       const result = await this.client.count(collection, {
@@ -426,7 +453,7 @@ export class QdrantService implements IVectorStore, OnModuleInit {
       await this.client.getCollections();
       return true;
     } catch (error) {
-      this.logger.error('Qdrant health check failed:', error);
+      this.logger.error("Qdrant health check failed:", error);
       return false;
     }
   }

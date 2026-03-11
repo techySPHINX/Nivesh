@@ -1,19 +1,19 @@
-import { v4 as uuidv4 } from 'uuid';
+import { v4 as uuidv4 } from "uuid";
 
 /**
  * Enum for different types of nodes in the knowledge graph
  * Represents the core entities that form the financial knowledge network
  */
 export enum NodeType {
-  USER = 'USER',
-  ACCOUNT = 'ACCOUNT',
-  TRANSACTION = 'TRANSACTION',
-  CATEGORY = 'CATEGORY',
-  BUDGET = 'BUDGET',
-  GOAL = 'GOAL',
-  MERCHANT = 'MERCHANT',
-  LOCATION = 'LOCATION',
-  TAG = 'TAG',
+  USER = "USER",
+  ACCOUNT = "ACCOUNT",
+  TRANSACTION = "TRANSACTION",
+  CATEGORY = "CATEGORY",
+  BUDGET = "BUDGET",
+  GOAL = "GOAL",
+  MERCHANT = "MERCHANT",
+  LOCATION = "LOCATION",
+  TAG = "TAG",
 }
 
 /**
@@ -29,7 +29,7 @@ export interface NodeProperties {
 /**
  * Domain entity representing a node in the knowledge graph
  * Each node represents a core financial entity with its properties and metadata
- * 
+ *
  * Business Rules:
  * - Every node must have a unique identifier
  * - Node type determines validation rules and allowed relationships
@@ -63,7 +63,7 @@ export class GraphNode {
    */
   static create(
     type: NodeType,
-    properties: Omit<NodeProperties, 'id' | 'createdAt' | 'updatedAt'>,
+    properties: Omit<NodeProperties, "id" | "createdAt" | "updatedAt">,
   ): GraphNode {
     const id = uuidv4();
     const now = new Date();
@@ -136,10 +136,7 @@ export class GraphNode {
         NodeType.GOAL,
         NodeType.USER, // For similar users
       ],
-      [NodeType.ACCOUNT]: [
-        NodeType.USER,
-        NodeType.TRANSACTION,
-      ],
+      [NodeType.ACCOUNT]: [NodeType.USER, NodeType.TRANSACTION],
       [NodeType.TRANSACTION]: [
         NodeType.ACCOUNT,
         NodeType.CATEGORY,
@@ -158,19 +155,13 @@ export class GraphNode {
         NodeType.CATEGORY,
         NodeType.TRANSACTION,
       ],
-      [NodeType.GOAL]: [
-        NodeType.USER,
-        NodeType.ACCOUNT,
-      ],
+      [NodeType.GOAL]: [NodeType.USER, NodeType.ACCOUNT],
       [NodeType.MERCHANT]: [
         NodeType.TRANSACTION,
         NodeType.LOCATION,
         NodeType.MERCHANT, // For merchant networks
       ],
-      [NodeType.LOCATION]: [
-        NodeType.TRANSACTION,
-        NodeType.MERCHANT,
-      ],
+      [NodeType.LOCATION]: [NodeType.TRANSACTION, NodeType.MERCHANT],
       [NodeType.TAG]: [
         NodeType.TRANSACTION,
         NodeType.TAG, // For tag hierarchies

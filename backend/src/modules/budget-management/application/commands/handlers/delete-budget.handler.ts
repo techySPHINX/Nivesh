@@ -1,7 +1,11 @@
-import { CommandHandler, ICommandHandler, EventBus } from '@nestjs/cqrs';
-import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
-import { DeleteBudgetCommand } from '../delete-budget.command';
-import { PrismaService } from '../../../../../core/database/postgres/prisma.service';
+import { CommandHandler, ICommandHandler, EventBus } from "@nestjs/cqrs";
+import {
+  Injectable,
+  NotFoundException,
+  ForbiddenException,
+} from "@nestjs/common";
+import { DeleteBudgetCommand } from "../delete-budget.command";
+import { PrismaService } from "../../../../../core/database/postgres/prisma.service";
 
 @CommandHandler(DeleteBudgetCommand)
 @Injectable()
@@ -24,7 +28,9 @@ export class DeleteBudgetHandler implements ICommandHandler<DeleteBudgetCommand>
     }
 
     if (existingBudget.userId !== userId) {
-      throw new ForbiddenException('You do not have permission to delete this budget');
+      throw new ForbiddenException(
+        "You do not have permission to delete this budget",
+      );
     }
 
     // Delete budget

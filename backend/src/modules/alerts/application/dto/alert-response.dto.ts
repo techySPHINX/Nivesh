@@ -1,5 +1,9 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { Alert, AlertType, AlertSeverity } from '../../domain/entities/alert.entity';
+import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
+import {
+  Alert,
+  AlertType,
+  AlertSeverity,
+} from "../../domain/entities/alert.entity";
 
 export class AlertResponseDto {
   @ApiProperty()

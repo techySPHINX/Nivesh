@@ -1,5 +1,8 @@
-import { BaseEvent, EventType } from '../../../../core/messaging/events/base.event';
-import { AccountType } from '../entities/account.entity';
+import {
+  BaseEvent,
+  EventType,
+} from "../../../../core/messaging/events/base.event";
+import { AccountType } from "../entities/account.entity";
 
 export class AccountCreatedEvent extends BaseEvent {
   constructor(
@@ -12,7 +15,7 @@ export class AccountCreatedEvent extends BaseEvent {
     super({
       eventType: EventType.ACCOUNT_CREATED,
       aggregateId: accountId,
-      aggregateType: 'Account',
+      aggregateType: "Account",
     });
   }
 }
@@ -26,7 +29,7 @@ export class AccountUpdatedEvent extends BaseEvent {
     super({
       eventType: EventType.ACCOUNT_UPDATED,
       aggregateId: accountId,
-      aggregateType: 'Account',
+      aggregateType: "Account",
     });
   }
 }
@@ -39,7 +42,7 @@ export class AccountDeletedEvent extends BaseEvent {
     super({
       eventType: EventType.ACCOUNT_DELETED,
       aggregateId: accountId,
-      aggregateType: 'Account',
+      aggregateType: "Account",
     });
   }
 }

@@ -1,5 +1,5 @@
-import { Module, Global } from '@nestjs/common';
-import { Neo4jService } from './neo4j.service';
+import { Module, Global } from "@nestjs/common";
+import { Neo4jService } from "./neo4j.service";
 
 @Global()
 @Module({

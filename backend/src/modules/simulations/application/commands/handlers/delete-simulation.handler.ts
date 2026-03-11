@@ -1,10 +1,15 @@
-import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { Inject, Logger, NotFoundException, ForbiddenException } from '@nestjs/common';
-import { DeleteSimulationCommand } from '../delete-simulation.command';
+import { CommandHandler, ICommandHandler } from "@nestjs/cqrs";
+import {
+  Inject,
+  Logger,
+  NotFoundException,
+  ForbiddenException,
+} from "@nestjs/common";
+import { DeleteSimulationCommand } from "../delete-simulation.command";
 import {
   ISimulationRepository,
   SIMULATION_REPOSITORY,
-} from '../../../domain/repositories/simulation.repository.interface';
+} from "../../../domain/repositories/simulation.repository.interface";
 
 @CommandHandler(DeleteSimulationCommand)
 export class DeleteSimulationHandler implements ICommandHandler<DeleteSimulationCommand> {
@@ -23,7 +28,7 @@ export class DeleteSimulationHandler implements ICommandHandler<DeleteSimulation
       throw new NotFoundException(`Simulation ${simulationId} not found`);
     }
     if (simulation.userId !== userId) {
-      throw new ForbiddenException('Access denied');
+      throw new ForbiddenException("Access denied");
     }
 
     await this.simulationRepository.delete(simulationId);

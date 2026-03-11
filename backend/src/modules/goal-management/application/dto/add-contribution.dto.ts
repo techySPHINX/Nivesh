@@ -1,5 +1,13 @@
-import { IsNumber, IsNotEmpty, IsString, IsOptional, IsEnum, Min, MaxLength } from 'class-validator';
-import { ContributionType } from '../../domain/entities/goal-contribution.entity';
+import {
+  IsNumber,
+  IsNotEmpty,
+  IsString,
+  IsOptional,
+  IsEnum,
+  Min,
+  MaxLength,
+} from "class-validator";
+import { ContributionType } from "../../domain/entities/goal-contribution.entity";
 
 export class AddContributionDto {
   @IsNumber()

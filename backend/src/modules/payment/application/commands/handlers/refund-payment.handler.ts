@@ -1,12 +1,18 @@
-import { CommandHandler, ICommandHandler, EventBus } from '@nestjs/cqrs';
-import { Inject, Logger, NotFoundException, ForbiddenException, BadRequestException } from '@nestjs/common';
-import { RefundPaymentCommand } from '../refund-payment.command';
-import { PaymentResponseDto } from '../../dto/payment-response.dto';
+import { CommandHandler, ICommandHandler, EventBus } from "@nestjs/cqrs";
+import {
+  Inject,
+  Logger,
+  NotFoundException,
+  ForbiddenException,
+  BadRequestException,
+} from "@nestjs/common";
+import { RefundPaymentCommand } from "../refund-payment.command";
+import { PaymentResponseDto } from "../../dto/payment-response.dto";
 import {
   IPaymentRepository,
   PAYMENT_REPOSITORY,
-} from '../../../domain/repositories/payment.repository.interface';
-import { PaymentRefundedEvent } from '../../../domain/events/payment.events';
+} from "../../../domain/repositories/payment.repository.interface";
+import { PaymentRefundedEvent } from "../../../domain/events/payment.events";
 
 @CommandHandler(RefundPaymentCommand)
 export class RefundPaymentHandler implements ICommandHandler<RefundPaymentCommand> {
@@ -26,11 +32,13 @@ export class RefundPaymentHandler implements ICommandHandler<RefundPaymentComman
       throw new NotFoundException(`Payment ${paymentId} not found`);
     }
     if (payment.userId !== userId) {
-      throw new ForbiddenException('Access denied to this payment');
+      throw new ForbiddenException("Access denied to this payment");
     }
 
     if (!payment.canBeRefunded()) {
-      throw new BadRequestException(`Payment ${paymentId} cannot be refunded in ${payment.status} status`);
+      throw new BadRequestException(
+        `Payment ${paymentId} cannot be refunded in ${payment.status} status`,
+      );
     }
 
     payment.refund(isPartial);
@@ -46,7 +54,9 @@ export class RefundPaymentHandler implements ICommandHandler<RefundPaymentComman
       ),
     );
 
-    this.logger.log(`Payment ${isPartial ? 'partially ' : ''}refunded: ${paymentId}`);
+    this.logger.log(
+      `Payment ${isPartial ? "partially " : ""}refunded: ${paymentId}`,
+    );
     return PaymentResponseDto.fromEntity(savedPayment);
   }
 }

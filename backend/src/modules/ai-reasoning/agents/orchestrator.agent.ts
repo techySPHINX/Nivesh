@@ -1,18 +1,18 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { BaseAgent } from './base.agent';
+import { Injectable, Logger } from "@nestjs/common";
+import { BaseAgent } from "./base.agent";
 import {
   AgentMessage,
   AgentResponse,
   AgentType,
   ExecutionPlan,
   ExecutionStep,
-} from '../types/agent.types';
-import { ToolRegistry } from '../services/tool-registry.service';
-import { DecisionTraceService } from '../services/decision-trace.service';
-import { AgentRegistry } from '../services/agent-registry.service';
-import { SemanticRetrieverService } from '../../rag-pipeline/application/services/semantic-retriever.service';
-import { ContextBuilderService } from '../../rag-pipeline/application/services/context-builder.service';
-import { AgentMemoryService } from '../services/agent-memory.service';
+} from "../types/agent.types";
+import { ToolRegistry } from "../services/tool-registry.service";
+import { DecisionTraceService } from "../services/decision-trace.service";
+import { AgentRegistry } from "../services/agent-registry.service";
+import { SemanticRetrieverService } from "../../rag-pipeline/application/services/semantic-retriever.service";
+import { ContextBuilderService } from "../../rag-pipeline/application/services/context-builder.service";
+import { AgentMemoryService } from "../services/agent-memory.service";
 
 /**
  * User Intent Interface
@@ -22,7 +22,7 @@ interface UserIntent {
   entities: Record<string, any>;
   confidence: number;
   requiredAgents: AgentType[];
-  executionMode: 'sequential' | 'parallel';
+  executionMode: "sequential" | "parallel";
 }
 
 /**
@@ -32,7 +32,7 @@ interface WorkflowDefinition {
   name: string;
   description: string;
   requiredAgents: AgentType[];
-  executionMode: 'sequential' | 'parallel';
+  executionMode: "sequential" | "parallel";
   contextEnrichment: boolean;
 }
 
@@ -106,8 +106,9 @@ export class OrchestratorAgent extends BaseAgent {
    * Execute orchestration task
    */
   async execute(message: AgentMessage): Promise<AgentResponse> {
-    const { query, context } = message.payload;
-    const traceId = context.traceId || (await this.decisionTraceService.generateTraceId());
+    const { task: query, context } = message.payload;
+    const traceId =
+      context.traceId || (await this.decisionTraceService.generateTraceId());
     const userId = context.userId || context.userContext?.userId;
 
     this.logger.log(`Orchestrating query: "${query}" for user: ${userId}`);
@@ -119,7 +120,11 @@ export class OrchestratorAgent extends BaseAgent {
       );
 
       // Step 0: Retrieve relevant context from RAG pipeline
-      const ragContext = await this.retrieveRelevantContext(query, userId, traceId);
+      const ragContext = await this.retrieveRelevantContext(
+        query,
+        userId,
+        traceId,
+      );
 
       await this.recordReasoning(
         `Retrieved ${ragContext.documentsCount} relevant documents from RAG pipeline`,
@@ -147,7 +152,11 @@ export class OrchestratorAgent extends BaseAgent {
       );
 
       // Step 2: Build execution plan
-      const plan = await this.buildExecutionPlan(intent, enrichedContext, traceId);
+      const plan = await this.buildExecutionPlan(
+        intent,
+        enrichedContext,
+        traceId,
+      );
 
       await this.recordReasoning(
         `Execution plan: ${plan.steps.length} steps (${intent.executionMode} mode)`,
@@ -192,10 +201,7 @@ export class OrchestratorAgent extends BaseAgent {
         synthesis.recommendations,
       );
     } catch (error) {
-      this.logger.error(
-        `Orchestration failed: ${error.message}`,
-        error.stack,
-      );
+      this.logger.error(`Orchestration failed: ${error.message}`, error.stack);
       return this.handleError(error, context);
     }
   }
@@ -211,7 +217,7 @@ export class OrchestratorAgent extends BaseAgent {
   ): Promise<any> {
     try {
       if (!userId) {
-        this.logger.warn('No userId provided, skipping RAG context retrieval');
+        this.logger.warn("No userId provided, skipping RAG context retrieval");
         return { documents: [], documentsCount: 0 };
       }
 
@@ -228,13 +234,9 @@ export class OrchestratorAgent extends BaseAgent {
       );
 
       // Build structured context from retrieval results
-      const structuredContext = await this.contextBuilder.buildContext(
+      const structuredContext = this.contextBuilder.buildPromptWithContext(
+        query,
         retrievalResults,
-        {
-          maxTokens: 2000,
-          includeMetadata: true,
-          format: 'structured',
-        },
       );
 
       await this.recordReasoning(
@@ -249,7 +251,7 @@ export class OrchestratorAgent extends BaseAgent {
         userFinancialSnapshot: this.extractFinancialSnapshot(retrievalResults),
       };
     } catch (error) {
-      this.logger.error('RAG context retrieval failed:', error);
+      this.logger.error("RAG context retrieval failed:", error);
       return { documents: [], documentsCount: 0 };
     }
   }
@@ -271,11 +273,12 @@ export class OrchestratorAgent extends BaseAgent {
       const userPreferences = await this.agentMemory.getUserPreferences(userId);
 
       // Get relevant past conversations
-      const conversationHistory = await this.agentMemory.getRelevantConversations(
-        userId,
-        context.query || '',
-        3, // Top 3 relevant conversations
-      );
+      const conversationHistory =
+        await this.agentMemory.getRelevantConversations(
+          userId,
+          context.query || "",
+          3, // Top 3 relevant conversations
+        );
 
       await this.recordReasoning(
         `Memory enrichment: preferences loaded, ${conversationHistory.length} relevant conversations`,
@@ -287,14 +290,14 @@ export class OrchestratorAgent extends BaseAgent {
         userPreferences,
         conversationHistory,
         personalization: {
-          riskTolerance: userPreferences.riskTolerance,
-          investmentStyle: userPreferences.investmentStyle,
-          preferredAgents: userPreferences.preferredAgents,
-          communicationStyle: userPreferences.communicationStyle,
+          riskTolerance: userPreferences?.riskTolerance,
+          investmentStyle: userPreferences?.investmentStyle,
+          preferredAgents: userPreferences?.preferredAgents,
+          communicationStyle: userPreferences?.communicationStyle,
         },
       };
     } catch (error) {
-      this.logger.error('Memory enrichment failed:', error);
+      this.logger.error("Memory enrichment failed:", error);
       return context;
     }
   }
@@ -303,8 +306,9 @@ export class OrchestratorAgent extends BaseAgent {
    * Calculate average retrieval score
    */
   private calculateAvgScore(results: any[]): string {
-    if (results.length === 0) return '0.00';
-    const avg = results.reduce((sum, r) => sum + (r.score || 0), 0) / results.length;
+    if (results.length === 0) return "0.00";
+    const avg =
+      results.reduce((sum, r) => sum + (r.score || 0), 0) / results.length;
     return avg.toFixed(2);
   }
 
@@ -312,7 +316,7 @@ export class OrchestratorAgent extends BaseAgent {
    * Extract financial snapshot from RAG results
    */
   private extractFinancialSnapshot(results: any[]): any {
-    const snapshot = {
+    const snapshot: { recentTransactions: any[]; activeGoals: any[]; portfolioSummary: Record<string, any>; budgetStatus: Record<string, any> } = {
       recentTransactions: [],
       activeGoals: [],
       portfolioSummary: {},
@@ -322,13 +326,16 @@ export class OrchestratorAgent extends BaseAgent {
     results.forEach((result) => {
       const metadata = result.metadata || {};
 
-      if (metadata.type === 'transaction') {
+      if (metadata.type === "transaction") {
         snapshot.recentTransactions.push(metadata);
-      } else if (metadata.type === 'goal') {
+      } else if (metadata.type === "goal") {
         snapshot.activeGoals.push(metadata);
-      } else if (metadata.type === 'portfolio') {
-        snapshot.portfolioSummary = { ...snapshot.portfolioSummary, ...metadata };
-      } else if (metadata.type === 'budget') {
+      } else if (metadata.type === "portfolio") {
+        snapshot.portfolioSummary = {
+          ...snapshot.portfolioSummary,
+          ...metadata,
+        };
+      } else if (metadata.type === "budget") {
         snapshot.budgetStatus = { ...snapshot.budgetStatus, ...metadata };
       }
     });
@@ -344,99 +351,99 @@ export class OrchestratorAgent extends BaseAgent {
     context: any,
     traceId?: string,
   ): Promise<UserIntent> {
-    await this.recordReasoning('Classifying user intent', traceId);
+    await this.recordReasoning("Classifying user intent", traceId);
 
     const queryLower = query.toLowerCase();
 
     // Goal Planning Intent
     if (
-      queryLower.includes('goal') ||
-      queryLower.includes('buy') ||
-      queryLower.includes('save for') ||
-      queryLower.includes('plan')
+      queryLower.includes("goal") ||
+      queryLower.includes("buy") ||
+      queryLower.includes("save for") ||
+      queryLower.includes("plan")
     ) {
-      const workflow = this.workflowDefinitions.get('goal_planning');
+      const workflow = this.workflowDefinitions.get("goal_planning");
       return {
-        intent: 'goal_planning',
+        intent: "goal_planning",
         entities: this.extractGoalEntities(query),
         confidence: 0.9,
         requiredAgents: workflow?.requiredAgents || [],
-        executionMode: workflow?.executionMode || 'sequential',
+        executionMode: workflow?.executionMode || "sequential",
       };
     }
 
     // Portfolio Review Intent
     if (
-      queryLower.includes('portfolio') ||
-      queryLower.includes('investment') ||
-      queryLower.includes('review')
+      queryLower.includes("portfolio") ||
+      queryLower.includes("investment") ||
+      queryLower.includes("review")
     ) {
-      const workflow = this.workflowDefinitions.get('portfolio_review');
+      const workflow = this.workflowDefinitions.get("portfolio_review");
       return {
-        intent: 'portfolio_review',
+        intent: "portfolio_review",
         entities: {},
         confidence: 0.85,
         requiredAgents: workflow?.requiredAgents || [],
-        executionMode: workflow?.executionMode || 'parallel',
+        executionMode: workflow?.executionMode || "parallel",
       };
     }
 
     // Risk Assessment Intent
     if (
-      queryLower.includes('risk') ||
-      queryLower.includes('safe') ||
-      queryLower.includes('secure')
+      queryLower.includes("risk") ||
+      queryLower.includes("safe") ||
+      queryLower.includes("secure")
     ) {
-      const workflow = this.workflowDefinitions.get('risk_assessment');
+      const workflow = this.workflowDefinitions.get("risk_assessment");
       return {
-        intent: 'risk_assessment',
+        intent: "risk_assessment",
         entities: {},
         confidence: 0.88,
         requiredAgents: workflow?.requiredAgents || [],
-        executionMode: workflow?.executionMode || 'sequential',
+        executionMode: workflow?.executionMode || "sequential",
       };
     }
 
     // Budget Analysis Intent
     if (
-      queryLower.includes('budget') ||
-      queryLower.includes('spending') ||
-      queryLower.includes('expense')
+      queryLower.includes("budget") ||
+      queryLower.includes("spending") ||
+      queryLower.includes("expense")
     ) {
-      const workflow = this.workflowDefinitions.get('budget_analysis');
+      const workflow = this.workflowDefinitions.get("budget_analysis");
       return {
-        intent: 'budget_analysis',
+        intent: "budget_analysis",
         entities: {},
         confidence: 0.87,
         requiredAgents: workflow?.requiredAgents || [],
-        executionMode: workflow?.executionMode || 'sequential',
+        executionMode: workflow?.executionMode || "sequential",
       };
     }
 
     // Loan Affordability Intent
     if (
-      queryLower.includes('loan') ||
-      queryLower.includes('emi') ||
-      queryLower.includes('afford')
+      queryLower.includes("loan") ||
+      queryLower.includes("emi") ||
+      queryLower.includes("afford")
     ) {
-      const workflow = this.workflowDefinitions.get('loan_affordability');
+      const workflow = this.workflowDefinitions.get("loan_affordability");
       return {
-        intent: 'loan_affordability',
+        intent: "loan_affordability",
         entities: this.extractLoanEntities(query),
         confidence: 0.9,
         requiredAgents: workflow?.requiredAgents || [],
-        executionMode: workflow?.executionMode || 'sequential',
+        executionMode: workflow?.executionMode || "sequential",
       };
     }
 
     // Default: Comprehensive Analysis
-    const workflow = this.workflowDefinitions.get('comprehensive_analysis');
+    const workflow = this.workflowDefinitions.get("comprehensive_analysis");
     return {
-      intent: 'comprehensive_analysis',
+      intent: "comprehensive_analysis",
       entities: {},
       confidence: 0.7,
       requiredAgents: workflow?.requiredAgents || [],
-      executionMode: workflow?.executionMode || 'sequential',
+      executionMode: workflow?.executionMode || "sequential",
     };
   }
 
@@ -448,17 +455,20 @@ export class OrchestratorAgent extends BaseAgent {
     context: any,
     traceId?: string,
   ): Promise<ExecutionPlan> {
-    await this.recordReasoning('Building execution plan', traceId);
+    await this.recordReasoning("Building execution plan", traceId);
 
-    const steps: ExecutionStep[] = intent.requiredAgents.map((agentType, index) => ({
-      stepId: `step-${index + 1}`,
-      agentType,
-      task: this.getTaskForAgent(agentType, intent),
-      dependencies: index > 0 ? [`step-${index}`] : [],
-      timeout: 30000,
-      retryOnFailure: true,
-      maxRetries: 2,
-    }));
+    const steps: ExecutionStep[] = intent.requiredAgents.map(
+      (agentType, index) => ({
+        stepId: `step-${index + 1}`,
+        agentType,
+        task: this.getTaskForAgent(agentType, intent),
+        dependencies: index > 0 ? [`step-${index}`] : [],
+        parallel: intent.executionMode === "parallel",
+        timeout: 30000,
+        retryOnFailure: true,
+        maxRetries: 2,
+      }),
+    );
 
     return {
       steps,
@@ -467,11 +477,12 @@ export class OrchestratorAgent extends BaseAgent {
         intent: intent.intent,
         entities: intent.entities,
         traceId,
-      },
-      metadata: {
         totalSteps: steps.length,
         executionMode: intent.executionMode,
-        estimatedDuration: steps.length * 5000, // 5s per step estimate
+        estimatedDuration: steps.length * 5000,
+      },
+      metadata: {
+        name: "orchestration-plan",
       },
     };
   }
@@ -498,7 +509,7 @@ export class OrchestratorAgent extends BaseAgent {
         id: `msg-${Date.now()}`,
         from: AgentType.ORCHESTRATOR,
         to: [step.agentType],
-        type: 'request',
+        type: "request",
         payload: {
           task: step.task,
           context: enrichedContext,
@@ -551,7 +562,7 @@ export class OrchestratorAgent extends BaseAgent {
     context: any,
     traceId?: string,
   ): Promise<SynthesisResult> {
-    await this.recordReasoning('Synthesizing agent results', traceId);
+    await this.recordReasoning("Synthesizing agent results", traceId);
 
     // Extract key information from all agent responses
     const keyInsights: string[] = [];
@@ -573,10 +584,10 @@ export class OrchestratorAgent extends BaseAgent {
     // Use LLM tool to create cohesive narrative
     const llmPrompt = this.buildSynthesisPrompt(query, results);
 
-    let summary = '';
+    let summary = "";
     try {
       const llmResult = await this.callTool(
-        'generate_llm_response',
+        "generate_llm_response",
         {
           prompt: llmPrompt,
           maxTokens: 500,
@@ -587,7 +598,7 @@ export class OrchestratorAgent extends BaseAgent {
 
       summary = llmResult.text || this.generateFallbackSummary(results);
     } catch (error) {
-      this.logger.warn('LLM synthesis failed, using fallback');
+      this.logger.warn("LLM synthesis failed, using fallback");
       summary = this.generateFallbackSummary(results);
     }
 
@@ -616,7 +627,7 @@ export class OrchestratorAgent extends BaseAgent {
 
     results.forEach((result, index) => {
       prompt += `Agent ${index + 1} Insights:\n`;
-      prompt += result.reasoning?.join('\n') || 'No reasoning provided';
+      prompt += result.reasoning?.join("\n") || "No reasoning provided";
       prompt += `\n\n`;
     });
 
@@ -634,13 +645,13 @@ export class OrchestratorAgent extends BaseAgent {
     const successful = results.filter((r) => r.success);
 
     if (successful.length === 0) {
-      return 'Analysis could not be completed. Please try again.';
+      return "Analysis could not be completed. Please try again.";
     }
 
     let summary = `Analysis complete using ${successful.length} specialized agents.\n\n`;
 
     successful.forEach((result, index) => {
-      const topInsight = result.reasoning?.[0] || 'Analysis completed';
+      const topInsight = result.reasoning?.[0] || "Analysis completed";
       summary += `${index + 1}. ${topInsight}\n`;
     });
 
@@ -652,9 +663,9 @@ export class OrchestratorAgent extends BaseAgent {
    */
   private initializeWorkflows(): void {
     // Goal Planning Workflow
-    this.workflowDefinitions.set('goal_planning', {
-      name: 'Goal Planning',
-      description: 'Comprehensive financial goal planning',
+    this.workflowDefinitions.set("goal_planning", {
+      name: "Goal Planning",
+      description: "Comprehensive financial goal planning",
       requiredAgents: [
         AgentType.FINANCIAL_PLANNING,
         AgentType.RISK_ASSESSMENT,
@@ -662,66 +673,66 @@ export class OrchestratorAgent extends BaseAgent {
         AgentType.SIMULATION,
         AgentType.ACTION_EXECUTION,
       ],
-      executionMode: 'sequential',
+      executionMode: "sequential",
       contextEnrichment: true,
     });
 
     // Portfolio Review Workflow
-    this.workflowDefinitions.set('portfolio_review', {
-      name: 'Portfolio Review',
-      description: 'Investment portfolio analysis',
+    this.workflowDefinitions.set("portfolio_review", {
+      name: "Portfolio Review",
+      description: "Investment portfolio analysis",
       requiredAgents: [
         AgentType.RISK_ASSESSMENT,
         AgentType.INVESTMENT_ADVISOR,
         AgentType.FINANCIAL_GRAPH,
       ],
-      executionMode: 'parallel',
+      executionMode: "parallel",
       contextEnrichment: false,
     });
 
     // Risk Assessment Workflow
-    this.workflowDefinitions.set('risk_assessment', {
-      name: 'Risk Assessment',
-      description: 'Comprehensive risk analysis',
+    this.workflowDefinitions.set("risk_assessment", {
+      name: "Risk Assessment",
+      description: "Comprehensive risk analysis",
       requiredAgents: [
         AgentType.RISK_ASSESSMENT,
         AgentType.FINANCIAL_GRAPH,
         AgentType.ACTION_EXECUTION,
       ],
-      executionMode: 'sequential',
+      executionMode: "sequential",
       contextEnrichment: true,
     });
 
     // Budget Analysis Workflow
-    this.workflowDefinitions.set('budget_analysis', {
-      name: 'Budget Analysis',
-      description: 'Spending pattern and budget analysis',
+    this.workflowDefinitions.set("budget_analysis", {
+      name: "Budget Analysis",
+      description: "Spending pattern and budget analysis",
       requiredAgents: [
         AgentType.FINANCIAL_GRAPH,
         AgentType.MONITORING_ALERTING,
         AgentType.ACTION_EXECUTION,
       ],
-      executionMode: 'sequential',
+      executionMode: "sequential",
       contextEnrichment: true,
     });
 
     // Loan Affordability Workflow
-    this.workflowDefinitions.set('loan_affordability', {
-      name: 'Loan Affordability',
-      description: 'Loan affordability and stress testing',
+    this.workflowDefinitions.set("loan_affordability", {
+      name: "Loan Affordability",
+      description: "Loan affordability and stress testing",
       requiredAgents: [
         AgentType.SIMULATION,
         AgentType.RISK_ASSESSMENT,
         AgentType.ACTION_EXECUTION,
       ],
-      executionMode: 'sequential',
+      executionMode: "sequential",
       contextEnrichment: true,
     });
 
     // Comprehensive Analysis Workflow
-    this.workflowDefinitions.set('comprehensive_analysis', {
-      name: 'Comprehensive Analysis',
-      description: 'Full financial health check',
+    this.workflowDefinitions.set("comprehensive_analysis", {
+      name: "Comprehensive Analysis",
+      description: "Full financial health check",
       requiredAgents: [
         AgentType.FINANCIAL_PLANNING,
         AgentType.RISK_ASSESSMENT,
@@ -731,7 +742,7 @@ export class OrchestratorAgent extends BaseAgent {
         AgentType.MONITORING_ALERTING,
         AgentType.ACTION_EXECUTION,
       ],
-      executionMode: 'sequential',
+      executionMode: "sequential",
       contextEnrichment: true,
     });
   }
@@ -741,17 +752,20 @@ export class OrchestratorAgent extends BaseAgent {
    */
   private getTaskForAgent(agentType: AgentType, intent: UserIntent): string {
     const taskMap: Record<AgentType, string> = {
-      [AgentType.FINANCIAL_PLANNING]: 'create_savings_plan',
-      [AgentType.RISK_ASSESSMENT]: 'assess_overall_risk',
-      [AgentType.INVESTMENT_ADVISOR]: 'recommend_allocation',
-      [AgentType.SIMULATION]: intent.intent === 'loan_affordability' ? 'check_loan_affordability' : 'run_monte_carlo',
-      [AgentType.FINANCIAL_GRAPH]: 'analyze_spending_patterns',
-      [AgentType.MONITORING_ALERTING]: 'check_alerts',
-      [AgentType.ACTION_EXECUTION]: 'generate_actions',
-      [AgentType.ORCHESTRATOR]: 'orchestrate',
+      [AgentType.FINANCIAL_PLANNING]: "create_savings_plan",
+      [AgentType.RISK_ASSESSMENT]: "assess_overall_risk",
+      [AgentType.INVESTMENT_ADVISOR]: "recommend_allocation",
+      [AgentType.SIMULATION]:
+        intent.intent === "loan_affordability"
+          ? "check_loan_affordability"
+          : "run_monte_carlo",
+      [AgentType.FINANCIAL_GRAPH]: "analyze_spending_patterns",
+      [AgentType.MONITORING_ALERTING]: "check_alerts",
+      [AgentType.ACTION_EXECUTION]: "generate_actions",
+      [AgentType.ORCHESTRATOR]: "orchestrate",
     };
 
-    return taskMap[agentType] || 'execute';
+    return taskMap[agentType] || "execute";
   }
 
   /**
@@ -763,12 +777,12 @@ export class OrchestratorAgent extends BaseAgent {
     // Extract amount (₹50L, ₹5000000, 50 lakh, etc.)
     const amountMatch = query.match(/₹?([\d,]+)(L|lakh|lakhs|crore|cr)?/i);
     if (amountMatch) {
-      let amount = parseFloat(amountMatch[1].replace(/,/g, ''));
+      let amount = parseFloat(amountMatch[1].replace(/,/g, ""));
       const unit = amountMatch[2]?.toLowerCase();
 
-      if (unit === 'l' || unit === 'lakh' || unit === 'lakhs') {
+      if (unit === "l" || unit === "lakh" || unit === "lakhs") {
         amount *= 100000;
-      } else if (unit === 'cr' || unit === 'crore') {
+      } else if (unit === "cr" || unit === "crore") {
         amount *= 10000000;
       }
 
@@ -776,26 +790,40 @@ export class OrchestratorAgent extends BaseAgent {
     }
 
     // Extract timeline (5 years, 3 months, etc.)
-    const timelineMatch = query.match(/(\d+)\s*(year|years|month|months|yr|yrs)/i);
+    const timelineMatch = query.match(
+      /(\d+)\s*(year|years|month|months|yr|yrs)/i,
+    );
     if (timelineMatch) {
       const value = parseInt(timelineMatch[1]);
       const unit = timelineMatch[2].toLowerCase();
 
       entities.timeline =
-        unit.startsWith('year') || unit === 'yr' || unit === 'yrs'
+        unit.startsWith("year") || unit === "yr" || unit === "yrs"
           ? value
           : value / 12;
     }
 
     // Extract goal type
-    if (query.toLowerCase().includes('house') || query.toLowerCase().includes('home')) {
-      entities.goalType = 'house';
-    } else if (query.toLowerCase().includes('car') || query.toLowerCase().includes('vehicle')) {
-      entities.goalType = 'car';
-    } else if (query.toLowerCase().includes('education') || query.toLowerCase().includes('study')) {
-      entities.goalType = 'education';
-    } else if (query.toLowerCase().includes('retirement') || query.toLowerCase().includes('retire')) {
-      entities.goalType = 'retirement';
+    if (
+      query.toLowerCase().includes("house") ||
+      query.toLowerCase().includes("home")
+    ) {
+      entities.goalType = "house";
+    } else if (
+      query.toLowerCase().includes("car") ||
+      query.toLowerCase().includes("vehicle")
+    ) {
+      entities.goalType = "car";
+    } else if (
+      query.toLowerCase().includes("education") ||
+      query.toLowerCase().includes("study")
+    ) {
+      entities.goalType = "education";
+    } else if (
+      query.toLowerCase().includes("retirement") ||
+      query.toLowerCase().includes("retire")
+    ) {
+      entities.goalType = "retirement";
     }
 
     return entities;
@@ -810,7 +838,7 @@ export class OrchestratorAgent extends BaseAgent {
     // Extract loan amount
     const amountMatch = query.match(/₹?([\d,]+)(L|lakh|lakhs)?/i);
     if (amountMatch) {
-      let amount = parseFloat(amountMatch[1].replace(/,/g, ''));
+      let amount = parseFloat(amountMatch[1].replace(/,/g, ""));
       if (amountMatch[2]) amount *= 100000;
       entities.loanAmount = amount;
     }

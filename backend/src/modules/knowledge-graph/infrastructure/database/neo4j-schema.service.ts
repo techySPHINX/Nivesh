@@ -3,10 +3,10 @@
  * Executes Cypher schema commands to set up constraints and indexes
  */
 
-import { readFileSync } from 'fs';
-import { join } from 'path';
-import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
+import { readFileSync } from "fs";
+import { join } from "path";
+import { Injectable, Logger, OnModuleInit } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
 
 export interface Neo4jConfig {
   uri: string;
@@ -20,36 +20,36 @@ export interface Neo4jConfig {
 /**
  * Service to initialize Neo4j schema on application startup
  * Executes constraints and indexes from neo4j-schema.cypher file
- * 
+ *
  * This runs idempotently - constraints/indexes are only created if they don't exist
  */
 @Injectable()
 export class Neo4jSchemaService implements OnModuleInit {
   private readonly logger = new Logger(Neo4jSchemaService.name);
-  private readonly schemaPath = join(__dirname, 'neo4j-schema.cypher');
+  private readonly schemaPath = join(__dirname, "neo4j-schema.cypher");
 
-  constructor(private readonly configService: ConfigService) { }
+  constructor(private readonly configService: ConfigService) {}
 
   /**
    * Initialize schema on module initialization
    */
   async onModuleInit(): Promise<void> {
     const autoInit = this.configService.get<boolean>(
-      'neo4j.autoInitSchema',
+      "neo4j.autoInitSchema",
       true,
     );
 
     if (autoInit) {
       try {
         await this.initializeSchema();
-        this.logger.log('Neo4j schema initialization completed successfully');
+        this.logger.log("Neo4j schema initialization completed successfully");
       } catch (error) {
-        this.logger.error('Failed to initialize Neo4j schema', error);
+        this.logger.error("Failed to initialize Neo4j schema", error);
         // Don't throw - allow app to start even if schema init fails
         // This is useful for development where Neo4j might not be running
       }
     } else {
-      this.logger.log('Neo4j schema auto-initialization is disabled');
+      this.logger.log("Neo4j schema auto-initialization is disabled");
     }
   }
 
@@ -57,8 +57,8 @@ export class Neo4jSchemaService implements OnModuleInit {
    * Read and execute schema file
    */
   async initializeSchema(): Promise<void> {
-    this.logger.log('Reading Neo4j schema file...');
-    const schemaContent = readFileSync(this.schemaPath, 'utf-8');
+    this.logger.log("Reading Neo4j schema file...");
+    const schemaContent = readFileSync(this.schemaPath, "utf-8");
 
     // Parse Cypher commands from file
     const commands = this.parseCypherFile(schemaContent);
@@ -78,14 +78,14 @@ export class Neo4jSchemaService implements OnModuleInit {
    */
   private parseCypherFile(content: string): string[] {
     // Remove single-line comments
-    let cleaned = content.replace(/\/\/.*$/gm, '');
+    let cleaned = content.replace(/\/\/.*$/gm, "");
 
     // Remove multi-line comments
-    cleaned = cleaned.replace(/\/\*[\s\S]*?\*\//g, '');
+    cleaned = cleaned.replace(/\/\*[\s\S]*?\*\//g, "");
 
     // Split on semicolons
     const commands = cleaned
-      .split(';')
+      .split(";")
       .map((cmd) => cmd.trim())
       .filter((cmd) => cmd.length > 0);
 
@@ -97,16 +97,16 @@ export class Neo4jSchemaService implements OnModuleInit {
    */
   getConfig(): Neo4jConfig {
     return {
-      uri: this.configService.get<string>('neo4j.uri', 'bolt://localhost:7687'),
-      username: this.configService.get<string>('neo4j.username', 'neo4j'),
-      password: this.configService.get<string>('neo4j.password', 'password'),
-      database: this.configService.get<string>('neo4j.database', 'neo4j'),
+      uri: this.configService.get<string>("neo4j.uri", "bolt://localhost:7687"),
+      username: this.configService.get<string>("neo4j.username", "neo4j"),
+      password: this.configService.get<string>("neo4j.password", "password"),
+      database: this.configService.get<string>("neo4j.database", "neo4j"),
       maxConnectionPoolSize: this.configService.get<number>(
-        'neo4j.maxConnectionPoolSize',
+        "neo4j.maxConnectionPoolSize",
         50,
       ),
       connectionTimeout: this.configService.get<number>(
-        'neo4j.connectionTimeout',
+        "neo4j.connectionTimeout",
         30000,
       ),
     };
@@ -118,10 +118,10 @@ export class Neo4jSchemaService implements OnModuleInit {
   async validateConnection(): Promise<boolean> {
     try {
       // Placeholder - will use Neo4jService to check connection
-      this.logger.log('Validating Neo4j connection...');
+      this.logger.log("Validating Neo4j connection...");
       return true;
     } catch (error) {
-      this.logger.error('Neo4j connection validation failed', error);
+      this.logger.error("Neo4j connection validation failed", error);
       return false;
     }
   }

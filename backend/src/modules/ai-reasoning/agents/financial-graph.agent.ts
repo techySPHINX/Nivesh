@@ -1,8 +1,8 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { BaseAgent } from './base.agent';
-import { AgentMessage, AgentResponse, AgentType } from '../types/agent.types';
-import { ToolRegistry } from '../services/tool-registry.service';
-import { DecisionTraceService } from '../services/decision-trace.service';
+import { Injectable, Logger } from "@nestjs/common";
+import { BaseAgent } from "./base.agent";
+import { AgentMessage, AgentResponse, AgentType } from "../types/agent.types";
+import { ToolRegistry } from "../services/tool-registry.service";
+import { DecisionTraceService } from "../services/decision-trace.service";
 
 /**
  * Graph Query Result Interface
@@ -25,9 +25,9 @@ interface GraphQueryResult {
  */
 interface SpendingPattern {
   category: string;
-  frequency: 'daily' | 'weekly' | 'monthly' | 'occasional';
+  frequency: "daily" | "weekly" | "monthly" | "occasional";
   averageAmount: number;
-  trend: 'increasing' | 'stable' | 'decreasing';
+  trend: "increasing" | "stable" | "decreasing";
   merchants: string[];
   percentageOfIncome: number;
   anomalies: Array<{
@@ -120,28 +120,25 @@ export class FinancialGraphAgent extends BaseAgent {
     this.logger.log(`Executing FinancialGraphAgent: ${task}`);
 
     try {
-      await this.recordReasoning(
-        `Starting graph query task: ${task}`,
-        traceId,
-      );
+      await this.recordReasoning(`Starting graph query task: ${task}`, traceId);
 
       if (!context.userId) {
-        throw new Error('Missing required context: userId');
+        throw new Error("Missing required context: userId");
       }
 
       // Route to appropriate handler
       let result;
       switch (task) {
-        case 'analyze_spending':
+        case "analyze_spending":
           result = await this.analyzeSpendingPatterns(context, traceId);
           break;
-        case 'find_merchant_loyalty':
+        case "find_merchant_loyalty":
           result = await this.analyzeMerchantLoyalty(context, traceId);
           break;
-        case 'detect_anomalies':
+        case "detect_anomalies":
           result = await this.detectSpendingAnomalies(context, traceId);
           break;
-        case 'goal_impact':
+        case "goal_impact":
           result = await this.analyzeGoalImpact(context, traceId);
           break;
         default:
@@ -166,7 +163,7 @@ export class FinancialGraphAgent extends BaseAgent {
     traceId?: string,
   ): Promise<AgentResponse> {
     const userId = context.userId;
-    const timeframe = context.timeframe || 'month';
+    const timeframe = context.timeframe || "month";
 
     const reasoning: string[] = [];
     const toolsUsed: string[] = [];
@@ -174,22 +171,22 @@ export class FinancialGraphAgent extends BaseAgent {
     reasoning.push(`Analyzing spending patterns for timeframe: ${timeframe}`);
 
     await this.recordReasoning(
-      'Querying transaction graph for spending patterns',
+      "Querying transaction graph for spending patterns",
       traceId,
     );
 
     // Query graph for spending data
     const graphData = await this.callTool(
-      'query_financial_graph',
+      "query_financial_graph",
       {
         userId,
-        queryType: 'spending_patterns',
+        queryType: "spending_patterns",
         timeframe,
       },
       traceId,
     );
 
-    toolsUsed.push('query_financial_graph');
+    toolsUsed.push("query_financial_graph");
 
     // Analyze patterns
     const patterns: SpendingPattern[] = this.extractSpendingPatterns(graphData);
@@ -201,7 +198,8 @@ export class FinancialGraphAgent extends BaseAgent {
     const topCategories = patterns.slice(0, 3);
 
     const topThreePercentage =
-      topCategories.reduce((sum, p) => sum + p.averageAmount, 0) / totalSpending;
+      topCategories.reduce((sum, p) => sum + p.averageAmount, 0) /
+      totalSpending;
 
     reasoning.push(
       `Total spending: ₹${totalSpending.toLocaleString()}/${timeframe}`,
@@ -217,7 +215,8 @@ export class FinancialGraphAgent extends BaseAgent {
     });
 
     // Check for concentration risk
-    const concentrationRisk = topThreePercentage > this.HIGH_CONCENTRATION_THRESHOLD;
+    const concentrationRisk =
+      topThreePercentage > this.HIGH_CONCENTRATION_THRESHOLD;
     if (concentrationRisk) {
       reasoning.push(
         `⚠️ High concentration risk: ${(topThreePercentage * 100).toFixed(1)}% in top 3 categories`,
@@ -240,8 +239,8 @@ export class FinancialGraphAgent extends BaseAgent {
       toolsUsed,
       0.87,
       concentrationRisk
-        ? ['Set budget limits for top categories', 'Diversify spending']
-        : ['Spending distribution is healthy', 'Monitor monthly trends'],
+        ? ["Set budget limits for top categories", "Diversify spending"]
+        : ["Spending distribution is healthy", "Monitor monthly trends"],
     );
   }
 
@@ -259,22 +258,22 @@ export class FinancialGraphAgent extends BaseAgent {
     const toolsUsed: string[] = [];
 
     await this.recordReasoning(
-      `Analyzing merchant loyalty${merchantName ? ` for ${merchantName}` : ''}`,
+      `Analyzing merchant loyalty${merchantName ? ` for ${merchantName}` : ""}`,
       traceId,
     );
 
     // Query graph for merchant data
     const graphData = await this.callTool(
-      'query_financial_graph',
+      "query_financial_graph",
       {
         userId,
-        queryType: 'merchant_loyalty',
+        queryType: "merchant_loyalty",
         merchantName,
       },
       traceId,
     );
 
-    toolsUsed.push('query_financial_graph');
+    toolsUsed.push("query_financial_graph");
 
     // Analyze loyalty
     const loyaltyAnalysis: MerchantLoyalty[] =
@@ -312,8 +311,8 @@ export class FinancialGraphAgent extends BaseAgent {
       toolsUsed,
       0.85,
       [
-        'Explore loyalty programs and cashback offers',
-        'Consider consolidating to fewer merchants for better deals',
+        "Explore loyalty programs and cashback offers",
+        "Consider consolidating to fewer merchants for better deals",
       ],
     );
   }
@@ -330,19 +329,19 @@ export class FinancialGraphAgent extends BaseAgent {
     const reasoning: string[] = [];
     const toolsUsed: string[] = [];
 
-    await this.recordReasoning('Detecting spending anomalies', traceId);
+    await this.recordReasoning("Detecting spending anomalies", traceId);
 
     // Query graph for anomalies
     const graphData = await this.callTool(
-      'query_financial_graph',
+      "query_financial_graph",
       {
         userId,
-        queryType: 'anomaly_detection',
+        queryType: "anomaly_detection",
       },
       traceId,
     );
 
-    toolsUsed.push('query_financial_graph');
+    toolsUsed.push("query_financial_graph");
 
     const anomalies = graphData.anomalies || [];
 
@@ -355,26 +354,28 @@ export class FinancialGraphAgent extends BaseAgent {
         );
       });
     } else {
-      reasoning.push('No significant anomalies detected');
+      reasoning.push("No significant anomalies detected");
     }
 
-    await this.recordReasoning(
-      `Found ${anomalies.length} anomalies`,
-      traceId,
-    );
+    await this.recordReasoning(`Found ${anomalies.length} anomalies`, traceId);
 
     return this.createSuccessResponse(
       {
         anomalies,
         anomalyCount: anomalies.length,
-        severityLevel: anomalies.length > 5 ? 'high' : anomalies.length > 2 ? 'medium' : 'low',
+        severityLevel:
+          anomalies.length > 5
+            ? "high"
+            : anomalies.length > 2
+              ? "medium"
+              : "low",
       },
       reasoning,
       toolsUsed,
       0.82,
       anomalies.length > 0
-        ? ['Review unusual transactions', 'Set alerts for future anomalies']
-        : ['Spending patterns are normal', 'Continue monitoring'],
+        ? ["Review unusual transactions", "Set alerts for future anomalies"]
+        : ["Spending patterns are normal", "Continue monitoring"],
     );
   }
 
@@ -391,20 +392,20 @@ export class FinancialGraphAgent extends BaseAgent {
     const reasoning: string[] = [];
     const toolsUsed: string[] = [];
 
-    await this.recordReasoning('Analyzing goal impact', traceId);
+    await this.recordReasoning("Analyzing goal impact", traceId);
 
     // Query graph for goal relationships
     const graphData = await this.callTool(
-      'query_financial_graph',
+      "query_financial_graph",
       {
         userId,
-        queryType: 'goal_impact',
+        queryType: "goal_impact",
         goalId,
       },
       traceId,
     );
 
-    toolsUsed.push('query_financial_graph');
+    toolsUsed.push("query_financial_graph");
 
     const goalData = graphData.goal || {};
     const savingsRate = goalData.monthlySavings || 0;
@@ -420,14 +421,12 @@ export class FinancialGraphAgent extends BaseAgent {
     );
 
     if (deficit > 0) {
-      reasoning.push(
-        `⚠️ Deficit: ₹${deficit.toLocaleString()}/month`,
-      );
+      reasoning.push(`⚠️ Deficit: ₹${deficit.toLocaleString()}/month`);
 
       // Identify categories to reduce
       const categoriesImpactingGoal = graphData.impactingCategories || [];
       if (categoriesImpactingGoal.length > 0) {
-        reasoning.push('Categories that can be reduced:');
+        reasoning.push("Categories that can be reduced:");
         categoriesImpactingGoal.forEach((cat: any) => {
           reasoning.push(
             `  ${cat.name}: ₹${cat.amount.toLocaleString()} (reduce by ₹${cat.suggestedReduction.toLocaleString()})`,
@@ -441,7 +440,9 @@ export class FinancialGraphAgent extends BaseAgent {
     }
 
     await this.recordReasoning(
-      deficit > 0 ? `Goal deficit: ₹${deficit.toLocaleString()}` : 'Goal on track',
+      deficit > 0
+        ? `Goal deficit: ₹${deficit.toLocaleString()}`
+        : "Goal on track",
       traceId,
     );
 
@@ -457,11 +458,11 @@ export class FinancialGraphAgent extends BaseAgent {
       0.88,
       deficit > 0
         ? [
-            'Reduce discretionary spending',
-            'Set category budgets',
-            'Review goal timeline',
+            "Reduce discretionary spending",
+            "Set category budgets",
+            "Review goal timeline",
           ]
-        : ['Maintain current savings rate', 'Consider increasing goal amount'],
+        : ["Maintain current savings rate", "Consider increasing goal amount"],
     );
   }
 
@@ -472,15 +473,17 @@ export class FinancialGraphAgent extends BaseAgent {
     const categories = graphData.categories || [];
     const totalIncome = graphData.monthlyIncome || 100000;
 
-    return categories.map((cat: any) => ({
-      category: cat.name,
-      frequency: this.determineFrequency(cat.transactionCount, cat.timeframe),
-      averageAmount: cat.averageAmount,
-      trend: cat.trend || 'stable',
-      merchants: cat.topMerchants || [],
-      percentageOfIncome: (cat.averageAmount / totalIncome) * 100,
-      anomalies: cat.anomalies || [],
-    })).sort((a, b) => b.averageAmount - a.averageAmount); // Sort by amount desc
+    return categories
+      .map((cat: any) => ({
+        category: cat.name,
+        frequency: this.determineFrequency(cat.transactionCount, cat.timeframe),
+        averageAmount: cat.averageAmount,
+        trend: cat.trend || "stable",
+        merchants: cat.topMerchants || [],
+        percentageOfIncome: (cat.averageAmount / totalIncome) * 100,
+        anomalies: cat.anomalies || [],
+      }))
+      .sort((a, b) => b.averageAmount - a.averageAmount); // Sort by amount desc
   }
 
   /**
@@ -489,14 +492,15 @@ export class FinancialGraphAgent extends BaseAgent {
   private determineFrequency(
     transactionCount: number,
     timeframe: string,
-  ): 'daily' | 'weekly' | 'monthly' | 'occasional' {
-    const daysInTimeframe = timeframe === 'year' ? 365 : timeframe === 'quarter' ? 90 : 30;
+  ): "daily" | "weekly" | "monthly" | "occasional" {
+    const daysInTimeframe =
+      timeframe === "year" ? 365 : timeframe === "quarter" ? 90 : 30;
     const avgPerDay = transactionCount / daysInTimeframe;
 
-    if (avgPerDay >= 0.8) return 'daily';
-    if (avgPerDay >= 0.2) return 'weekly';
-    if (transactionCount >= 4) return 'monthly';
-    return 'occasional';
+    if (avgPerDay >= 0.8) return "daily";
+    if (avgPerDay >= 0.2) return "weekly";
+    if (transactionCount >= 4) return "monthly";
+    return "occasional";
   }
 
   /**
@@ -505,26 +509,28 @@ export class FinancialGraphAgent extends BaseAgent {
   private analyzeMerchantData(graphData: any): MerchantLoyalty[] {
     const merchants = graphData.merchants || [];
 
-    return merchants.map((merchant: any) => {
-      const loyaltyScore = this.calculateLoyaltyScore(
-        merchant.transactionCount,
-        merchant.frequency,
-        merchant.totalSpent,
-      );
+    return merchants
+      .map((merchant: any) => {
+        const loyaltyScore = this.calculateLoyaltyScore(
+          merchant.transactionCount,
+          merchant.frequency,
+          merchant.totalSpent,
+        );
 
-      return {
-        merchantName: merchant.name,
-        totalSpent: merchant.totalSpent,
-        transactionCount: merchant.transactionCount,
-        averageTicketSize: merchant.totalSpent / merchant.transactionCount,
-        frequency: merchant.frequency,
-        loyaltyScore,
-        recommendations: this.generateMerchantRecommendations(
+        return {
+          merchantName: merchant.name,
+          totalSpent: merchant.totalSpent,
+          transactionCount: merchant.transactionCount,
+          averageTicketSize: merchant.totalSpent / merchant.transactionCount,
+          frequency: merchant.frequency,
           loyaltyScore,
-          merchant,
-        ),
-      };
-    }).sort((a, b) => b.totalSpent - a.totalSpent);
+          recommendations: this.generateMerchantRecommendations(
+            loyaltyScore,
+            merchant,
+          ),
+        };
+      })
+      .sort((a, b) => b.totalSpent - a.totalSpent);
   }
 
   /**
@@ -557,16 +563,16 @@ export class FinancialGraphAgent extends BaseAgent {
     const recommendations: string[] = [];
 
     if (loyaltyScore >= 70) {
-      recommendations.push('Explore loyalty programs and premium benefits');
-      recommendations.push('Check for subscription savings');
+      recommendations.push("Explore loyalty programs and premium benefits");
+      recommendations.push("Check for subscription savings");
     }
 
     if (merchant.averageTicketSize > 5000) {
-      recommendations.push('Consider credit card rewards for large purchases');
+      recommendations.push("Consider credit card rewards for large purchases");
     }
 
-    if (merchant.category === 'groceries' && merchant.frequency > 10) {
-      recommendations.push('Look for bulk purchase discounts');
+    if (merchant.category === "groceries" && merchant.frequency > 10) {
+      recommendations.push("Look for bulk purchase discounts");
     }
 
     return recommendations;

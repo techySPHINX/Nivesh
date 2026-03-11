@@ -1,17 +1,23 @@
-import { CommandHandler, ICommandHandler, EventBus } from '@nestjs/cqrs';
-import { Inject, NotFoundException, ForbiddenException } from '@nestjs/common';
-import { CancelGoalCommand } from '../commands/cancel-goal.command';
-import { IGoalRepository, GOAL_REPOSITORY } from '../../domain/repositories/goal.repository.interface';
-import { GoalCancelledEvent } from '../../domain/events/goal.events';
-import { GoalResponseDto } from '../dto/goal-response.dto';
-import { Goal } from '../../domain/entities/goal.entity';
+import { CommandHandler, ICommandHandler, EventBus } from "@nestjs/cqrs";
+import { Inject, NotFoundException, ForbiddenException } from "@nestjs/common";
+import { CancelGoalCommand } from "../commands/cancel-goal.command";
+import {
+  IGoalRepository,
+  GOAL_REPOSITORY,
+} from "../../domain/repositories/goal.repository.interface";
+import { GoalCancelledEvent } from "../../domain/events/goal.events";
+import { GoalResponseDto } from "../dto/goal-response.dto";
+import { Goal } from "../../domain/entities/goal.entity";
 
 @CommandHandler(CancelGoalCommand)
-export class CancelGoalHandler implements ICommandHandler<CancelGoalCommand, GoalResponseDto> {
+export class CancelGoalHandler implements ICommandHandler<
+  CancelGoalCommand,
+  GoalResponseDto
+> {
   constructor(
     @Inject(GOAL_REPOSITORY) private readonly goalRepository: IGoalRepository,
     private readonly eventBus: EventBus,
-  ) { }
+  ) {}
 
   async execute(command: CancelGoalCommand): Promise<GoalResponseDto> {
     const { userId, goalId, reason } = command;
@@ -19,12 +25,14 @@ export class CancelGoalHandler implements ICommandHandler<CancelGoalCommand, Goa
     // Find goal
     const goal = await this.goalRepository.findById(goalId);
     if (!goal) {
-      throw new NotFoundException('Goal not found');
+      throw new NotFoundException("Goal not found");
     }
 
     // Check ownership
     if (goal.userId !== userId) {
-      throw new ForbiddenException('You do not have permission to cancel this goal');
+      throw new ForbiddenException(
+        "You do not have permission to cancel this goal",
+      );
     }
 
     // Cancel goal

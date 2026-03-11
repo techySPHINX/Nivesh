@@ -1,6 +1,6 @@
 /**
  * Embedding Vector Value Object
- * 
+ *
  * Represents a single embedding vector with metadata
  */
 export class EmbeddingVector {
@@ -9,11 +9,7 @@ export class EmbeddingVector {
   readonly model: string;
   readonly createdAt: Date;
 
-  constructor(
-    vector: number[],
-    model: string,
-    createdAt: Date = new Date(),
-  ) {
+  constructor(vector: number[], model: string, createdAt: Date = new Date()) {
     this.vector = vector;
     this.dimension = vector.length;
     this.model = model;
@@ -40,7 +36,7 @@ export class EmbeddingVector {
   normalize(): number[] {
     const mag = this.magnitude();
     if (mag === 0) return this.vector;
-    return this.vector.map(val => val / mag);
+    return this.vector.map((val) => val / mag);
   }
 
   /**
@@ -48,10 +44,13 @@ export class EmbeddingVector {
    */
   cosineSimilarity(other: number[]): number {
     if (this.vector.length !== other.length) {
-      throw new Error('Vector dimensions must match for cosine similarity');
+      throw new Error("Vector dimensions must match for cosine similarity");
     }
 
-    const dotProduct = this.vector.reduce((sum, val, i) => sum + val * other[i], 0);
+    const dotProduct = this.vector.reduce(
+      (sum, val, i) => sum + val * other[i],
+      0,
+    );
     const thisMag = this.magnitude();
     const otherMag = Math.sqrt(other.reduce((sum, val) => sum + val * val, 0));
 

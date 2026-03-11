@@ -1,10 +1,10 @@
-import { IQueryHandler, QueryHandler } from '@nestjs/cqrs';
-import { Logger } from '@nestjs/common';
-import { GetCategoryBreakdownQuery } from '../get-category-breakdown.query';
-import { CategoryBreakdownResponseDto } from '../../dto/analytics-response.dto';
-import { ClickhouseService } from '../../../../core/database/clickhouse/clickhouse.service';
-import { PrismaService } from '../../../../core/database/postgres/prisma.service';
-import { CategoryBreakdown } from '../../../domain/entities/analytics.entity';
+import { IQueryHandler, QueryHandler } from "@nestjs/cqrs";
+import { Logger } from "@nestjs/common";
+import { GetCategoryBreakdownQuery } from "../get-category-breakdown.query";
+import { CategoryBreakdownResponseDto } from "../../dto/analytics-response.dto";
+import { ClickhouseService } from "../../../../../core/database/clickhouse/clickhouse.service";
+import { PrismaService } from "../../../../../core/database/postgres/prisma.service";
+import { CategoryBreakdown } from "../../../domain/entities/analytics.entity";
 
 @QueryHandler(GetCategoryBreakdownQuery)
 export class GetCategoryBreakdownHandler implements IQueryHandler<GetCategoryBreakdownQuery> {
@@ -15,16 +15,21 @@ export class GetCategoryBreakdownHandler implements IQueryHandler<GetCategoryBre
     private readonly prisma: PrismaService,
   ) {}
 
-  async execute(query: GetCategoryBreakdownQuery): Promise<CategoryBreakdownResponseDto> {
+  async execute(
+    query: GetCategoryBreakdownQuery,
+  ): Promise<CategoryBreakdownResponseDto> {
     const { userId } = query;
     const now = new Date();
-    const from = query.from || new Date(now.getFullYear(), now.getMonth() - 1, 1).toISOString();
+    const from =
+      query.from ||
+      new Date(now.getFullYear(), now.getMonth() - 1, 1).toISOString();
     const to = query.to || now.toISOString();
 
     let categories: CategoryBreakdown[];
 
     try {
-      const rows = await this.clickhouse.query<any>(`
+      const rows = await this.clickhouse.query<any>(
+        `
         SELECT
           category,
           sum(amount) as totalAmount,
@@ -37,25 +42,33 @@ export class GetCategoryBreakdownHandler implements IQueryHandler<GetCategoryBre
           AND created_at <= {to:DateTime}
         GROUP BY category
         ORDER BY totalAmount DESC
-      `, { userId, from, to });
+      `,
+        { userId, from, to },
+      );
 
-      const grandTotal = rows.reduce((sum, r) => sum + Number(r.totalAmount), 0);
+      const grandTotal = rows.reduce(
+        (sum, r) => sum + Number(r.totalAmount),
+        0,
+      );
       categories = rows.map((row) => ({
         category: row.category,
         totalAmount: Number(row.totalAmount),
-        percentage: grandTotal > 0 ? (Number(row.totalAmount) / grandTotal) * 100 : 0,
+        percentage:
+          grandTotal > 0 ? (Number(row.totalAmount) / grandTotal) * 100 : 0,
         transactionCount: Number(row.transactionCount),
         averageAmount: Number(row.averageAmount),
-        trend: 'STABLE' as const,
+        trend: "STABLE" as const,
         changePercentage: 0,
       }));
     } catch (error) {
-      this.logger.warn('ClickHouse unavailable, falling back to Prisma for category breakdown');
+      this.logger.warn(
+        "ClickHouse unavailable, falling back to Prisma for category breakdown",
+      );
       categories = await this.fallbackCategoryBreakdown(userId, from, to);
     }
 
     const totalSpent = categories.reduce((sum, c) => sum + c.totalAmount, 0);
-    const topCategory = categories.length > 0 ? categories[0].category : 'N/A';
+    const topCategory = categories.length > 0 ? categories[0].category : "N/A";
 
     // Calculate trends by comparing with previous period
     await this.calculateTrends(categories, userId, from, to);
@@ -78,21 +91,24 @@ export class GetCategoryBreakdownHandler implements IQueryHandler<GetCategoryBre
     const transactions = await this.prisma.transaction.findMany({
       where: {
         userId,
-        type: 'DEBIT',
+        type: "DEBIT",
         createdAt: { gte: new Date(from), lte: new Date(to) },
       },
     });
 
     const grouped = new Map<string, { total: number; count: number }>();
     for (const tx of transactions) {
-      const cat = tx.category || 'UNCATEGORIZED';
+      const cat = tx.category || "UNCATEGORIZED";
       const existing = grouped.get(cat) || { total: 0, count: 0 };
       existing.total += Number(tx.amount);
       existing.count++;
       grouped.set(cat, existing);
     }
 
-    const grandTotal = Array.from(grouped.values()).reduce((s, v) => s + v.total, 0);
+    const grandTotal = Array.from(grouped.values()).reduce(
+      (s, v) => s + v.total,
+      0,
+    );
     return Array.from(grouped.entries())
       .map(([category, { total, count }]) => ({
         category,
@@ -100,7 +116,7 @@ export class GetCategoryBreakdownHandler implements IQueryHandler<GetCategoryBre
         percentage: grandTotal > 0 ? (total / grandTotal) * 100 : 0,
         transactionCount: count,
         averageAmount: count > 0 ? total / count : 0,
-        trend: 'STABLE' as const,
+        trend: "STABLE" as const,
         changePercentage: 0,
       }))
       .sort((a, b) => b.totalAmount - a.totalAmount);
@@ -114,27 +130,35 @@ export class GetCategoryBreakdownHandler implements IQueryHandler<GetCategoryBre
   ): Promise<void> {
     try {
       const periodLength = new Date(to).getTime() - new Date(from).getTime();
-      const prevFrom = new Date(new Date(from).getTime() - periodLength).toISOString();
+      const prevFrom = new Date(
+        new Date(from).getTime() - periodLength,
+      ).toISOString();
 
       const prevTransactions = await this.prisma.transaction.findMany({
         where: {
           userId,
-          type: 'DEBIT',
+          type: "DEBIT",
           createdAt: { gte: new Date(prevFrom), lt: new Date(from) },
         },
       });
 
       const prevMap = new Map<string, number>();
       for (const tx of prevTransactions) {
-        const cat = tx.category || 'UNCATEGORIZED';
+        const cat = tx.category || "UNCATEGORIZED";
         prevMap.set(cat, (prevMap.get(cat) || 0) + Number(tx.amount));
       }
 
       for (const cat of categories) {
         const prevAmount = prevMap.get(cat.category) || 0;
         if (prevAmount > 0) {
-          cat.changePercentage = ((cat.totalAmount - prevAmount) / prevAmount) * 100;
-          cat.trend = cat.changePercentage > 5 ? 'UP' : cat.changePercentage < -5 ? 'DOWN' : 'STABLE';
+          cat.changePercentage =
+            ((cat.totalAmount - prevAmount) / prevAmount) * 100;
+          cat.trend =
+            cat.changePercentage > 5
+              ? "UP"
+              : cat.changePercentage < -5
+                ? "DOWN"
+                : "STABLE";
         }
       }
     } catch {

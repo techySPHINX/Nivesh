@@ -1,10 +1,13 @@
-import { GraphNode, NodeType } from './graph-node.entity';
-import { GraphRelationship, RelationshipType } from './graph-relationship.entity';
+import { GraphNode, NodeType } from "./graph-node.entity";
+import {
+  GraphRelationship,
+  RelationshipType,
+} from "./graph-relationship.entity";
 
 /**
  * Represents a detected spending pattern in the knowledge graph
  * Aggregates multiple transactions and relationships to identify behavior patterns
- * 
+ *
  * Business Rules:
  * - Pattern must have at least 3 occurrences to be considered valid
  * - Confidence score indicates pattern strength (0-1)
@@ -66,15 +69,15 @@ export class SpendingPattern {
   }): SpendingPattern {
     // Validate minimum requirements
     if (params.frequency < 3) {
-      throw new Error('Pattern must occur at least 3 times');
+      throw new Error("Pattern must occur at least 3 times");
     }
 
     if (params.confidence < 0 || params.confidence > 1) {
-      throw new Error('Confidence must be between 0 and 1');
+      throw new Error("Confidence must be between 0 and 1");
     }
 
     if (params.nodes.length === 0) {
-      throw new Error('Pattern must involve at least one node');
+      throw new Error("Pattern must involve at least one node");
     }
 
     const id = `pattern_${params.userId}_${Date.now()}`;
@@ -134,16 +137,17 @@ export class SpendingPattern {
    */
   getDescription(): string {
     const typeDescriptions: Record<PatternType, string> = {
-      [PatternType.RECURRING_PAYMENT]: 'Recurring payment pattern',
-      [PatternType.PERIODIC_SPENDING]: 'Periodic spending pattern',
-      [PatternType.CATEGORY_CONCENTRATION]: 'High spending in specific category',
-      [PatternType.MERCHANT_LOYALTY]: 'Frequent purchases at merchant',
-      [PatternType.TIME_OF_DAY]: 'Time-based spending pattern',
-      [PatternType.LOCATION_BASED]: 'Location-based spending pattern',
-      [PatternType.SEASONAL]: 'Seasonal spending pattern',
-      [PatternType.UNUSUAL_SPENDING]: 'Unusual spending detected',
-      [PatternType.BUDGET_OVERRUN]: 'Budget limit exceeded',
-      [PatternType.GOAL_PROGRESS]: 'Goal progress pattern',
+      [PatternType.RECURRING_PAYMENT]: "Recurring payment pattern",
+      [PatternType.PERIODIC_SPENDING]: "Periodic spending pattern",
+      [PatternType.CATEGORY_CONCENTRATION]:
+        "High spending in specific category",
+      [PatternType.MERCHANT_LOYALTY]: "Frequent purchases at merchant",
+      [PatternType.TIME_OF_DAY]: "Time-based spending pattern",
+      [PatternType.LOCATION_BASED]: "Location-based spending pattern",
+      [PatternType.SEASONAL]: "Seasonal spending pattern",
+      [PatternType.UNUSUAL_SPENDING]: "Unusual spending detected",
+      [PatternType.BUDGET_OVERRUN]: "Budget limit exceeded",
+      [PatternType.GOAL_PROGRESS]: "Goal progress pattern",
     };
 
     return typeDescriptions[this._patternType];
@@ -157,28 +161,28 @@ export class SpendingPattern {
 
     if (this.isRecurring() && !this.hasAutomation()) {
       recommendations.push({
-        type: 'AUTOMATION',
-        title: 'Set up automatic payment',
-        description: 'Automate this recurring expense to never miss a payment',
-        priority: 'medium',
+        type: "AUTOMATION",
+        title: "Set up automatic payment",
+        description: "Automate this recurring expense to never miss a payment",
+        priority: "medium",
       });
     }
 
     if (this.isAnomalous()) {
       recommendations.push({
-        type: 'ALERT',
-        title: 'Review unusual activity',
-        description: 'This spending pattern deviates from your normal behavior',
-        priority: 'high',
+        type: "ALERT",
+        title: "Review unusual activity",
+        description: "This spending pattern deviates from your normal behavior",
+        priority: "high",
       });
     }
 
     if (this._patternType === PatternType.CATEGORY_CONCENTRATION) {
       recommendations.push({
-        type: 'BUDGET',
-        title: 'Consider budget adjustment',
+        type: "BUDGET",
+        title: "Consider budget adjustment",
         description: `High spending in ${this._metadata.categories[0]}`,
-        priority: 'medium',
+        priority: "medium",
       });
     }
 
@@ -186,7 +190,7 @@ export class SpendingPattern {
   }
 
   private hasAutomation(): boolean {
-    return this._metadata.tags?.includes('automated') ?? false;
+    return this._metadata.tags?.includes("automated") ?? false;
   }
 
   // Getters
@@ -258,16 +262,16 @@ export class SpendingPattern {
  * Enum for different types of spending patterns
  */
 export enum PatternType {
-  RECURRING_PAYMENT = 'RECURRING_PAYMENT',
-  PERIODIC_SPENDING = 'PERIODIC_SPENDING',
-  CATEGORY_CONCENTRATION = 'CATEGORY_CONCENTRATION',
-  MERCHANT_LOYALTY = 'MERCHANT_LOYALTY',
-  TIME_OF_DAY = 'TIME_OF_DAY',
-  LOCATION_BASED = 'LOCATION_BASED',
-  SEASONAL = 'SEASONAL',
-  UNUSUAL_SPENDING = 'UNUSUAL_SPENDING',
-  BUDGET_OVERRUN = 'BUDGET_OVERRUN',
-  GOAL_PROGRESS = 'GOAL_PROGRESS',
+  RECURRING_PAYMENT = "RECURRING_PAYMENT",
+  PERIODIC_SPENDING = "PERIODIC_SPENDING",
+  CATEGORY_CONCENTRATION = "CATEGORY_CONCENTRATION",
+  MERCHANT_LOYALTY = "MERCHANT_LOYALTY",
+  TIME_OF_DAY = "TIME_OF_DAY",
+  LOCATION_BASED = "LOCATION_BASED",
+  SEASONAL = "SEASONAL",
+  UNUSUAL_SPENDING = "UNUSUAL_SPENDING",
+  BUDGET_OVERRUN = "BUDGET_OVERRUN",
+  GOAL_PROGRESS = "GOAL_PROGRESS",
 }
 
 /**
@@ -276,7 +280,7 @@ export enum PatternType {
 export interface PatternTimeframe {
   startDate: Date;
   endDate: Date;
-  periodicity?: 'daily' | 'weekly' | 'monthly' | 'yearly';
+  periodicity?: "daily" | "weekly" | "monthly" | "yearly";
 }
 
 /**
@@ -295,8 +299,8 @@ export interface PatternMetadata {
  * Recommendation generated from pattern
  */
 export interface PatternRecommendation {
-  type: 'AUTOMATION' | 'ALERT' | 'BUDGET' | 'GOAL' | 'OPTIMIZATION';
+  type: "AUTOMATION" | "ALERT" | "BUDGET" | "GOAL" | "OPTIMIZATION";
   title: string;
   description: string;
-  priority: 'low' | 'medium' | 'high';
+  priority: "low" | "medium" | "high";
 }

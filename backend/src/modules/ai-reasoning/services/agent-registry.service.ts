@@ -1,10 +1,6 @@
-import { Injectable, Logger } from '@nestjs/common';
-import {
-  AgentMessage,
-  AgentResponse,
-  AgentType,
-} from '../types/agent.types';
-import { BaseAgent } from '../agents/base.agent';
+import { Injectable, Logger } from "@nestjs/common";
+import { AgentMessage, AgentResponse, AgentType } from "../types/agent.types";
+import { BaseAgent } from "../agents/base.agent";
 
 /**
  * AgentRegistry Service
@@ -29,7 +25,7 @@ export class AgentRegistry {
   private readonly agents: Map<AgentType, BaseAgent> = new Map();
 
   constructor() {
-    this.logger.log('AgentRegistry initialized');
+    this.logger.log("AgentRegistry initialized");
   }
 
   /**
@@ -89,7 +85,7 @@ export class AgentRegistry {
     const agent = this.agents.get(agentType);
 
     if (!agent) {
-      const availableAgents = Array.from(this.agents.keys()).join(', ');
+      const availableAgents = Array.from(this.agents.keys()).join(", ");
       throw new Error(
         `Agent type '${agentType}' not found. Available agents: ${availableAgents}`,
       );
@@ -131,7 +127,7 @@ export class AgentRegistry {
    */
   async routeMessage(message: AgentMessage): Promise<AgentResponse[]> {
     this.logger.debug(
-      `Routing message ${message.id} from ${message.from} to ${message.to.join(', ')}`,
+      `Routing message ${message.id} from ${message.from} to ${message.to.join(", ")}`,
     );
 
     const recipients = message.to;
@@ -241,7 +237,7 @@ export class AgentRegistry {
     message: AgentMessage,
   ): Promise<AgentResponse[]> {
     this.logger.debug(
-      `Parallel execution of ${agentTypes.length} agents: ${agentTypes.join(', ')}`,
+      `Parallel execution of ${agentTypes.length} agents: ${agentTypes.join(", ")}`,
     );
 
     const responses = await Promise.all(
@@ -281,7 +277,7 @@ export class AgentRegistry {
     initialMessage: AgentMessage,
   ): Promise<AgentResponse[]> {
     this.logger.debug(
-      `Sequential execution of ${agentTypes.length} agents: ${agentTypes.join(' → ')}`,
+      `Sequential execution of ${agentTypes.length} agents: ${agentTypes.join(" → ")}`,
     );
 
     const responses: AgentResponse[] = [];
@@ -364,7 +360,7 @@ export class AgentRegistry {
    */
   clearAll(): void {
     this.agents.clear();
-    this.logger.warn('All agents cleared from registry');
+    this.logger.warn("All agents cleared from registry");
   }
 
   /**
@@ -374,8 +370,6 @@ export class AgentRegistry {
    * @returns Array of agent metadata
    */
   getAllAgentMetadata(): Array<{ type: AgentType; id: string }> {
-    return Array.from(this.agents.values()).map((agent) =>
-      agent.getMetadata(),
-    );
+    return Array.from(this.agents.values()).map((agent) => agent.getMetadata());
   }
 }

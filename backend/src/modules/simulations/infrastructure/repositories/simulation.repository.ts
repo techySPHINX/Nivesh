@@ -1,11 +1,11 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { PrismaService } from '../../../../core/database/postgres/prisma.service';
-import { ISimulationRepository } from '../../domain/repositories/simulation.repository.interface';
+import { Injectable, Logger } from "@nestjs/common";
+import { PrismaService } from "../../../../core/database/postgres/prisma.service";
+import { ISimulationRepository } from "../../domain/repositories/simulation.repository.interface";
 import {
   Simulation,
   SimulationType,
   SimulationStatus,
-} from '../../domain/entities/simulation.entity';
+} from "../../domain/entities/simulation.entity";
 
 @Injectable()
 export class SimulationRepository implements ISimulationRepository {
@@ -21,7 +21,7 @@ export class SimulationRepository implements ISimulationRepository {
       type: simulation.type,
       scenario: simulation.scenario,
       inputParameters: simulation.inputParameters as any,
-      results: simulation.results as any || undefined,
+      results: (simulation.results as any) || undefined,
       status: simulation.status,
       metadata: simulation.metadata || undefined,
       completedAt: simulation.completedAt,
@@ -44,7 +44,7 @@ export class SimulationRepository implements ISimulationRepository {
   async findByUserId(userId: string): Promise<Simulation[]> {
     const results = await this.prisma.simulation.findMany({
       where: { userId },
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: "desc" },
     });
     return results.map(Simulation.fromPersistence);
   }
@@ -57,7 +57,7 @@ export class SimulationRepository implements ISimulationRepository {
     const [results, total] = await Promise.all([
       this.prisma.simulation.findMany({
         where: { userId },
-        orderBy: { createdAt: 'desc' },
+        orderBy: { createdAt: "desc" },
         skip,
         take,
       }),
@@ -70,18 +70,24 @@ export class SimulationRepository implements ISimulationRepository {
     };
   }
 
-  async findByType(userId: string, type: SimulationType): Promise<Simulation[]> {
+  async findByType(
+    userId: string,
+    type: SimulationType,
+  ): Promise<Simulation[]> {
     const results = await this.prisma.simulation.findMany({
       where: { userId, type },
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: "desc" },
     });
     return results.map(Simulation.fromPersistence);
   }
 
-  async findByStatus(userId: string, status: SimulationStatus): Promise<Simulation[]> {
+  async findByStatus(
+    userId: string,
+    status: SimulationStatus,
+  ): Promise<Simulation[]> {
     const results = await this.prisma.simulation.findMany({
       where: { userId, status },
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: "desc" },
     });
     return results.map(Simulation.fromPersistence);
   }

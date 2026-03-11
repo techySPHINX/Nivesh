@@ -1,4 +1,4 @@
-import { ValidationException } from '../../../../core/exceptions/base.exception';
+import { ValidationException } from "../../../../core/exceptions/base.exception";
 
 export class Email {
   private readonly value: string;
@@ -10,16 +10,16 @@ export class Email {
 
   private validate(email: string): void {
     if (!email) {
-      throw new ValidationException('Email is required');
+      throw new ValidationException("Email is required");
     }
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
-      throw new ValidationException('Invalid email format');
+      throw new ValidationException("Invalid email format");
     }
 
     if (email.length > 255) {
-      throw new ValidationException('Email must not exceed 255 characters');
+      throw new ValidationException("Email must not exceed 255 characters");
     }
   }
 

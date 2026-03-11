@@ -3,5 +3,5 @@
  * Retrieves aggregated financial context for a user
  */
 export class GetFinancialContextQuery {
-  constructor(public readonly userId: string) { }
+  constructor(public readonly userId: string) {}
 }

@@ -1,5 +1,5 @@
-import { Module, Global } from '@nestjs/common';
-import { KafkaModule as NestKafkaModule } from './kafka/kafka.module';
+import { Module, Global } from "@nestjs/common";
+import { KafkaModule as NestKafkaModule } from "./kafka/kafka.module";
 
 @Global()
 @Module({

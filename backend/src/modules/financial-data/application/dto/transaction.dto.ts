@@ -7,41 +7,41 @@ import {
   Min,
   MaxLength,
   IsDateString,
-} from 'class-validator';
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+} from "class-validator";
+import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
 import {
   TransactionType,
   TransactionCategory,
   TransactionStatus,
-} from '../../domain/entities/transaction.entity';
-import { Currency } from '../../domain/value-objects/money.vo';
+} from "../../domain/entities/transaction.entity";
+import { Currency } from "../../domain/value-objects/money.vo";
 
 // ==========================================
 // Transaction DTOs
 // ==========================================
 
 export class CreateTransactionDto {
-  @ApiProperty({ description: 'Account ID' })
+  @ApiProperty({ description: "Account ID" })
   @IsString()
   @IsNotEmpty()
   accountId: string;
 
   @ApiProperty({
     enum: TransactionType,
-    description: 'Transaction type',
+    description: "Transaction type",
     example: TransactionType.DEBIT,
   })
   @IsEnum(TransactionType)
   type: TransactionType;
 
-  @ApiProperty({ description: 'Transaction amount', example: 1500 })
+  @ApiProperty({ description: "Transaction amount", example: 1500 })
   @IsNumber()
   @Min(0.01)
   amount: number;
 
   @ApiPropertyOptional({
     enum: Currency,
-    description: 'Currency',
+    description: "Currency",
     default: Currency.INR,
   })
   @IsEnum(Currency)
@@ -50,47 +50,53 @@ export class CreateTransactionDto {
 
   @ApiProperty({
     enum: TransactionCategory,
-    description: 'Transaction category',
+    description: "Transaction category",
     example: TransactionCategory.FOOD,
   })
   @IsEnum(TransactionCategory)
   category: TransactionCategory;
 
-  @ApiProperty({ description: 'Transaction description', example: 'Dinner at restaurant' })
+  @ApiProperty({
+    description: "Transaction description",
+    example: "Dinner at restaurant",
+  })
   @IsString()
   @IsNotEmpty()
   @MaxLength(500)
   description: string;
 
-  @ApiPropertyOptional({ description: 'Merchant name', example: 'Pizza Hut' })
+  @ApiPropertyOptional({ description: "Merchant name", example: "Pizza Hut" })
   @IsString()
   @IsOptional()
   @MaxLength(200)
   merchantName?: string;
 
-  @ApiProperty({ description: 'Transaction date', example: '2026-01-20T10:30:00Z' })
+  @ApiProperty({
+    description: "Transaction date",
+    example: "2026-01-20T10:30:00Z",
+  })
   @IsDateString()
   transactionDate: string;
 
-  @ApiPropertyOptional({ description: 'Reference number' })
+  @ApiPropertyOptional({ description: "Reference number" })
   @IsString()
   @IsOptional()
   referenceNumber?: string;
 }
 
 export class UpdateTransactionDto {
-  @ApiPropertyOptional({ enum: TransactionCategory, description: 'Category' })
+  @ApiPropertyOptional({ enum: TransactionCategory, description: "Category" })
   @IsEnum(TransactionCategory)
   @IsOptional()
   category?: TransactionCategory;
 
-  @ApiPropertyOptional({ description: 'Description' })
+  @ApiPropertyOptional({ description: "Description" })
   @IsString()
   @IsOptional()
   @MaxLength(500)
   description?: string;
 
-  @ApiPropertyOptional({ enum: TransactionStatus, description: 'Status' })
+  @ApiPropertyOptional({ enum: TransactionStatus, description: "Status" })
   @IsEnum(TransactionStatus)
   @IsOptional()
   status?: TransactionStatus;
@@ -156,7 +162,7 @@ export class TransactionResponseDto {
 }
 
 export class TransactionFiltersDto {
-  @ApiPropertyOptional({ description: 'Account ID' })
+  @ApiPropertyOptional({ description: "Account ID" })
   @IsString()
   @IsOptional()
   accountId?: string;
@@ -166,23 +172,23 @@ export class TransactionFiltersDto {
   @IsOptional()
   category?: TransactionCategory;
 
-  @ApiPropertyOptional({ description: 'Start date', example: '2026-01-01' })
+  @ApiPropertyOptional({ description: "Start date", example: "2026-01-01" })
   @IsDateString()
   @IsOptional()
   startDate?: string;
 
-  @ApiPropertyOptional({ description: 'End date', example: '2026-01-31' })
+  @ApiPropertyOptional({ description: "End date", example: "2026-01-31" })
   @IsDateString()
   @IsOptional()
   endDate?: string;
 
-  @ApiPropertyOptional({ description: 'Minimum amount' })
+  @ApiPropertyOptional({ description: "Minimum amount" })
   @IsNumber()
   @IsOptional()
   @Min(0)
   minAmount?: number;
 
-  @ApiPropertyOptional({ description: 'Maximum amount' })
+  @ApiPropertyOptional({ description: "Maximum amount" })
   @IsNumber()
   @IsOptional()
   @Min(0)

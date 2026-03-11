@@ -1,17 +1,23 @@
-import { CommandHandler, ICommandHandler, EventBus } from '@nestjs/cqrs';
-import { Inject, NotFoundException, ForbiddenException } from '@nestjs/common';
-import { CreateGoalCommand } from '../commands/create-goal.command';
-import { Goal } from '../../domain/entities/goal.entity';
-import { IGoalRepository, GOAL_REPOSITORY } from '../../domain/repositories/goal.repository.interface';
-import { GoalCreatedEvent } from '../../domain/events/goal.events';
-import { GoalResponseDto } from '../dto/goal-response.dto';
+import { CommandHandler, ICommandHandler, EventBus } from "@nestjs/cqrs";
+import { Inject, NotFoundException, ForbiddenException } from "@nestjs/common";
+import { CreateGoalCommand } from "../commands/create-goal.command";
+import { Goal } from "../../domain/entities/goal.entity";
+import {
+  IGoalRepository,
+  GOAL_REPOSITORY,
+} from "../../domain/repositories/goal.repository.interface";
+import { GoalCreatedEvent } from "../../domain/events/goal.events";
+import { GoalResponseDto } from "../dto/goal-response.dto";
 
 @CommandHandler(CreateGoalCommand)
-export class CreateGoalHandler implements ICommandHandler<CreateGoalCommand, GoalResponseDto> {
+export class CreateGoalHandler implements ICommandHandler<
+  CreateGoalCommand,
+  GoalResponseDto
+> {
   constructor(
     @Inject(GOAL_REPOSITORY) private readonly goalRepository: IGoalRepository,
     private readonly eventBus: EventBus,
-  ) { }
+  ) {}
 
   async execute(command: CreateGoalCommand): Promise<GoalResponseDto> {
     const { userId, dto } = command;

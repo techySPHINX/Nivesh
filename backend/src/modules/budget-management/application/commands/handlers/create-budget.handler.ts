@@ -1,9 +1,9 @@
-import { CommandHandler, ICommandHandler, EventBus } from '@nestjs/cqrs';
-import { Injectable, Inject, ConflictException } from '@nestjs/common';
-import { CreateBudgetCommand } from '../create-budget.command';
-import { PrismaService } from '../../../../../core/database/postgres/prisma.service';
-import { BudgetResponseDto } from '../../dto';
-import { BudgetCreatedEvent } from '../../../domain/events/budget.events';
+import { CommandHandler, ICommandHandler, EventBus } from "@nestjs/cqrs";
+import { Injectable, Inject, ConflictException } from "@nestjs/common";
+import { CreateBudgetCommand } from "../create-budget.command";
+import { PrismaService } from "../../../../../core/database/postgres/prisma.service";
+import { BudgetResponseDto } from "../../dto";
+import { BudgetCreatedEvent } from "../../../domain/events/budget.events";
 
 @CommandHandler(CreateBudgetCommand)
 @Injectable()
@@ -38,7 +38,7 @@ export class CreateBudgetHandler implements ICommandHandler<CreateBudgetCommand>
         userId,
         category: createBudgetDto.category,
         amount: createBudgetDto.amount,
-        currency: createBudgetDto.currency || 'INR',
+        currency: createBudgetDto.currency || "INR",
         period: createBudgetDto.period,
         startDate: new Date(createBudgetDto.startDate),
         endDate: new Date(createBudgetDto.endDate),

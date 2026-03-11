@@ -63,7 +63,11 @@ export class GraphQueryResult<T = any> {
    */
   map<U>(mapper: (record: T) => U): GraphQueryResult<U> {
     const mappedRecords = this._records.map(mapper);
-    return new GraphQueryResult(mappedRecords, this._summary, this._executionTime);
+    return new GraphQueryResult(
+      mappedRecords,
+      this._summary,
+      this._executionTime,
+    );
   }
 
   /**
@@ -91,7 +95,7 @@ export class GraphQueryResult<T = any> {
   /**
    * Get first record or throw error
    */
-  firstOrThrow(message = 'No records found'): T {
+  firstOrThrow(message = "No records found"): T {
     const first = this.first();
     if (!first) {
       throw new Error(message);

@@ -1,19 +1,23 @@
-import { Injectable } from '@nestjs/common';
-import { PrismaService } from '../../../../core/database/postgres/prisma.service';
-import { IGoalRepository } from '../../domain/repositories/goal.repository.interface';
-import { Goal, GoalStatus, GoalCategory } from '../../domain/entities/goal.entity';
+import { Injectable } from "@nestjs/common";
+import { PrismaService } from "../../../../core/database/postgres/prisma.service";
+import { IGoalRepository } from "../../domain/repositories/goal.repository.interface";
+import {
+  Goal,
+  GoalStatus,
+  GoalCategory,
+} from "../../domain/entities/goal.entity";
 
 @Injectable()
 export class GoalRepository implements IGoalRepository {
-  constructor(private readonly prisma: PrismaService) { }
+  constructor(private readonly prisma: PrismaService) {}
 
   async save(goal: Goal): Promise<Goal> {
     // Convert GoalPriority enum to number for Prisma
     const priorityMap = {
-      'LOW': 1,
-      'MEDIUM': 2,
-      'HIGH': 3,
-      'CRITICAL': 4,
+      LOW: 1,
+      MEDIUM: 2,
+      HIGH: 3,
+      CRITICAL: 4,
     };
 
     const data = {
@@ -57,10 +61,10 @@ export class GoalRepository implements IGoalRepository {
   async findByUserId(userId: string): Promise<Goal[]> {
     const results = await this.prisma.goal.findMany({
       where: { userId },
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: "desc" },
     });
 
-    return results.map(r => Goal.fromPersistence(r));
+    return results.map((r) => Goal.fromPersistence(r));
   }
 
   async findActiveByUserId(userId: string): Promise<Goal[]> {
@@ -69,10 +73,10 @@ export class GoalRepository implements IGoalRepository {
         userId,
         status: GoalStatus.ACTIVE,
       },
-      orderBy: { targetDate: 'asc' },
+      orderBy: { targetDate: "asc" },
     });
 
-    return results.map(r => Goal.fromPersistence(r));
+    return results.map((r) => Goal.fromPersistence(r));
   }
 
   async findByStatus(userId: string, status: GoalStatus): Promise<Goal[]> {
@@ -81,22 +85,25 @@ export class GoalRepository implements IGoalRepository {
         userId,
         status,
       },
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: "desc" },
     });
 
-    return results.map(r => Goal.fromPersistence(r));
+    return results.map((r) => Goal.fromPersistence(r));
   }
 
-  async findByCategory(userId: string, category: GoalCategory): Promise<Goal[]> {
+  async findByCategory(
+    userId: string,
+    category: GoalCategory,
+  ): Promise<Goal[]> {
     const results = await this.prisma.goal.findMany({
       where: {
         userId,
         category,
       },
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: "desc" },
     });
 
-    return results.map(r => Goal.fromPersistence(r));
+    return results.map((r) => Goal.fromPersistence(r));
   }
 
   async findOverdueGoals(userId: string): Promise<Goal[]> {
@@ -109,10 +116,10 @@ export class GoalRepository implements IGoalRepository {
           lt: now,
         },
       },
-      orderBy: { targetDate: 'asc' },
+      orderBy: { targetDate: "asc" },
     });
 
-    return results.map(r => Goal.fromPersistence(r));
+    return results.map((r) => Goal.fromPersistence(r));
   }
 
   async findAutoContributionGoals(userId: string): Promise<Goal[]> {
@@ -122,10 +129,10 @@ export class GoalRepository implements IGoalRepository {
         status: GoalStatus.ACTIVE,
         autoContribute: true,
       },
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: "desc" },
     });
 
-    return results.map(r => Goal.fromPersistence(r));
+    return results.map((r) => Goal.fromPersistence(r));
   }
 
   async findByLinkedAccount(accountId: string): Promise<Goal[]> {
@@ -133,10 +140,10 @@ export class GoalRepository implements IGoalRepository {
       where: {
         linkedAccountId: accountId,
       },
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: "desc" },
     });
 
-    return results.map(r => Goal.fromPersistence(r));
+    return results.map((r) => Goal.fromPersistence(r));
   }
 
   async getTotalTargetAmount(userId: string): Promise<number> {

@@ -1,27 +1,27 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { EventBus } from '@nestjs/cqrs';
+import { Test, TestingModule } from "@nestjs/testing";
+import { EventBus } from "@nestjs/cqrs";
 import {
   CreateAccountHandler,
   UpdateAccountHandler,
   DeleteAccountHandler,
   LinkAccountHandler,
-} from './account.handlers';
+} from "./account.handlers";
 import {
   CreateAccountCommand,
   UpdateAccountCommand,
   DeleteAccountCommand,
   LinkAccountCommand,
-} from '../account.commands';
-import { ACCOUNT_REPOSITORY } from '../../../domain/repositories/account.repository.interface';
-import { KafkaProducerService } from '../../../../../core/messaging/kafka/kafka.producer';
+} from "../account.commands";
+import { ACCOUNT_REPOSITORY } from "../../../domain/repositories/account.repository.interface";
+import { KafkaProducerService } from "../../../../../core/messaging/kafka/kafka.producer";
 import {
   ConflictException,
   EntityNotFoundException,
   UnauthorizedException,
-} from '../../../../../core/exceptions/base.exception';
-import { AccountStatus } from '../../../domain/entities/account.entity';
+} from "../../../../../core/exceptions/base.exception";
+import { AccountStatus } from "../../../domain/entities/account.entity";
 
-describe('Account Command Handlers', () => {
+describe("Account Command Handlers", () => {
   let accountRepository: Record<string, jest.Mock>;
   let eventBus: { publish: jest.Mock };
   let kafkaProducer: { publish: jest.Mock };
@@ -40,7 +40,7 @@ describe('Account Command Handlers', () => {
 
   // ─── CreateAccountHandler ─────────────────────────────────────────────
 
-  describe('CreateAccountHandler', () => {
+  describe("CreateAccountHandler", () => {
     let handler: CreateAccountHandler;
 
     beforeEach(async () => {
@@ -56,76 +56,78 @@ describe('Account Command Handlers', () => {
       handler = module.get<CreateAccountHandler>(CreateAccountHandler);
     });
 
-    it('should create an account successfully', async () => {
+    it("should create an account successfully", async () => {
       accountRepository.existsByAccountNumber.mockResolvedValue(false);
 
       const savedAccount = {
-        Id: 'acc-123',
-        UserId: 'user-1',
-        AccountType: 'SAVINGS',
-        BankName: 'SBI',
-        Balance: { getAmount: () => 10000, getCurrency: () => 'INR' },
+        Id: "acc-123",
+        UserId: "user-1",
+        AccountType: "SAVINGS",
+        BankName: "SBI",
+        Balance: { getAmount: () => 10000, getCurrency: () => "INR" },
       };
       accountRepository.save.mockResolvedValue(savedAccount);
 
       const command = new CreateAccountCommand(
-        'user-1',
-        'My Savings',
-        '1234567890',
-        'SAVINGS' as any,
-        'SBI',
+        "user-1",
+        "My Savings",
+        "1234567890",
+        "SAVINGS" as any,
+        "SBI",
         10000,
-        'INR' as any,
-        'SBIN0001234',
+        "INR" as any,
+        "SBIN0001234",
       );
 
       const result = await handler.execute(command);
 
       expect(result).toEqual(savedAccount);
-      expect(accountRepository.existsByAccountNumber).toHaveBeenCalledWith('1234567890');
+      expect(accountRepository.existsByAccountNumber).toHaveBeenCalledWith(
+        "1234567890",
+      );
       expect(accountRepository.save).toHaveBeenCalledTimes(1);
       expect(eventBus.publish).toHaveBeenCalledTimes(1);
       expect(kafkaProducer.publish).toHaveBeenCalledTimes(1);
     });
 
-    it('should throw ConflictException if account number already exists', async () => {
+    it("should throw ConflictException if account number already exists", async () => {
       accountRepository.existsByAccountNumber.mockResolvedValue(true);
 
       const command = new CreateAccountCommand(
-        'user-1',
-        'Dup Account',
-        '1234567890',
-        'SAVINGS' as any,
-        'SBI',
+        "user-1",
+        "Dup Account",
+        "1234567890",
+        "SAVINGS" as any,
+        "SBI",
         5000,
-        'INR' as any,
+        "INR" as any,
       );
 
       await expect(handler.execute(command)).rejects.toThrow(ConflictException);
       expect(accountRepository.save).not.toHaveBeenCalled();
     });
 
-    it('should propagate repository errors', async () => {
+    it("should propagate repository errors", async () => {
       accountRepository.existsByAccountNumber.mockResolvedValue(false);
-      accountRepository.save.mockRejectedValue(new Error('DB error'));
+      accountRepository.save.mockRejectedValue(new Error("DB error"));
 
       const command = new CreateAccountCommand(
-        'user-1',
-        'Acc',
-        '9999999999',
-        'SAVINGS' as any,
-        'SBI',
+        "user-1",
+        "Acc",
+        "9999999999",
+        "SAVINGS" as any,
+        "SBI",
         0,
-        'INR' as any,
+        "INR" as any,
       );
 
-      await expect(handler.execute(command)).rejects.toThrow('DB error');
+      await expect(handler.execute(command)).rejects.toThrow("DB error");
     });
   });
 
   // ─── UpdateAccountHandler ─────────────────────────────────────────────
 
-  describe('UpdateAccountHandler', () => {
+  describe("UpdateAccountHandler", () => {
     let handler: UpdateAccountHandler;
 
     beforeEach(async () => {
@@ -141,11 +143,11 @@ describe('Account Command Handlers', () => {
       handler = module.get<UpdateAccountHandler>(UpdateAccountHandler);
     });
 
-    it('should update an account successfully', async () => {
+    it("should update an account successfully", async () => {
       const existingAccount = {
-        Id: 'acc-1',
-        UserId: 'user-1',
-        Balance: { getCurrency: () => 'INR' },
+        Id: "acc-1",
+        UserId: "user-1",
+        Balance: { getCurrency: () => "INR" },
         rename: jest.fn(),
         updateBalance: jest.fn(),
         activate: jest.fn(),
@@ -154,42 +156,50 @@ describe('Account Command Handlers', () => {
         close: jest.fn(),
       };
       accountRepository.findById.mockResolvedValue(existingAccount);
-      accountRepository.save.mockResolvedValue({ ...existingAccount, Id: 'acc-1', UserId: 'user-1' });
+      accountRepository.save.mockResolvedValue({
+        ...existingAccount,
+        Id: "acc-1",
+        UserId: "user-1",
+      });
 
-      const command = new UpdateAccountCommand('acc-1', 'user-1', {
-        accountName: 'Renamed Account',
+      const command = new UpdateAccountCommand("acc-1", "user-1", {
+        accountName: "Renamed Account",
       });
 
       const result = await handler.execute(command);
 
       expect(result).toBeDefined();
-      expect(existingAccount.rename).toHaveBeenCalledWith('Renamed Account');
+      expect(existingAccount.rename).toHaveBeenCalledWith("Renamed Account");
       expect(eventBus.publish).toHaveBeenCalledTimes(1);
     });
 
-    it('should throw EntityNotFoundException when account not found', async () => {
+    it("should throw EntityNotFoundException when account not found", async () => {
       accountRepository.findById.mockResolvedValue(null);
 
-      const command = new UpdateAccountCommand('nonexistent', 'user-1', {});
+      const command = new UpdateAccountCommand("nonexistent", "user-1", {});
 
-      await expect(handler.execute(command)).rejects.toThrow(EntityNotFoundException);
+      await expect(handler.execute(command)).rejects.toThrow(
+        EntityNotFoundException,
+      );
     });
 
-    it('should throw UnauthorizedException when user does not own the account', async () => {
+    it("should throw UnauthorizedException when user does not own the account", async () => {
       accountRepository.findById.mockResolvedValue({
-        Id: 'acc-1',
-        UserId: 'other-user',
+        Id: "acc-1",
+        UserId: "other-user",
       });
 
-      const command = new UpdateAccountCommand('acc-1', 'user-1', {});
+      const command = new UpdateAccountCommand("acc-1", "user-1", {});
 
-      await expect(handler.execute(command)).rejects.toThrow(UnauthorizedException);
+      await expect(handler.execute(command)).rejects.toThrow(
+        UnauthorizedException,
+      );
     });
   });
 
   // ─── DeleteAccountHandler ─────────────────────────────────────────────
 
-  describe('DeleteAccountHandler', () => {
+  describe("DeleteAccountHandler", () => {
     let handler: DeleteAccountHandler;
 
     beforeEach(async () => {
@@ -203,41 +213,41 @@ describe('Account Command Handlers', () => {
       handler = module.get<DeleteAccountHandler>(DeleteAccountHandler);
     });
 
-    it('should delete an account successfully', async () => {
+    it("should delete an account successfully", async () => {
       accountRepository.findById.mockResolvedValue({
-        Id: 'acc-1',
-        UserId: 'user-1',
+        Id: "acc-1",
+        UserId: "user-1",
       });
       accountRepository.delete.mockResolvedValue(undefined);
 
-      await handler.execute(new DeleteAccountCommand('acc-1', 'user-1'));
+      await handler.execute(new DeleteAccountCommand("acc-1", "user-1"));
 
-      expect(accountRepository.delete).toHaveBeenCalledWith('acc-1');
+      expect(accountRepository.delete).toHaveBeenCalledWith("acc-1");
     });
 
-    it('should throw EntityNotFoundException when account not found', async () => {
+    it("should throw EntityNotFoundException when account not found", async () => {
       accountRepository.findById.mockResolvedValue(null);
 
       await expect(
-        handler.execute(new DeleteAccountCommand('nonexistent', 'user-1')),
+        handler.execute(new DeleteAccountCommand("nonexistent", "user-1")),
       ).rejects.toThrow(EntityNotFoundException);
     });
 
-    it('should throw UnauthorizedException when user does not own the account', async () => {
+    it("should throw UnauthorizedException when user does not own the account", async () => {
       accountRepository.findById.mockResolvedValue({
-        Id: 'acc-1',
-        UserId: 'other-user',
+        Id: "acc-1",
+        UserId: "other-user",
       });
 
       await expect(
-        handler.execute(new DeleteAccountCommand('acc-1', 'user-1')),
+        handler.execute(new DeleteAccountCommand("acc-1", "user-1")),
       ).rejects.toThrow(UnauthorizedException);
     });
   });
 
   // ─── LinkAccountHandler ───────────────────────────────────────────────
 
-  describe('LinkAccountHandler', () => {
+  describe("LinkAccountHandler", () => {
     let handler: LinkAccountHandler;
 
     beforeEach(async () => {
@@ -251,38 +261,40 @@ describe('Account Command Handlers', () => {
       handler = module.get<LinkAccountHandler>(LinkAccountHandler);
     });
 
-    it('should link an account successfully', async () => {
+    it("should link an account successfully", async () => {
       const account = {
-        Id: 'acc-1',
-        UserId: 'user-1',
+        Id: "acc-1",
+        UserId: "user-1",
         linkAccount: jest.fn(),
       };
       accountRepository.findById.mockResolvedValue(account);
-      accountRepository.save.mockResolvedValue({ ...account, Id: 'acc-1' });
+      accountRepository.save.mockResolvedValue({ ...account, Id: "acc-1" });
 
-      const result = await handler.execute(new LinkAccountCommand('acc-1', 'user-1'));
+      const result = await handler.execute(
+        new LinkAccountCommand("acc-1", "user-1"),
+      );
 
       expect(result).toBeDefined();
       expect(account.linkAccount).toHaveBeenCalled();
       expect(accountRepository.save).toHaveBeenCalled();
     });
 
-    it('should throw EntityNotFoundException when account not found', async () => {
+    it("should throw EntityNotFoundException when account not found", async () => {
       accountRepository.findById.mockResolvedValue(null);
 
       await expect(
-        handler.execute(new LinkAccountCommand('nonexistent', 'user-1')),
+        handler.execute(new LinkAccountCommand("nonexistent", "user-1")),
       ).rejects.toThrow(EntityNotFoundException);
     });
 
-    it('should throw UnauthorizedException when user does not own the account', async () => {
+    it("should throw UnauthorizedException when user does not own the account", async () => {
       accountRepository.findById.mockResolvedValue({
-        Id: 'acc-1',
-        UserId: 'other-user',
+        Id: "acc-1",
+        UserId: "other-user",
       });
 
       await expect(
-        handler.execute(new LinkAccountCommand('acc-1', 'user-1')),
+        handler.execute(new LinkAccountCommand("acc-1", "user-1")),
       ).rejects.toThrow(UnauthorizedException);
     });
   });

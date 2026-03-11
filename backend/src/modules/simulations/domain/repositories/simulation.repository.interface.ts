@@ -1,4 +1,8 @@
-import { Simulation, SimulationType, SimulationStatus } from '../entities/simulation.entity';
+import {
+  Simulation,
+  SimulationType,
+  SimulationStatus,
+} from "../entities/simulation.entity";
 
 export interface ISimulationRepository {
   save(simulation: Simulation): Promise<Simulation>;
@@ -14,4 +18,4 @@ export interface ISimulationRepository {
   delete(id: string): Promise<void>;
 }
 
-export const SIMULATION_REPOSITORY = Symbol('SIMULATION_REPOSITORY');
+export const SIMULATION_REPOSITORY = Symbol("SIMULATION_REPOSITORY");

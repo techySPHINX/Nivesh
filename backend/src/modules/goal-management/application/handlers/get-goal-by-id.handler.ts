@@ -1,27 +1,35 @@
-import { IQueryHandler, QueryHandler } from '@nestjs/cqrs';
-import { Inject, NotFoundException, ForbiddenException } from '@nestjs/common';
-import { GetGoalByIdQuery } from '../queries/get-goal-by-id.query';
-import { IGoalRepository, GOAL_REPOSITORY } from '../../domain/repositories/goal.repository.interface';
-import { GoalResponseDto } from '../dto/goal-response.dto';
-import { Goal } from '../../domain/entities/goal.entity';
+import { IQueryHandler, QueryHandler } from "@nestjs/cqrs";
+import { Inject, NotFoundException, ForbiddenException } from "@nestjs/common";
+import { GetGoalByIdQuery } from "../queries/get-goal-by-id.query";
+import {
+  IGoalRepository,
+  GOAL_REPOSITORY,
+} from "../../domain/repositories/goal.repository.interface";
+import { GoalResponseDto } from "../dto/goal-response.dto";
+import { Goal } from "../../domain/entities/goal.entity";
 
 @QueryHandler(GetGoalByIdQuery)
-export class GetGoalByIdHandler implements IQueryHandler<GetGoalByIdQuery, GoalResponseDto> {
+export class GetGoalByIdHandler implements IQueryHandler<
+  GetGoalByIdQuery,
+  GoalResponseDto
+> {
   constructor(
     @Inject(GOAL_REPOSITORY) private readonly goalRepository: IGoalRepository,
-  ) { }
+  ) {}
 
   async execute(query: GetGoalByIdQuery): Promise<GoalResponseDto> {
     const { userId, goalId } = query;
 
     const goal = await this.goalRepository.findById(goalId);
     if (!goal) {
-      throw new NotFoundException('Goal not found');
+      throw new NotFoundException("Goal not found");
     }
 
     // Check ownership
     if (goal.userId !== userId) {
-      throw new ForbiddenException('You do not have permission to view this goal');
+      throw new ForbiddenException(
+        "You do not have permission to view this goal",
+      );
     }
 
     return this.toResponseDto(goal);

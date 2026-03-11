@@ -1,5 +1,5 @@
-import { BaseEvent } from '../../../../core/messaging/events/base.event';
-import { AlertType, AlertSeverity } from '../entities/alert.entity';
+import { BaseEvent } from "../../../../core/messaging/events/base.event";
+import { AlertType, AlertSeverity } from "../entities/alert.entity";
 
 export class AlertCreatedEvent extends BaseEvent {
   constructor(
@@ -10,9 +10,9 @@ export class AlertCreatedEvent extends BaseEvent {
     public readonly title: string,
   ) {
     super({
-      eventType: 'alert.created',
+      eventType: "alert.created",
       aggregateId: alertId,
-      aggregateType: 'Alert',
+      aggregateType: "Alert",
     });
   }
 }
@@ -23,9 +23,9 @@ export class AlertReadEvent extends BaseEvent {
     public readonly userId: string,
   ) {
     super({
-      eventType: 'alert.read',
+      eventType: "alert.read",
       aggregateId: alertId,
-      aggregateType: 'Alert',
+      aggregateType: "Alert",
     });
   }
 }
@@ -36,9 +36,9 @@ export class AlertDismissedEvent extends BaseEvent {
     public readonly userId: string,
   ) {
     super({
-      eventType: 'alert.dismissed',
+      eventType: "alert.dismissed",
       aggregateId: alertId,
-      aggregateType: 'Alert',
+      aggregateType: "Alert",
     });
   }
 }
@@ -51,9 +51,9 @@ export class AlertRuleCreatedEvent extends BaseEvent {
     public readonly name: string,
   ) {
     super({
-      eventType: 'alert.rule.created',
+      eventType: "alert.rule.created",
       aggregateId: ruleId,
-      aggregateType: 'AlertRule',
+      aggregateType: "AlertRule",
     });
   }
 }
@@ -65,9 +65,9 @@ export class AlertRuleTriggeredEvent extends BaseEvent {
     public readonly alertId: string,
   ) {
     super({
-      eventType: 'alert.rule.triggered',
+      eventType: "alert.rule.triggered",
       aggregateId: ruleId,
-      aggregateType: 'AlertRule',
+      aggregateType: "AlertRule",
     });
   }
 }

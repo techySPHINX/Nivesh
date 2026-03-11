@@ -1,5 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { CypherQuery, IKnowledgeGraphRepository } from '../../domain';
+import { Injectable, Logger } from "@nestjs/common";
+import { CypherQuery, IKnowledgeGraphRepository } from "../../domain";
 
 /**
  * Category insights interface
@@ -11,7 +11,7 @@ export interface CategoryInsight {
   transactionCount: number;
   averageTransaction: number;
   percentageOfTotal: number;
-  trend: 'increasing' | 'decreasing' | 'stable';
+  trend: "increasing" | "decreasing" | "stable";
   topMerchants: string[];
 }
 
@@ -22,14 +22,17 @@ export interface CategoryInsight {
 export class CategoryInsightsService {
   private readonly logger = new Logger(CategoryInsightsService.name);
 
-  constructor(
+  constructor() {
     // private readonly graphRepository: IKnowledgeGraphRepository,
-  ) { }
+  }
 
   /**
    * Get category insights for a user
    */
-  async getCategoryInsights(userId: string, period = 30): Promise<CategoryInsight[]> {
+  async getCategoryInsights(
+    userId: string,
+    period = 30,
+  ): Promise<CategoryInsight[]> {
     const query = CypherQuery.create(
       `
       MATCH (u:User {id: $userId})-[:OWNS]->(a:Account)

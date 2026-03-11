@@ -3,13 +3,13 @@
  * Provides mock implementations of repository interfaces
  */
 
-import { IAccountRepository } from '../../modules/financial-data/domain/repositories/account.repository.interface';
+import { IAccountRepository } from "../../modules/financial-data/domain/repositories/account.repository.interface";
 import {
   ITransactionRepository,
   TransactionFilters,
-} from '../../modules/financial-data/domain/repositories/transaction.repository.interface';
-import { Account } from '../../modules/financial-data/domain/entities/account.entity';
-import { Transaction } from '../../modules/financial-data/domain/entities/transaction.entity';
+} from "../../modules/financial-data/domain/repositories/transaction.repository.interface";
+import { Account } from "../../modules/financial-data/domain/entities/account.entity";
+import { Transaction } from "../../modules/financial-data/domain/entities/transaction.entity";
 
 /**
  * Mock Account Repository
@@ -27,7 +27,9 @@ export class MockAccountRepository implements IAccountRepository {
   }
 
   async findByUserId(userId: string): Promise<Account[]> {
-    return Array.from(this.accounts.values()).filter((account) => account.UserId === userId);
+    return Array.from(this.accounts.values()).filter(
+      (account) => account.UserId === userId,
+    );
   }
 
   async findByAccountNumber(accountNumber: string): Promise<Account | null> {
@@ -46,7 +48,7 @@ export class MockAccountRepository implements IAccountRepository {
 
   async findActiveByUserId(userId: string): Promise<Account[]> {
     return Array.from(this.accounts.values()).filter(
-      (account) => account.UserId === userId && account.Status === 'ACTIVE',
+      (account) => account.UserId === userId && account.Status === "ACTIVE",
     );
   }
 
@@ -109,21 +111,29 @@ export class MockTransactionRepository implements ITransactionRepository {
     return this.transactions.get(id) || null;
   }
 
-  async findByUserId(userId: string, limit: number = 50): Promise<Transaction[]> {
+  async findByUserId(
+    userId: string,
+    limit: number = 50,
+  ): Promise<Transaction[]> {
     const userTransactions = Array.from(this.transactions.values()).filter(
       (transaction) => transaction.UserId === userId,
     );
     return userTransactions.slice(0, limit);
   }
 
-  async findByAccountId(accountId: string, limit: number = 50): Promise<Transaction[]> {
+  async findByAccountId(
+    accountId: string,
+    limit: number = 50,
+  ): Promise<Transaction[]> {
     const accountTransactions = Array.from(this.transactions.values()).filter(
       (transaction) => transaction.AccountId === accountId,
     );
     return accountTransactions.slice(0, limit);
   }
 
-  async findByReferenceNumber(referenceNumber: string): Promise<Transaction | null> {
+  async findByReferenceNumber(
+    referenceNumber: string,
+  ): Promise<Transaction | null> {
     return (
       Array.from(this.transactions.values()).find(
         (transaction) => transaction.ReferenceNumber === referenceNumber,
@@ -135,8 +145,8 @@ export class MockTransactionRepository implements ITransactionRepository {
     skip?: number;
     take?: number;
     filters?: TransactionFilters;
-    sortBy?: 'transactionDate' | 'amount' | 'createdAt';
-    sortOrder?: 'asc' | 'desc';
+    sortBy?: "transactionDate" | "amount" | "createdAt";
+    sortOrder?: "asc" | "desc";
   }): Promise<{ transactions: Transaction[]; total: number }> {
     let result = Array.from(this.transactions.values());
 
@@ -165,11 +175,15 @@ export class MockTransactionRepository implements ITransactionRepository {
       }
 
       if (filters.minAmount !== undefined) {
-        result = result.filter((t) => t.Amount.getAmount() >= filters.minAmount!);
+        result = result.filter(
+          (t) => t.Amount.getAmount() >= filters.minAmount!,
+        );
       }
 
       if (filters.maxAmount !== undefined) {
-        result = result.filter((t) => t.Amount.getAmount() <= filters.maxAmount!);
+        result = result.filter(
+          (t) => t.Amount.getAmount() <= filters.maxAmount!,
+        );
       }
     }
 
@@ -180,15 +194,15 @@ export class MockTransactionRepository implements ITransactionRepository {
         let bValue: any;
 
         switch (options.sortBy) {
-          case 'transactionDate':
+          case "transactionDate":
             aValue = a.TransactionDate.getTime();
             bValue = b.TransactionDate.getTime();
             break;
-          case 'amount':
+          case "amount":
             aValue = a.Amount.getAmount();
             bValue = b.Amount.getAmount();
             break;
-          case 'createdAt':
+          case "createdAt":
             aValue = a.CreatedAt.getTime();
             bValue = b.CreatedAt.getTime();
             break;
@@ -197,7 +211,7 @@ export class MockTransactionRepository implements ITransactionRepository {
             bValue = b.CreatedAt.getTime();
         }
 
-        const order = options.sortOrder === 'asc' ? 1 : -1;
+        const order = options.sortOrder === "asc" ? 1 : -1;
         if (aValue < bValue) return -1 * order;
         if (aValue > bValue) return 1 * order;
         return 0;
@@ -230,7 +244,10 @@ export class MockTransactionRepository implements ITransactionRepository {
 
     userTransactions.forEach((transaction) => {
       const current = categoryTotals.get(transaction.Category) || 0;
-      categoryTotals.set(transaction.Category, current + transaction.Amount.getAmount());
+      categoryTotals.set(
+        transaction.Category,
+        current + transaction.Amount.getAmount(),
+      );
     });
 
     return Array.from(categoryTotals.entries()).map(([category, total]) => ({
@@ -239,7 +256,11 @@ export class MockTransactionRepository implements ITransactionRepository {
     }));
   }
 
-  async getMonthlySpending(userId: string, year: number, month: number): Promise<number> {
+  async getMonthlySpending(
+    userId: string,
+    year: number,
+    month: number,
+  ): Promise<number> {
     const startDate = new Date(year, month - 1, 1);
     const endDate = new Date(year, month, 0, 23, 59, 59, 999);
 
@@ -248,21 +269,32 @@ export class MockTransactionRepository implements ITransactionRepository {
         transaction.UserId === userId &&
         transaction.TransactionDate >= startDate &&
         transaction.TransactionDate <= endDate &&
-        transaction.Type === 'DEBIT',
+        transaction.Type === "DEBIT",
     );
 
-    return monthlyTransactions.reduce((sum, transaction) => sum + transaction.Amount.getAmount(), 0);
+    return monthlyTransactions.reduce(
+      (sum, transaction) => sum + transaction.Amount.getAmount(),
+      0,
+    );
   }
 
-  async getRecentTransactions(userId: string, days: number = 7, limit?: number): Promise<Transaction[]> {
+  async getRecentTransactions(
+    userId: string,
+    days: number = 7,
+    limit?: number,
+  ): Promise<Transaction[]> {
     const cutoffDate = new Date();
     cutoffDate.setDate(cutoffDate.getDate() - days);
 
     let result = Array.from(this.transactions.values())
       .filter(
-        (transaction) => transaction.UserId === userId && transaction.TransactionDate >= cutoffDate,
+        (transaction) =>
+          transaction.UserId === userId &&
+          transaction.TransactionDate >= cutoffDate,
       )
-      .sort((a, b) => b.TransactionDate.getTime() - a.TransactionDate.getTime());
+      .sort(
+        (a, b) => b.TransactionDate.getTime() - a.TransactionDate.getTime(),
+      );
 
     if (limit) {
       result = result.slice(0, limit);

@@ -1,21 +1,21 @@
-import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { Inject, Logger } from '@nestjs/common';
-import { SimulateScenarioCommand } from '../commands/simulate-scenario.command';
-import { FinancialContextBuilderService } from '../../domain/services/context-builder.service';
+import { CommandHandler, ICommandHandler } from "@nestjs/cqrs";
+import { Inject, Logger } from "@nestjs/common";
+import { SimulateScenarioCommand } from "../commands/simulate-scenario.command";
+import { FinancialContextBuilderService } from "../../domain/services/context-builder.service";
 import {
   SimulationResult,
   ScenarioType,
   ProjectedOutcome,
   ScenarioParameters,
-} from '../../domain/value-objects/simulation.vo';
+} from "../../domain/value-objects/simulation.vo";
 import {
   IAccountRepository,
   ACCOUNT_REPOSITORY,
-} from '../../../financial-data/domain/repositories/account.repository.interface';
+} from "../../../financial-data/domain/repositories/account.repository.interface";
 import {
   ITransactionRepository,
   TRANSACTION_REPOSITORY,
-} from '../../../financial-data/domain/repositories/transaction.repository.interface';
+} from "../../../financial-data/domain/repositories/transaction.repository.interface";
 
 /**
  * Simulate Scenario Handler
@@ -33,8 +33,10 @@ export class SimulateScenarioHandler implements ICommandHandler<SimulateScenario
 
   constructor(
     private readonly contextBuilder: FinancialContextBuilderService,
-    @Inject(ACCOUNT_REPOSITORY) private readonly accountRepository: IAccountRepository,
-    @Inject(TRANSACTION_REPOSITORY) private readonly transactionRepository: ITransactionRepository,
+    @Inject(ACCOUNT_REPOSITORY)
+    private readonly accountRepository: IAccountRepository,
+    @Inject(TRANSACTION_REPOSITORY)
+    private readonly transactionRepository: ITransactionRepository,
   ) {}
 
   async execute(command: SimulateScenarioCommand): Promise<SimulationResult> {
@@ -77,8 +79,11 @@ export class SimulateScenarioHandler implements ICommandHandler<SimulateScenario
       const snapshot = context.toAIContext();
       return this.dispatch(scenarioType, snapshot, parameters);
     } catch (error) {
-      const msg = error instanceof Error ? error.message : 'Unknown error';
-      this.logger.error(`Simulation failed: ${msg}`, error instanceof Error ? error.stack : '');
+      const msg = error instanceof Error ? error.message : "Unknown error";
+      this.logger.error(
+        `Simulation failed: ${msg}`,
+        error instanceof Error ? error.stack : "",
+      );
       throw error;
     }
   }
@@ -104,7 +109,9 @@ export class SimulateScenarioHandler implements ICommandHandler<SimulateScenario
       case ScenarioType.LIFESTYLE_CHANGE:
         return this.simulateLifestyleChange(snapshot, params);
       default:
-        this.logger.warn(`Unknown scenarioType "${scenarioType}", falling back to NEW_EXPENSE`);
+        this.logger.warn(
+          `Unknown scenarioType "${scenarioType}", falling back to NEW_EXPENSE`,
+        );
         return this.simulateNewExpense(snapshot, params);
     }
   }
@@ -113,80 +120,153 @@ export class SimulateScenarioHandler implements ICommandHandler<SimulateScenario
 
   /** NEW_EXPENSE: monthly cost increase (EMI, subscription, rent, etc.) */
   private simulateNewExpense(snapshot: any, params: any): SimulationResult {
-    const { category = 'general', monthlyChange = 0 } = params;
+    const { category = "general", monthlyChange = 0 } = params;
 
     const income = snapshot.totalIncome ?? 0;
     const currentExpenses = snapshot.totalExpenses ?? 0;
     const newExpenses = currentExpenses + monthlyChange;
-    const currentSavingsRate = income > 0 ? ((income - currentExpenses) / income) * 100 : 0;
+    const currentSavingsRate =
+      income > 0 ? ((income - currentExpenses) / income) * 100 : 0;
     const newSavings = income - newExpenses;
     const newSavingsRate = income > 0 ? (newSavings / income) * 100 : 0;
     const impact = newSavingsRate - currentSavingsRate;
 
     const outcomes = this.buildOutcomes([
-      { metric: 'Monthly Expenses', current: currentExpenses, projected: newExpenses, change: monthlyChange },
-      { metric: 'Savings Rate (%)', current: currentSavingsRate, projected: newSavingsRate },
-      { metric: 'Annual Impact (₹)', current: 0, projected: -monthlyChange * 12, change: -monthlyChange * 12 },
+      {
+        metric: "Monthly Expenses",
+        current: currentExpenses,
+        projected: newExpenses,
+        change: monthlyChange,
+      },
+      {
+        metric: "Savings Rate (%)",
+        current: currentSavingsRate,
+        projected: newSavingsRate,
+      },
+      {
+        metric: "Annual Impact (₹)",
+        current: 0,
+        projected: -monthlyChange * 12,
+        change: -monthlyChange * 12,
+      },
     ]);
 
     const insights: string[] = [];
-    if (newSavingsRate < 10) insights.push('⚠️ Savings rate falls below recommended 10% minimum');
-    if (newSavingsRate < 0) insights.push('🚨 Critical: Monthly expenses exceed income');
-    if (newSavingsRate >= 20) insights.push('✅ Healthy savings rate maintained');
+    if (newSavingsRate < 10)
+      insights.push("⚠️ Savings rate falls below recommended 10% minimum");
+    if (newSavingsRate < 0)
+      insights.push("🚨 Critical: Monthly expenses exceed income");
+    if (newSavingsRate >= 20)
+      insights.push("✅ Healthy savings rate maintained");
 
-    const alternatives = newSavingsRate < 10
-      ? ['Cut discretionary spending to offset new expense', 'Seek income enhancement through upskilling']
-      : [];
+    const alternatives =
+      newSavingsRate < 10
+        ? [
+            "Cut discretionary spending to offset new expense",
+            "Seek income enhancement through upskilling",
+          ]
+        : [];
 
-    return this.buildResult(ScenarioType.NEW_EXPENSE, { category, monthlyChange }, 12, outcomes, impact, insights, alternatives);
+    return this.buildResult(
+      ScenarioType.NEW_EXPENSE,
+      { category, monthlyChange },
+      12,
+      outcomes,
+      impact,
+      insights,
+      alternatives,
+    );
   }
 
   /** INCOME_CHANGE: salary raise, job loss, freelance side income */
   private simulateIncomeChange(snapshot: any, params: any): SimulationResult {
-    const { monthlyChange = 0, reason = 'salary change' } = params;
+    const { monthlyChange = 0, reason = "salary change" } = params;
 
     const currentIncome = snapshot.totalIncome ?? 0;
     const expenses = snapshot.totalExpenses ?? 0;
     const newIncome = currentIncome + monthlyChange;
     const currentSavings = currentIncome - expenses;
     const newSavings = newIncome - expenses;
-    const currentSavingsRate = currentIncome > 0 ? (currentSavings / currentIncome) * 100 : 0;
+    const currentSavingsRate =
+      currentIncome > 0 ? (currentSavings / currentIncome) * 100 : 0;
     const newSavingsRate = newIncome > 0 ? (newSavings / newIncome) * 100 : 0;
     const savingsRateChange = newSavingsRate - currentSavingsRate;
 
     // Project 12-month corpus delta
-    const corpusDelta = (newSavings - currentSavings) * 12 * Math.pow(1.10, 1); // 10% assumed return
+    const corpusDelta = (newSavings - currentSavings) * 12 * Math.pow(1.1, 1); // 10% assumed return
 
     const outcomes = this.buildOutcomes([
-      { metric: 'Monthly Income', current: currentIncome, projected: newIncome, change: monthlyChange },
-      { metric: 'Monthly Savings', current: currentSavings, projected: newSavings },
-      { metric: 'Savings Rate (%)', current: currentSavingsRate, projected: newSavingsRate },
-      { metric: '1-Year Corpus Delta (₹)', current: 0, projected: corpusDelta, change: corpusDelta },
+      {
+        metric: "Monthly Income",
+        current: currentIncome,
+        projected: newIncome,
+        change: monthlyChange,
+      },
+      {
+        metric: "Monthly Savings",
+        current: currentSavings,
+        projected: newSavings,
+      },
+      {
+        metric: "Savings Rate (%)",
+        current: currentSavingsRate,
+        projected: newSavingsRate,
+      },
+      {
+        metric: "1-Year Corpus Delta (₹)",
+        current: 0,
+        projected: corpusDelta,
+        change: corpusDelta,
+      },
     ]);
 
     const insights: string[] = [];
     if (monthlyChange > 0) {
-      insights.push(`✅ Income boost of ₹${monthlyChange.toLocaleString('en-IN')}/month improves savings by ₹${Math.round(corpusDelta).toLocaleString('en-IN')} over a year.`);
-      insights.push('Consider channelling the raise directly into SIP to avoid lifestyle inflation.');
+      insights.push(
+        `✅ Income boost of ₹${monthlyChange.toLocaleString("en-IN")}/month improves savings by ₹${Math.round(corpusDelta).toLocaleString("en-IN")} over a year.`,
+      );
+      insights.push(
+        "Consider channelling the raise directly into SIP to avoid lifestyle inflation.",
+      );
     } else {
-      insights.push(`⚠️ Income reduction of ₹${Math.abs(monthlyChange).toLocaleString('en-IN')}/month.`);
-      if (newSavings < 0) insights.push('🚨 Expenses now exceed income — immediate budget review needed.');
+      insights.push(
+        `⚠️ Income reduction of ₹${Math.abs(monthlyChange).toLocaleString("en-IN")}/month.`,
+      );
+      if (newSavings < 0)
+        insights.push(
+          "🚨 Expenses now exceed income — immediate budget review needed.",
+        );
     }
 
-    const alternatives = monthlyChange < 0
-      ? ['Identify top 3 discretionary categories to cut', 'Explore freelance or consulting income']
-      : ['Automate the income delta into index funds', 'Accelerate goal timelines with surplus'];
+    const alternatives =
+      monthlyChange < 0
+        ? [
+            "Identify top 3 discretionary categories to cut",
+            "Explore freelance or consulting income",
+          ]
+        : [
+            "Automate the income delta into index funds",
+            "Accelerate goal timelines with surplus",
+          ];
 
-    return this.buildResult(ScenarioType.INCOME_CHANGE, { monthlyChange, reason }, 12, outcomes, savingsRateChange, insights, alternatives);
+    return this.buildResult(
+      ScenarioType.INCOME_CHANGE,
+      { monthlyChange, reason },
+      12,
+      outcomes,
+      savingsRateChange,
+      insights,
+      alternatives,
+    );
   }
 
   /** GOAL_ADDITION: adds a new financial goal requiring a monthly reserve */
   private simulateGoalAddition(snapshot: any, params: any): SimulationResult {
     const {
-      goalName = 'New Goal',
+      goalName = "New Goal",
       targetAmount = 0,
       timelineMonths = 60,
-      expectedReturnRate = 0.10,
+      expectedReturnRate = 0.1,
     } = params;
 
     const income = snapshot.totalIncome ?? 0;
@@ -205,36 +285,70 @@ export class SimulateScenarioHandler implements ICommandHandler<SimulateScenario
     const newSavingsRate = income > 0 ? (newSavings / income) * 100 : 0;
 
     const outcomes = this.buildOutcomes([
-      { metric: 'Monthly SIP Required', current: 0, projected: monthlyRequired, change: monthlyRequired },
-      { metric: 'Free Monthly Savings', current: currentSavings, projected: newSavings },
-      { metric: 'Savings Rate (%)', current: currentSavingsRate, projected: newSavingsRate },
-      { metric: 'Goal Timeline (months)', current: 0, projected: timelineMonths, change: timelineMonths },
+      {
+        metric: "Monthly SIP Required",
+        current: 0,
+        projected: monthlyRequired,
+        change: monthlyRequired,
+      },
+      {
+        metric: "Free Monthly Savings",
+        current: currentSavings,
+        projected: newSavings,
+      },
+      {
+        metric: "Savings Rate (%)",
+        current: currentSavingsRate,
+        projected: newSavingsRate,
+      },
+      {
+        metric: "Goal Timeline (months)",
+        current: 0,
+        projected: timelineMonths,
+        change: timelineMonths,
+      },
     ]);
 
     const insights: string[] = [
-      `You need ₹${Math.round(monthlyRequired).toLocaleString('en-IN')}/month to reach ₹${targetAmount.toLocaleString('en-IN')} in ${timelineMonths} months.`,
+      `You need ₹${Math.round(monthlyRequired).toLocaleString("en-IN")}/month to reach ₹${targetAmount.toLocaleString("en-IN")} in ${timelineMonths} months.`,
     ];
-    if (newSavingsRate < 0) insights.push('🚨 Goal not feasible without income growth or expense reduction.');
-    if (monthlyRequired > currentSavings) insights.push('⚠️ Monthly requirement exceeds current surplus.');
-    if (newSavingsRate >= 10) insights.push('✅ Savings rate remains healthy after goal allocation.');
+    if (newSavingsRate < 0)
+      insights.push(
+        "🚨 Goal not feasible without income growth or expense reduction.",
+      );
+    if (monthlyRequired > currentSavings)
+      insights.push("⚠️ Monthly requirement exceeds current surplus.");
+    if (newSavingsRate >= 10)
+      insights.push("✅ Savings rate remains healthy after goal allocation.");
 
     const alternatives =
       newSavingsRate < 0
         ? [
             `Extend timeline to ${Math.round(timelineMonths * 1.5)} months to reduce monthly requirement`,
-            'Start with partial SIP and step-up annually',
+            "Start with partial SIP and step-up annually",
           ]
         : [];
 
     const impact = newSavingsRate - currentSavingsRate;
-    return this.buildResult(ScenarioType.GOAL_ADDITION, { goalName, targetAmount, timelineMonths }, timelineMonths, outcomes, impact, insights, alternatives);
+    return this.buildResult(
+      ScenarioType.GOAL_ADDITION,
+      { goalName, targetAmount, timelineMonths },
+      timelineMonths,
+      outcomes,
+      impact,
+      insights,
+      alternatives,
+    );
   }
 
   /** INVESTMENT_INCREASE: boosting SIP / equity allocation */
-  private simulateInvestmentIncrease(snapshot: any, params: any): SimulationResult {
+  private simulateInvestmentIncrease(
+    snapshot: any,
+    params: any,
+  ): SimulationResult {
     const {
       additionalMonthlyInvestment = 0,
-      instrument = 'equity mutual fund',
+      instrument = "equity mutual fund",
       expectedReturnRate = 0.12,
       investmentHorizonYears = 10,
     } = params;
@@ -248,30 +362,57 @@ export class SimulateScenarioHandler implements ICommandHandler<SimulateScenario
     const r = expectedReturnRate / 12;
     const fv =
       r > 0
-        ? additionalMonthlyInvestment * ((Math.pow(1 + r, horizonMonths) - 1) / r)
+        ? additionalMonthlyInvestment *
+          ((Math.pow(1 + r, horizonMonths) - 1) / r)
         : additionalMonthlyInvestment * horizonMonths;
 
     const outcomes = this.buildOutcomes([
-      { metric: 'Additional Monthly SIP', current: 0, projected: additionalMonthlyInvestment, change: additionalMonthlyInvestment },
-      { metric: 'Free Monthly Cash', current: currentSavings, projected: newFreeSavings },
-      { metric: `${investmentHorizonYears}Y Corpus (₹)`, current: 0, projected: Math.round(fv), change: Math.round(fv) },
+      {
+        metric: "Additional Monthly SIP",
+        current: 0,
+        projected: additionalMonthlyInvestment,
+        change: additionalMonthlyInvestment,
+      },
+      {
+        metric: "Free Monthly Cash",
+        current: currentSavings,
+        projected: newFreeSavings,
+      },
+      {
+        metric: `${investmentHorizonYears}Y Corpus (₹)`,
+        current: 0,
+        projected: Math.round(fv),
+        change: Math.round(fv),
+      },
     ]);
 
     const insights = [
-      `₹${additionalMonthlyInvestment.toLocaleString('en-IN')}/month into ${instrument} at ${(expectedReturnRate * 100).toFixed(1)}% grows to ₹${Math.round(fv).toLocaleString('en-IN')} in ${investmentHorizonYears} years.`,
+      `₹${additionalMonthlyInvestment.toLocaleString("en-IN")}/month into ${instrument} at ${(expectedReturnRate * 100).toFixed(1)}% grows to ₹${Math.round(fv).toLocaleString("en-IN")} in ${investmentHorizonYears} years.`,
     ];
-    if (newFreeSavings < 0) insights.push('⚠️ Insufficient free cash — reduce investment or expenses.');
-    if (newFreeSavings > 0) insights.push('✅ Emergency fund buffer maintained.');
+    if (newFreeSavings < 0)
+      insights.push(
+        "⚠️ Insufficient free cash — reduce investment or expenses.",
+      );
+    if (newFreeSavings > 0)
+      insights.push("✅ Emergency fund buffer maintained.");
 
     const impact = newFreeSavings >= 0 ? fv : -Math.abs(newFreeSavings) * 12;
-    return this.buildResult(ScenarioType.INVESTMENT_INCREASE, { additionalMonthlyInvestment, instrument, expectedReturnRate }, horizonMonths, outcomes, impact, insights, []);
+    return this.buildResult(
+      ScenarioType.INVESTMENT_INCREASE,
+      { additionalMonthlyInvestment, instrument, expectedReturnRate },
+      horizonMonths,
+      outcomes,
+      impact,
+      insights,
+      [],
+    );
   }
 
   /** DEBT_PAYOFF: eliminates an EMI and redirects cash to investments/savings */
   private simulateDebtPayoff(snapshot: any, params: any): SimulationResult {
     const {
       emiAmount = 0,
-      loanName = 'Loan',
+      loanName = "Loan",
       remainingMonths = 0,
       redirectToInvestment = true,
       expectedReturnRate = 0.12,
@@ -290,32 +431,63 @@ export class SimulateScenarioHandler implements ICommandHandler<SimulateScenario
 
     // Investment corpus if redirected
     const r = expectedReturnRate / 12;
-    const redirectionCorpus = redirectToInvestment && r > 0
-      ? emiAmount * ((Math.pow(1 + r, remainingMonths) - 1) / r)
-      : emiAmount * remainingMonths;
+    const redirectionCorpus =
+      redirectToInvestment && r > 0
+        ? emiAmount * ((Math.pow(1 + r, remainingMonths) - 1) / r)
+        : emiAmount * remainingMonths;
 
     const outcomes = this.buildOutcomes([
-      { metric: 'Monthly Cash Flow', current: currentSavings, projected: newSavings, change: emiAmount },
-      { metric: 'Savings Rate (%)', current: currentSavingsRate, projected: newSavingsRate },
-      { metric: `Corpus if Redirected (₹)`, current: 0, projected: Math.round(redirectionCorpus), change: Math.round(redirectionCorpus) },
+      {
+        metric: "Monthly Cash Flow",
+        current: currentSavings,
+        projected: newSavings,
+        change: emiAmount,
+      },
+      {
+        metric: "Savings Rate (%)",
+        current: currentSavingsRate,
+        projected: newSavingsRate,
+      },
+      {
+        metric: `Corpus if Redirected (₹)`,
+        current: 0,
+        projected: Math.round(redirectionCorpus),
+        change: Math.round(redirectionCorpus),
+      },
     ]);
 
     const insights = [
-      `Paying off ${loanName} frees ₹${emiAmount.toLocaleString('en-IN')}/month, improving savings rate from ${currentSavingsRate.toFixed(1)}% to ${newSavingsRate.toFixed(1)}%.`,
+      `Paying off ${loanName} frees ₹${emiAmount.toLocaleString("en-IN")}/month, improving savings rate from ${currentSavingsRate.toFixed(1)}% to ${newSavingsRate.toFixed(1)}%.`,
     ];
     if (redirectToInvestment) {
-      insights.push(`Redirecting ₹${emiAmount.toLocaleString('en-IN')}/month to investments could grow to ₹${Math.round(redirectionCorpus).toLocaleString('en-IN')} over ${remainingMonths} months.`);
+      insights.push(
+        `Redirecting ₹${emiAmount.toLocaleString("en-IN")}/month to investments could grow to ₹${Math.round(redirectionCorpus).toLocaleString("en-IN")} over ${remainingMonths} months.`,
+      );
     }
 
     const impact = newSavingsRate - currentSavingsRate;
-    return this.buildResult(ScenarioType.DEBT_PAYOFF, { loanName, emiAmount, remainingMonths }, remainingMonths, outcomes, impact, insights, []);
+    return this.buildResult(
+      ScenarioType.DEBT_PAYOFF,
+      { loanName, emiAmount, remainingMonths },
+      remainingMonths,
+      outcomes,
+      impact,
+      insights,
+      [],
+    );
   }
 
   /** LIFESTYLE_CHANGE: broad spending cuts or upgrades across categories */
-  private simulateLifestyleChange(snapshot: any, params: any): SimulationResult {
+  private simulateLifestyleChange(
+    snapshot: any,
+    params: any,
+  ): SimulationResult {
     const {
-      categoryChanges = [] as Array<{ category: string; monthlyChange: number }>,
-      description = 'Lifestyle adjustment',
+      categoryChanges = [] as Array<{
+        category: string;
+        monthlyChange: number;
+      }>,
+      description = "Lifestyle adjustment",
     } = params;
 
     const income = snapshot.totalIncome ?? 0;
@@ -331,26 +503,56 @@ export class SimulateScenarioHandler implements ICommandHandler<SimulateScenario
     const newSavingsRate = income > 0 ? (newSavings / income) * 100 : 0;
 
     const outcomes = this.buildOutcomes([
-      { metric: 'Total Monthly Change', current: 0, projected: Math.abs(totalMonthlyChange), change: totalMonthlyChange },
-      { metric: 'Monthly Expenses', current: expenses, projected: newExpenses },
-      { metric: 'Savings Rate (%)', current: currentSavingsRate, projected: newSavingsRate },
-      { metric: 'Annual Savings Impact (₹)', current: 0, projected: -totalMonthlyChange * 12, change: -totalMonthlyChange * 12 },
+      {
+        metric: "Total Monthly Change",
+        current: 0,
+        projected: Math.abs(totalMonthlyChange),
+        change: totalMonthlyChange,
+      },
+      { metric: "Monthly Expenses", current: expenses, projected: newExpenses },
+      {
+        metric: "Savings Rate (%)",
+        current: currentSavingsRate,
+        projected: newSavingsRate,
+      },
+      {
+        metric: "Annual Savings Impact (₹)",
+        current: 0,
+        projected: -totalMonthlyChange * 12,
+        change: -totalMonthlyChange * 12,
+      },
     ]);
 
     const insights: string[] = [description];
     if (totalMonthlyChange < 0) {
-      insights.push(`✅ Reducing spending by ₹${Math.abs(totalMonthlyChange).toLocaleString('en-IN')}/month saves ₹${Math.abs(totalMonthlyChange * 12).toLocaleString('en-IN')} annually.`);
+      insights.push(
+        `✅ Reducing spending by ₹${Math.abs(totalMonthlyChange).toLocaleString("en-IN")}/month saves ₹${Math.abs(totalMonthlyChange * 12).toLocaleString("en-IN")} annually.`,
+      );
     }
-    if (newSavingsRate < 10) insights.push('⚠️ Savings rate still below recommended minimum of 10%.');
+    if (newSavingsRate < 10)
+      insights.push("⚠️ Savings rate still below recommended minimum of 10%.");
 
     const impact = newSavingsRate - currentSavingsRate;
-    return this.buildResult(ScenarioType.LIFESTYLE_CHANGE, { categoryChanges, description }, 12, outcomes, impact, insights, []);
+    return this.buildResult(
+      ScenarioType.LIFESTYLE_CHANGE,
+      { categoryChanges, description },
+      12,
+      outcomes,
+      impact,
+      insights,
+      [],
+    );
   }
 
   // ─── Helpers ────────────────────────────────────────────────────────────────
 
   private buildOutcomes(
-    rows: Array<{ metric: string; current: number; projected: number; change?: number }>,
+    rows: Array<{
+      metric: string;
+      current: number;
+      projected: number;
+      change?: number;
+    }>,
   ): ProjectedOutcome[] {
     return rows.map((r) => {
       const change = r.change ?? r.projected - r.current;
@@ -360,7 +562,9 @@ export class SimulateScenarioHandler implements ICommandHandler<SimulateScenario
         projected: Math.round(r.projected * 100) / 100,
         change: Math.round(change * 100) / 100,
         changePercentage:
-          r.current !== 0 ? Math.round((change / Math.abs(r.current)) * 10000) / 100 : 0,
+          r.current !== 0
+            ? Math.round((change / Math.abs(r.current)) * 10000) / 100
+            : 0,
       };
     });
   }
@@ -374,13 +578,21 @@ export class SimulateScenarioHandler implements ICommandHandler<SimulateScenario
     insights: string[],
     alternatives: string[],
   ): SimulationResult {
-    const impact = impactNumber > 5 ? 'positive' : impactNumber < -5 ? 'negative' : 'neutral';
-    const feasibility =
-      outcomes.some((o) => o.metric.includes('Savings Rate') && o.projected < 0)
-        ? 'unfeasible'
-        : outcomes.some((o) => o.metric.includes('Savings Rate') && o.projected < 10)
-        ? 'challenging'
-        : 'feasible';
+    const impact =
+      impactNumber > 5
+        ? "positive"
+        : impactNumber < -5
+          ? "negative"
+          : "neutral";
+    const feasibility = outcomes.some(
+      (o) => o.metric.includes("Savings Rate") && o.projected < 0,
+    )
+      ? "unfeasible"
+      : outcomes.some(
+            (o) => o.metric.includes("Savings Rate") && o.projected < 10,
+          )
+        ? "challenging"
+        : "feasible";
 
     const params: ScenarioParameters = { type, changes, timeframeMonths };
 

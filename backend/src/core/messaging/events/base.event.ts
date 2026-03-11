@@ -33,51 +33,51 @@ export abstract class BaseEvent implements IEvent {
 // Event Types Registry
 export enum EventType {
   // User Events
-  USER_CREATED = 'user.created',
-  USER_UPDATED = 'user.updated',
-  USER_DELETED = 'user.deleted',
+  USER_CREATED = "user.created",
+  USER_UPDATED = "user.updated",
+  USER_DELETED = "user.deleted",
 
   // Account Events
-  ACCOUNT_CREATED = 'account.created',
-  ACCOUNT_UPDATED = 'account.updated',
-  ACCOUNT_DELETED = 'account.deleted',
-  ACCOUNT_SYNCED = 'account.synced',
+  ACCOUNT_CREATED = "account.created",
+  ACCOUNT_UPDATED = "account.updated",
+  ACCOUNT_DELETED = "account.deleted",
+  ACCOUNT_SYNCED = "account.synced",
 
   // Transaction Events
-  TRANSACTION_CREATED = 'transaction.created',
-  TRANSACTION_UPDATED = 'transaction.updated',
-  TRANSACTION_DELETED = 'transaction.deleted',
-  TRANSACTION_CATEGORIZED = 'transaction.categorized',
-  TRANSACTION_ENRICHED = 'transaction.enriched',
+  TRANSACTION_CREATED = "transaction.created",
+  TRANSACTION_UPDATED = "transaction.updated",
+  TRANSACTION_DELETED = "transaction.deleted",
+  TRANSACTION_CATEGORIZED = "transaction.categorized",
+  TRANSACTION_ENRICHED = "transaction.enriched",
 
   // Goal Events
-  GOAL_CREATED = 'goal.created',
-  GOAL_UPDATED = 'goal.updated',
-  GOAL_ACHIEVED = 'goal.achieved',
-  GOAL_PROGRESS_UPDATED = 'goal.progress.updated',
-  GOAL_CONTRIBUTION_ADDED = 'goal.contribution.added',
-  GOAL_COMPLETED = 'goal.completed',
-  GOAL_CANCELLED = 'goal.cancelled',
-  GOAL_EXPIRED = 'goal.expired',
+  GOAL_CREATED = "goal.created",
+  GOAL_UPDATED = "goal.updated",
+  GOAL_ACHIEVED = "goal.achieved",
+  GOAL_PROGRESS_UPDATED = "goal.progress.updated",
+  GOAL_CONTRIBUTION_ADDED = "goal.contribution.added",
+  GOAL_COMPLETED = "goal.completed",
+  GOAL_CANCELLED = "goal.cancelled",
+  GOAL_EXPIRED = "goal.expired",
 
   // Budget Events
-  BUDGET_CREATED = 'budget.created',
-  BUDGET_UPDATED = 'budget.updated',
-  BUDGET_EXCEEDED = 'budget.exceeded',
-  BUDGET_THRESHOLD_REACHED = 'budget.threshold.reached',
-  CATEGORY_BUDGET_EXCEEDED = 'budget.category.exceeded',
-  BUDGET_COMPLETED = 'budget.completed',
+  BUDGET_CREATED = "budget.created",
+  BUDGET_UPDATED = "budget.updated",
+  BUDGET_EXCEEDED = "budget.exceeded",
+  BUDGET_THRESHOLD_REACHED = "budget.threshold.reached",
+  CATEGORY_BUDGET_EXCEEDED = "budget.category.exceeded",
+  BUDGET_COMPLETED = "budget.completed",
 
   // AI Events
-  AI_QUERY_RECEIVED = 'ai.query.received',
-  AI_RESPONSE_GENERATED = 'ai.response.generated',
-  AI_REASONING_COMPLETED = 'ai.reasoning.completed',
+  AI_QUERY_RECEIVED = "ai.query.received",
+  AI_RESPONSE_GENERATED = "ai.response.generated",
+  AI_REASONING_COMPLETED = "ai.reasoning.completed",
 
   // Alert Events
-  ALERT_TRIGGERED = 'alert.triggered',
-  ALERT_RESOLVED = 'alert.resolved',
+  ALERT_TRIGGERED = "alert.triggered",
+  ALERT_RESOLVED = "alert.resolved",
 
   // System Events
-  SYSTEM_ERROR = 'system.error',
-  SYSTEM_HEALTH_CHECK = 'system.health_check',
+  SYSTEM_ERROR = "system.error",
+  SYSTEM_HEALTH_CHECK = "system.health_check",
 }

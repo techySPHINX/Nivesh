@@ -1,4 +1,4 @@
-import { ValidationException } from '../../../../core/exceptions/base.exception';
+import { ValidationException } from "../../../../core/exceptions/base.exception";
 
 export class PhoneNumber {
   private readonly value: string;
@@ -10,39 +10,40 @@ export class PhoneNumber {
 
   private validate(phoneNumber: string): void {
     if (!phoneNumber) {
-      throw new ValidationException('Phone number is required');
+      throw new ValidationException("Phone number is required");
     }
 
     // Remove all non-digit characters for validation
-    const digitsOnly = phoneNumber.replace(/\D/g, '');
+    const digitsOnly = phoneNumber.replace(/\D/g, "");
 
     // Indian phone numbers: 10 digits (can have +91 prefix)
     if (digitsOnly.length < 10 || digitsOnly.length > 13) {
-      throw new ValidationException('Invalid phone number length');
+      throw new ValidationException("Invalid phone number length");
     }
 
     // Basic format validation
-    const phoneRegex = /^(\+?\d{1,3})?[-.\s]?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}$/;
+    const phoneRegex =
+      /^(\+?\d{1,3})?[-.\s]?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}$/;
     if (!phoneRegex.test(phoneNumber)) {
-      throw new ValidationException('Invalid phone number format');
+      throw new ValidationException("Invalid phone number format");
     }
   }
 
   private normalize(phoneNumber: string): string {
     // Remove all non-digit characters
-    let normalized = phoneNumber.replace(/\D/g, '');
+    let normalized = phoneNumber.replace(/\D/g, "");
 
     // Add +91 if not present for Indian numbers
     if (normalized.length === 10) {
-      normalized = '91' + normalized;
+      normalized = "91" + normalized;
     }
 
     // Remove leading + if present
-    if (normalized.startsWith('+')) {
+    if (normalized.startsWith("+")) {
       normalized = normalized.substring(1);
     }
 
-    return '+' + normalized;
+    return "+" + normalized;
   }
 
   getValue(): string {

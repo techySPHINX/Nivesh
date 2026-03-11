@@ -1,5 +1,5 @@
-import { Goal } from '../entities/goal.entity';
-import { GoalStatus, GoalCategory } from '../entities/goal.entity';
+import { Goal } from "../entities/goal.entity";
+import { GoalStatus, GoalCategory } from "../entities/goal.entity";
 
 /**
  * Goal Repository Interface
@@ -67,4 +67,4 @@ export interface IGoalRepository {
   delete(id: string): Promise<void>;
 }
 
-export const GOAL_REPOSITORY = Symbol('GOAL_REPOSITORY');
+export const GOAL_REPOSITORY = Symbol("GOAL_REPOSITORY");

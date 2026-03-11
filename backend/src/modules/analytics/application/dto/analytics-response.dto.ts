@@ -1,14 +1,18 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty } from "@nestjs/swagger";
 import {
   SpendingTrendPoint,
   CategoryBreakdown,
   NetWorthPoint,
   TimeGranularity,
-} from '../../domain/entities/analytics.entity';
+} from "../../domain/entities/analytics.entity";
 
 export class SpendingTrendsResponseDto {
   @ApiProperty() userId: string;
-  @ApiProperty() period: { from: string; to: string; granularity: TimeGranularity };
+  @ApiProperty() period: {
+    from: string;
+    to: string;
+    granularity: TimeGranularity;
+  };
   @ApiProperty() data: SpendingTrendPoint[];
   @ApiProperty() summary: {
     totalSpent: number;
@@ -30,7 +34,11 @@ export class CategoryBreakdownResponseDto {
 
 export class NetWorthHistoryResponseDto {
   @ApiProperty() userId: string;
-  @ApiProperty() period: { from: string; to: string; granularity: TimeGranularity };
+  @ApiProperty() period: {
+    from: string;
+    to: string;
+    granularity: TimeGranularity;
+  };
   @ApiProperty() data: NetWorthPoint[];
   @ApiProperty() currentNetWorth: number;
   @ApiProperty() changeOverPeriod: number;

@@ -1,39 +1,39 @@
-import { Module, MiddlewareConsumer, NestModule } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
-import { ThrottlerModule } from '@nestjs/throttler';
-import { EventEmitterModule } from '@nestjs/event-emitter';
+import { Module, MiddlewareConsumer, NestModule } from "@nestjs/common";
+import { ConfigModule } from "@nestjs/config";
+import { ThrottlerModule } from "@nestjs/throttler";
+import { EventEmitterModule } from "@nestjs/event-emitter";
 
 // Core modules
-import { CoreConfigModule } from './core/config/config.module';
-import { DatabaseModule } from './core/database/database.module';
-import { MessagingModule } from './core/messaging/messaging.module';
-import { SecurityModule } from './core/security/security.module';
-import { ObservabilityModule } from './core/observability/observability.module';
-import { IntegrationsModule } from './core/integrations/integrations.module';
-import { CorrelationIdMiddleware } from './core/observability/correlation-id.middleware';
+import { CoreConfigModule } from "./core/config/config.module";
+import { DatabaseModule } from "./core/database/database.module";
+import { MessagingModule } from "./core/messaging/messaging.module";
+import { SecurityModule } from "./core/security/security.module";
+import { ObservabilityModule } from "./core/observability/observability.module";
+import { IntegrationsModule } from "./core/integrations/integrations.module";
+import { CorrelationIdMiddleware } from "./core/observability/correlation-id.middleware";
 
 // Feature modules
-import { UserModule } from './modules/user/user.module';
-import { FinancialDataModule } from './modules/financial-data/financial-data.module';
-import { GoalManagementModule } from './modules/goal-management/goal-management.module';
-import { BudgetManagementModule } from './modules/budget-management/budget-management.module';
-import { RAGPipelineModule } from './modules/rag-pipeline/rag-pipeline.module';
-import { AiReasoningModule } from './modules/ai-reasoning/ai-reasoning.module';
-import { KnowledgeGraphModule } from './modules/knowledge-graph/knowledge-graph.module';
-import { PaymentModule } from './modules/payment/payment.module';
-import { SimulationsModule } from './modules/simulations/simulations.module';
-import { AlertsModule } from './modules/alerts/alerts.module';
-import { AnalyticsModule } from './modules/analytics/analytics.module';
+import { UserModule } from "./modules/user/user.module";
+import { FinancialDataModule } from "./modules/financial-data/financial-data.module";
+import { GoalManagementModule } from "./modules/goal-management/goal-management.module";
+import { BudgetManagementModule } from "./modules/budget-management/budget-management.module";
+import { RAGPipelineModule } from "./modules/rag-pipeline/rag-pipeline.module";
+import { AiReasoningModule } from "./modules/ai-reasoning/ai-reasoning.module";
+import { KnowledgeGraphModule } from "./modules/knowledge-graph/knowledge-graph.module";
+import { PaymentModule } from "./modules/payment/payment.module";
+import { SimulationsModule } from "./modules/simulations/simulations.module";
+import { AlertsModule } from "./modules/alerts/alerts.module";
+import { AnalyticsModule } from "./modules/analytics/analytics.module";
 
 // Controllers
-import { HealthController } from './health.controller';
+import { HealthController } from "./health.controller";
 
 @Module({
   imports: [
     // Global configuration
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: ['.env.local', '.env'],
+      envFilePath: [".env.local", ".env"],
       cache: true,
     }),
 
@@ -48,7 +48,7 @@ import { HealthController } from './health.controller';
     // Event emitter for domain events
     EventEmitterModule.forRoot({
       wildcard: true,
-      delimiter: '.',
+      delimiter: ".",
       maxListeners: 10,
     }),
 
@@ -78,6 +78,6 @@ import { HealthController } from './health.controller';
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
-    consumer.apply(CorrelationIdMiddleware).forRoutes('*');
+    consumer.apply(CorrelationIdMiddleware).forRoutes("*");
   }
 }

@@ -1,4 +1,4 @@
-import { Budget, BudgetPeriod, BudgetStatus } from '../entities/budget.entity';
+import { Budget, BudgetPeriod, BudgetStatus } from "../entities/budget.entity";
 
 /**
  * Budget Repository Interface
@@ -27,7 +27,10 @@ export interface IBudgetRepository {
   /**
    * Find current budget for user and period
    */
-  findCurrentByUserAndPeriod(userId: string, period: BudgetPeriod): Promise<Budget | null>;
+  findCurrentByUserAndPeriod(
+    userId: string,
+    period: BudgetPeriod,
+  ): Promise<Budget | null>;
 
   /**
    * Find budgets by status
@@ -42,7 +45,11 @@ export interface IBudgetRepository {
   /**
    * Find budgets for date range
    */
-  findByDateRange(userId: string, startDate: Date, endDate: Date): Promise<Budget[]>;
+  findByDateRange(
+    userId: string,
+    startDate: Date,
+    endDate: Date,
+  ): Promise<Budget[]>;
 
   /**
    * Delete budget
@@ -50,4 +57,4 @@ export interface IBudgetRepository {
   delete(id: string): Promise<void>;
 }
 
-export const BUDGET_REPOSITORY = Symbol('BUDGET_REPOSITORY');
+export const BUDGET_REPOSITORY = Symbol("BUDGET_REPOSITORY");

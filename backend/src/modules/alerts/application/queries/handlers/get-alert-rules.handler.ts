@@ -1,11 +1,11 @@
-import { IQueryHandler, QueryHandler } from '@nestjs/cqrs';
-import { Inject } from '@nestjs/common';
-import { GetAlertRulesQuery } from '../get-alert-rules.query';
-import { AlertRuleResponseDto } from '../../dto/alert-rule-response.dto';
+import { IQueryHandler, QueryHandler } from "@nestjs/cqrs";
+import { Inject } from "@nestjs/common";
+import { GetAlertRulesQuery } from "../get-alert-rules.query";
+import { AlertRuleResponseDto } from "../../dto/alert-rule-response.dto";
 import {
   IAlertRuleRepository,
   ALERT_RULE_REPOSITORY,
-} from '../../../domain/repositories/alert-rule.repository.interface';
+} from "../../../domain/repositories/alert-rule.repository.interface";
 
 @QueryHandler(GetAlertRulesQuery)
 export class GetAlertRulesHandler implements IQueryHandler<GetAlertRulesQuery> {

@@ -1,15 +1,15 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { EventsHandler, IEventHandler } from '@nestjs/cqrs';
-import { UserCreatedEvent } from '../../../user/domain/events/user.events';
-import { GraphNode, NodeType } from '../../domain';
-import { DeadLetterQueueService } from '../services/dead-letter-queue.service';
-import { IKnowledgeGraphRepository } from '../../domain/repositories/knowledge-graph.repository.interface';
-import { Inject } from '@nestjs/common';
+import { Injectable, Logger } from "@nestjs/common";
+import { EventsHandler, IEventHandler } from "@nestjs/cqrs";
+import { UserCreatedEvent } from "../../../user/domain/events/user.events";
+import { GraphNode, NodeType } from "../../domain";
+import { DeadLetterQueueService } from "../services/dead-letter-queue.service";
+import { IKnowledgeGraphRepository } from "../../domain/repositories/knowledge-graph.repository.interface";
+import { Inject } from "@nestjs/common";
 
 /**
  * Kafka Consumer for User Graph Synchronization
  * Listens to user events and creates/updates nodes in Neo4j
- * 
+ *
  * Events handled:
  * - UserCreatedEvent: Create User node
  * - UserUpdatedEvent: Update User node properties
@@ -22,10 +22,10 @@ export class UserGraphSyncConsumer implements IEventHandler<UserCreatedEvent> {
   private readonly eventAttempts = new Map<string, number>();
 
   constructor(
-    @Inject('IKnowledgeGraphRepository')
+    @Inject("IKnowledgeGraphRepository")
     private readonly graphRepository: IKnowledgeGraphRepository,
     private readonly dlqService: DeadLetterQueueService,
-  ) { }
+  ) {}
 
   /**
    * Handle user created event
@@ -37,16 +37,18 @@ export class UserGraphSyncConsumer implements IEventHandler<UserCreatedEvent> {
     this.eventAttempts.set(eventKey, attemptCount);
 
     try {
-      this.logger.log(`Syncing user to knowledge graph: ${event.userId} (attempt ${attemptCount})`);
+      this.logger.log(
+        `Syncing user to knowledge graph: ${event.userId} (attempt ${attemptCount})`,
+      );
 
       // Create User node
       const userNode = GraphNode.create(NodeType.USER, {
         email: event.email,
         phoneNumber: event.phoneNumber,
-        riskProfile: 'moderate', // Default risk profile
+        riskProfile: "moderate", // Default risk profile
         monthlyIncome: 0,
         metadata: {
-          source: 'user-service',
+          source: "user-service",
           synced: true,
           syncedAt: new Date().toISOString(),
         },
@@ -60,7 +62,8 @@ export class UserGraphSyncConsumer implements IEventHandler<UserCreatedEvent> {
       // Clear attempt count on success
       this.eventAttempts.delete(eventKey);
     } catch (error) {
-      const errorObj = error instanceof Error ? error : new Error(String(error));
+      const errorObj =
+        error instanceof Error ? error : new Error(String(error));
       this.logger.error(
         `Failed to sync user to knowledge graph: ${event.userId} (attempt ${attemptCount})`,
         errorObj.stack,
@@ -69,7 +72,7 @@ export class UserGraphSyncConsumer implements IEventHandler<UserCreatedEvent> {
       // Send to DLQ if max retries reached
       if (this.dlqService.shouldSendToDLQ(attemptCount)) {
         await this.dlqService.sendToDeadLetterQueue(
-          'user.events',
+          "user.events",
           event,
           errorObj,
           attemptCount,
@@ -94,7 +97,9 @@ export class UserGraphSyncConsumer implements IEventHandler<UserCreatedEvent> {
       this.logger.log(`Updating user in knowledge graph: ${event.userId}`);
 
       // Find existing node
-      const existingNode = await this.graphRepository.findNodeById(event.userId);
+      const existingNode = await this.graphRepository.findNodeById(
+        event.userId,
+      );
 
       if (existingNode) {
         existingNode.updateProperties({
@@ -114,7 +119,8 @@ export class UserGraphSyncConsumer implements IEventHandler<UserCreatedEvent> {
       this.logger.log(`User node updated successfully: ${event.userId}`);
       this.eventAttempts.delete(eventKey);
     } catch (error) {
-      const errorObj = error instanceof Error ? error : new Error(String(error));
+      const errorObj =
+        error instanceof Error ? error : new Error(String(error));
       this.logger.error(
         `Failed to update user in knowledge graph: ${event.userId}`,
         errorObj.stack,
@@ -122,7 +128,7 @@ export class UserGraphSyncConsumer implements IEventHandler<UserCreatedEvent> {
 
       if (this.dlqService.shouldSendToDLQ(attemptCount)) {
         await this.dlqService.sendToDeadLetterQueue(
-          'user.events',
+          "user.events",
           event,
           errorObj,
           attemptCount,
@@ -150,7 +156,8 @@ export class UserGraphSyncConsumer implements IEventHandler<UserCreatedEvent> {
       this.logger.log(`User node deleted successfully: ${event.userId}`);
       this.eventAttempts.delete(eventKey);
     } catch (error) {
-      const errorObj = error instanceof Error ? error : new Error(String(error));
+      const errorObj =
+        error instanceof Error ? error : new Error(String(error));
       this.logger.error(
         `Failed to delete user from knowledge graph: ${event.userId}`,
         errorObj.stack,
@@ -158,7 +165,7 @@ export class UserGraphSyncConsumer implements IEventHandler<UserCreatedEvent> {
 
       if (this.dlqService.shouldSendToDLQ(attemptCount)) {
         await this.dlqService.sendToDeadLetterQueue(
-          'user.events',
+          "user.events",
           event,
           errorObj,
           attemptCount,

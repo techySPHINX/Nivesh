@@ -1,5 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { CypherQuery, IKnowledgeGraphRepository } from '../../domain';
+import { Injectable, Logger } from "@nestjs/common";
+import { CypherQuery, IKnowledgeGraphRepository } from "../../domain";
 
 /**
  * Merchant network interface
@@ -23,9 +23,9 @@ export interface MerchantNetwork {
 export class MerchantNetworkService {
   private readonly logger = new Logger(MerchantNetworkService.name);
 
-  constructor(
+  constructor() {
     // private readonly graphRepository: IKnowledgeGraphRepository,
-  ) { }
+  }
 
   /**
    * Get merchant network for a merchant
@@ -44,7 +44,7 @@ export class MerchantNetworkService {
 
     return {
       merchantId,
-      merchantName: '',
+      merchantName: "",
       similarMerchants: [],
       chainAffiliations: [],
     };

@@ -1,4 +1,4 @@
-import { User } from '../entities/user.entity';
+import { User } from "../entities/user.entity";
 
 export interface IUserRepository {
   /**
@@ -56,4 +56,4 @@ export interface IUserRepository {
   hardDelete(id: string): Promise<void>;
 }
 
-export const USER_REPOSITORY = Symbol('USER_REPOSITORY');
+export const USER_REPOSITORY = Symbol("USER_REPOSITORY");

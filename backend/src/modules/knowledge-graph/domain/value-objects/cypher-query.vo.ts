@@ -27,7 +27,7 @@ export class CypherQuery {
   ): CypherQuery {
     // Validate query is not empty
     if (!query || query.trim().length === 0) {
-      throw new Error('Query cannot be empty');
+      throw new Error("Query cannot be empty");
     }
 
     // Detect if query is read-only (doesn't modify data)
@@ -99,12 +99,12 @@ export class CypherQuery {
   private static isReadOnlyQuery(query: string): boolean {
     const upperQuery = query.toUpperCase();
     const mutatingKeywords = [
-      'CREATE',
-      'MERGE',
-      'DELETE',
-      'REMOVE',
-      'SET',
-      'DETACH',
+      "CREATE",
+      "MERGE",
+      "DELETE",
+      "REMOVE",
+      "SET",
+      "DETACH",
     ];
     return !mutatingKeywords.some((keyword) => upperQuery.includes(keyword));
   }
@@ -130,7 +130,11 @@ export class CypherQuery {
       }
 
       // Handle nested objects
-      if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+      if (
+        typeof value === "object" &&
+        value !== null &&
+        !Array.isArray(value)
+      ) {
         sanitized[key] = this.sanitizeParameters(value);
         continue;
       }
@@ -167,7 +171,10 @@ export class CypherQuery {
   /**
    * Add ordering to the query
    */
-  withOrdering(orderBy: string, direction: 'ASC' | 'DESC' = 'ASC'): CypherQuery {
+  withOrdering(
+    orderBy: string,
+    direction: "ASC" | "DESC" = "ASC",
+  ): CypherQuery {
     const orderedQuery = `${this._query} ORDER BY ${orderBy} ${direction}`;
     return new CypherQuery(orderedQuery, this._parameters, this._readonly);
   }

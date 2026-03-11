@@ -1,10 +1,10 @@
-import { Injectable, NestMiddleware } from '@nestjs/common';
-import { Request, Response, NextFunction } from 'express';
-import { trace } from '@opentelemetry/api';
-import { randomUUID } from 'crypto';
+import { Injectable, NestMiddleware } from "@nestjs/common";
+import { Request, Response, NextFunction } from "express";
+import { trace } from "@opentelemetry/api";
+import { randomUUID } from "crypto";
 
-const REQUEST_ID_HEADER = 'x-request-id';
-const CORRELATION_ID_HEADER = 'x-correlation-id';
+const REQUEST_ID_HEADER = "x-request-id";
+const CORRELATION_ID_HEADER = "x-correlation-id";
 
 @Injectable()
 export class CorrelationIdMiddleware implements NestMiddleware {
@@ -25,8 +25,8 @@ export class CorrelationIdMiddleware implements NestMiddleware {
     // Add to active OTel span as attributes
     const activeSpan = trace.getActiveSpan();
     if (activeSpan) {
-      activeSpan.setAttribute('http.request_id', requestId);
-      activeSpan.setAttribute('http.correlation_id', correlationId);
+      activeSpan.setAttribute("http.request_id", requestId);
+      activeSpan.setAttribute("http.correlation_id", correlationId);
     }
 
     next();

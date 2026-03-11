@@ -29,11 +29,11 @@ export interface GoalSummary {
 }
 
 export interface RiskProfile {
-  level: 'conservative' | 'moderate' | 'aggressive';
+  level: "conservative" | "moderate" | "aggressive";
   age: number;
   dependents: number;
   hasEmergencyFund: boolean;
-  jobStability: 'high' | 'medium' | 'low';
+  jobStability: "high" | "medium" | "low";
 }
 
 export class FinancialContext {
@@ -43,7 +43,7 @@ export class FinancialContext {
     public readonly goals: GoalSummary[],
     public readonly riskProfile: RiskProfile,
     public readonly generatedAt: Date = new Date(),
-  ) { }
+  ) {}
 
   // Business logic
   hasEmergencyFund(): boolean {
@@ -52,7 +52,8 @@ export class FinancialContext {
   }
 
   canAfford(amount: number): boolean {
-    const disposableIncome = this.snapshot.totalIncome - this.snapshot.totalExpenses;
+    const disposableIncome =
+      this.snapshot.totalIncome - this.snapshot.totalExpenses;
     return disposableIncome >= amount;
   }
 
@@ -97,9 +98,9 @@ export class FinancialContext {
         type: goal.category,
         target: Math.round(goal.targetAmount),
         saved: Math.round(goal.currentAmount),
-        deadline: goal.targetDate.toISOString().split('T')[0],
+        deadline: goal.targetDate.toISOString().split("T")[0],
         monthlyNeed: Math.round(goal.monthlyContribution),
-        status: goal.onTrack ? 'on-track' : 'at-risk',
+        status: goal.onTrack ? "on-track" : "at-risk",
       })),
       profile: {
         riskTolerance: this.riskProfile.level,
@@ -110,7 +111,7 @@ export class FinancialContext {
       metrics: {
         disposableIncome: Math.round(this.getDisposableIncome()),
         netWorth: Math.round(this.getNetWorth()),
-        financialHealth: this.isFinanciallyStressed() ? 'stressed' : 'healthy',
+        financialHealth: this.isFinanciallyStressed() ? "stressed" : "healthy",
       },
     };
   }

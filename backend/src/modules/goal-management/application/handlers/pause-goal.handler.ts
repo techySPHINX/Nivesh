@@ -1,17 +1,23 @@
-import { CommandHandler, ICommandHandler, EventBus } from '@nestjs/cqrs';
-import { Inject, NotFoundException, ForbiddenException } from '@nestjs/common';
-import { PauseGoalCommand } from '../commands/pause-goal.command';
-import { IGoalRepository, GOAL_REPOSITORY } from '../../domain/repositories/goal.repository.interface';
-import { GoalUpdatedEvent } from '../../domain/events/goal.events';
-import { GoalResponseDto } from '../dto/goal-response.dto';
-import { Goal } from '../../domain/entities/goal.entity';
+import { CommandHandler, ICommandHandler, EventBus } from "@nestjs/cqrs";
+import { Inject, NotFoundException, ForbiddenException } from "@nestjs/common";
+import { PauseGoalCommand } from "../commands/pause-goal.command";
+import {
+  IGoalRepository,
+  GOAL_REPOSITORY,
+} from "../../domain/repositories/goal.repository.interface";
+import { GoalUpdatedEvent } from "../../domain/events/goal.events";
+import { GoalResponseDto } from "../dto/goal-response.dto";
+import { Goal } from "../../domain/entities/goal.entity";
 
 @CommandHandler(PauseGoalCommand)
-export class PauseGoalHandler implements ICommandHandler<PauseGoalCommand, GoalResponseDto> {
+export class PauseGoalHandler implements ICommandHandler<
+  PauseGoalCommand,
+  GoalResponseDto
+> {
   constructor(
     @Inject(GOAL_REPOSITORY) private readonly goalRepository: IGoalRepository,
     private readonly eventBus: EventBus,
-  ) { }
+  ) {}
 
   async execute(command: PauseGoalCommand): Promise<GoalResponseDto> {
     const { userId, goalId } = command;
@@ -19,12 +25,14 @@ export class PauseGoalHandler implements ICommandHandler<PauseGoalCommand, GoalR
     // Find goal
     const goal = await this.goalRepository.findById(goalId);
     if (!goal) {
-      throw new NotFoundException('Goal not found');
+      throw new NotFoundException("Goal not found");
     }
 
     // Check ownership
     if (goal.userId !== userId) {
-      throw new ForbiddenException('You do not have permission to pause this goal');
+      throw new ForbiddenException(
+        "You do not have permission to pause this goal",
+      );
     }
 
     // Pause goal
@@ -34,7 +42,7 @@ export class PauseGoalHandler implements ICommandHandler<PauseGoalCommand, GoalR
     const updatedGoal = await this.goalRepository.save(goal);
 
     // Publish event
-    const event = new GoalUpdatedEvent(goalId, userId, { status: 'PAUSED' });
+    const event = new GoalUpdatedEvent(goalId, userId, { status: "PAUSED" });
     this.eventBus.publish(event);
 
     // Return DTO

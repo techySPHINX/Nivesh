@@ -1,4 +1,4 @@
-import { Tool } from '../types/agent.types';
+import { Tool } from "../types/agent.types";
 
 /**
  * Savings Rate Calculation Tool
@@ -27,20 +27,20 @@ import { Tool } from '../types/agent.types';
  */
 
 interface SavingsRateInput {
-  goalAmount: number;           // Target amount to achieve
-  timelineMonths: number;       // Timeline in months
-  expectedReturn: number;       // Expected annual return (%)
-  currentSavings?: number;      // Existing corpus (optional)
-  inflationRate?: number;       // Annual inflation rate (%) (optional)
+  goalAmount: number; // Target amount to achieve
+  timelineMonths: number; // Timeline in months
+  expectedReturn: number; // Expected annual return (%)
+  currentSavings?: number; // Existing corpus (optional)
+  inflationRate?: number; // Annual inflation rate (%) (optional)
 }
 
 interface SavingsRateResult {
-  monthlySavingsRequired: number;     // Required monthly savings
-  totalInvestment: number;            // Total amount to be invested
-  expectedCorpus: number;             // Expected final corpus
-  goalAmount: number;                 // Original goal amount
-  inflationAdjustedGoal: number;      // Goal adjusted for inflation
-  currentSavings: number;             // Starting corpus
+  monthlySavingsRequired: number; // Required monthly savings
+  totalInvestment: number; // Total amount to be invested
+  expectedCorpus: number; // Expected final corpus
+  goalAmount: number; // Original goal amount
+  inflationAdjustedGoal: number; // Goal adjusted for inflation
+  currentSavings: number; // Starting corpus
   timeline: {
     months: number;
     years: number;
@@ -59,44 +59,45 @@ interface SavingsRateResult {
 }
 
 export const calculateSavingsRateTool: Tool = {
-  name: 'calculate_savings_rate',
-  description: 'Calculate monthly savings required to achieve a financial goal with compound interest',
+  name: "calculate_savings_rate",
+  description:
+    "Calculate monthly savings required to achieve a financial goal with compound interest",
   schema: {
-    type: 'object',
+    type: "object",
     properties: {
       goalAmount: {
-        type: 'number',
-        description: 'Target amount to achieve in rupees',
+        type: "number",
+        description: "Target amount to achieve in rupees",
         minimum: 1000,
         maximum: 1000000000,
       },
       timelineMonths: {
-        type: 'number',
-        description: 'Timeline to achieve goal in months',
+        type: "number",
+        description: "Timeline to achieve goal in months",
         minimum: 1,
         maximum: 600, // 50 years max
       },
       expectedReturn: {
-        type: 'number',
-        description: 'Expected annual return in percentage (e.g., 12 for 12%)',
+        type: "number",
+        description: "Expected annual return in percentage (e.g., 12 for 12%)",
         minimum: 0,
         maximum: 50,
       },
       currentSavings: {
-        type: 'number',
-        description: 'Existing corpus in rupees (optional)',
+        type: "number",
+        description: "Existing corpus in rupees (optional)",
         minimum: 0,
         default: 0,
       },
       inflationRate: {
-        type: 'number',
-        description: 'Annual inflation rate in percentage (optional)',
+        type: "number",
+        description: "Annual inflation rate in percentage (optional)",
         minimum: 0,
         maximum: 20,
         default: 6,
       },
     },
-    required: ['goalAmount', 'timelineMonths', 'expectedReturn'],
+    required: ["goalAmount", "timelineMonths", "expectedReturn"],
   },
   handler: async (args: SavingsRateInput): Promise<SavingsRateResult> => {
     const {
@@ -109,18 +110,19 @@ export const calculateSavingsRateTool: Tool = {
 
     // Validate inputs
     if (goalAmount <= 0) {
-      throw new Error('Goal amount must be greater than 0');
+      throw new Error("Goal amount must be greater than 0");
     }
     if (timelineMonths <= 0) {
-      throw new Error('Timeline must be greater than 0');
+      throw new Error("Timeline must be greater than 0");
     }
     if (expectedReturn < 0) {
-      throw new Error('Expected return cannot be negative');
+      throw new Error("Expected return cannot be negative");
     }
 
     // Calculate inflation-adjusted goal
     const yearsToGoal = timelineMonths / 12;
-    const inflationAdjustedGoal = goalAmount * Math.pow(1 + inflationRate / 100, yearsToGoal);
+    const inflationAdjustedGoal =
+      goalAmount * Math.pow(1 + inflationRate / 100, yearsToGoal);
 
     // Calculate monthly return rate
     const monthlyReturnRate = expectedReturn / 12 / 100;
@@ -142,25 +144,28 @@ export const calculateSavingsRateTool: Tool = {
       monthlySavingsRequired = remainingAmount / timelineMonths;
     } else {
       const annuityFactor =
-        (Math.pow(1 + monthlyReturnRate, timelineMonths) - 1) / monthlyReturnRate;
+        (Math.pow(1 + monthlyReturnRate, timelineMonths) - 1) /
+        monthlyReturnRate;
       monthlySavingsRequired = remainingAmount / annuityFactor;
     }
 
     // Ensure non-negative
     monthlySavingsRequired = Math.max(0, monthlySavingsRequired);
 
-    const totalInvestment = monthlySavingsRequired * timelineMonths + currentSavings;
+    const totalInvestment =
+      monthlySavingsRequired * timelineMonths + currentSavings;
 
     // Calculate expected corpus
     const expectedCorpus =
       futureValueOfCurrentSavings +
       monthlySavingsRequired *
-        ((Math.pow(1 + monthlyReturnRate, timelineMonths) - 1) / monthlyReturnRate);
+        ((Math.pow(1 + monthlyReturnRate, timelineMonths) - 1) /
+          monthlyReturnRate);
 
     const totalReturns = expectedCorpus - totalInvestment;
 
     // Generate yearly projection
-    const yearlyProjection = [];
+    const yearlyProjection: Array<{ year: number; invested: number; returns: number; corpus: number }> = [];
     let cumulativeInvested = currentSavings;
     let cumulativeCorpus = currentSavings;
 

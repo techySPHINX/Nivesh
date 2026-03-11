@@ -1,7 +1,11 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { PrismaService } from '../../../../core/database/postgres/prisma.service';
-import { IAlertRepository } from '../../domain/repositories/alert.repository.interface';
-import { Alert, AlertType, AlertSeverity } from '../../domain/entities/alert.entity';
+import { Injectable, Logger } from "@nestjs/common";
+import { PrismaService } from "../../../../core/database/postgres/prisma.service";
+import { IAlertRepository } from "../../domain/repositories/alert.repository.interface";
+import {
+  Alert,
+  AlertType,
+  AlertSeverity,
+} from "../../domain/entities/alert.entity";
 
 @Injectable()
 export class PrismaAlertRepository implements IAlertRepository {
@@ -28,24 +32,31 @@ export class PrismaAlertRepository implements IAlertRepository {
       where,
       skip,
       take,
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: "desc" },
     });
 
     return records.map((r) => this.toDomain(r));
   }
 
-  async findActiveByUserId(userId: string, skip: number = 0, take: number = 20): Promise<Alert[]> {
+  async findActiveByUserId(
+    userId: string,
+    skip: number = 0,
+    take: number = 20,
+  ): Promise<Alert[]> {
     const records = await this.prisma.alert.findMany({
       where: { userId, isDismissed: false },
       skip,
       take,
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: "desc" },
     });
 
     return records.map((r) => this.toDomain(r));
   }
 
-  async countByUserId(userId: string, filters?: { type?: string; severity?: string }): Promise<number> {
+  async countByUserId(
+    userId: string,
+    filters?: { type?: string; severity?: string },
+  ): Promise<number> {
     const where: any = { userId };
     if (filters?.type) where.alertType = filters.type;
     if (filters?.severity) where.severity = filters.severity;
@@ -81,6 +92,36 @@ export class PrismaAlertRepository implements IAlertRepository {
     await this.prisma.alert.delete({ where: { id } });
   }
 
+  async findUnreadByUserId(userId: string): Promise<Alert[]> {
+    const records = await this.prisma.alert.findMany({
+      where: { userId, isRead: false, isDismissed: false },
+      orderBy: { createdAt: "desc" },
+    });
+    return records.map((r) => this.toDomain(r));
+  }
+
+  async findByType(userId: string, alertType: AlertType): Promise<Alert[]> {
+    const records = await this.prisma.alert.findMany({
+      where: { userId, alertType },
+      orderBy: { createdAt: "desc" },
+    });
+    return records.map((r) => this.toDomain(r));
+  }
+
+  async findBySeverity(userId: string, severity: AlertSeverity): Promise<Alert[]> {
+    const records = await this.prisma.alert.findMany({
+      where: { userId, severity },
+      orderBy: { createdAt: "desc" },
+    });
+    return records.map((r) => this.toDomain(r));
+  }
+
+  async countUnread(userId: string): Promise<number> {
+    return this.prisma.alert.count({
+      where: { userId, isRead: false, isDismissed: false },
+    });
+  }
+
   async markAllReadByUserId(userId: string): Promise<number> {
     const result = await this.prisma.alert.updateMany({
       where: { userId, isRead: false },
@@ -90,23 +131,7 @@ export class PrismaAlertRepository implements IAlertRepository {
   }
 
   private toDomain(record: any): Alert {
-    return Alert.create({
-      id: record.id,
-      userId: record.userId,
-      alertType: record.alertType as AlertType,
-      severity: record.severity as AlertSeverity,
-      title: record.title,
-      message: record.message,
-      actionable: record.actionable,
-      actionUrl: record.actionUrl,
-      isRead: record.isRead,
-      readAt: record.readAt,
-      isDismissed: record.isDismissed,
-      dismissedAt: record.dismissedAt,
-      metadata: record.metadata,
-      createdAt: record.createdAt,
-      updatedAt: record.updatedAt,
-    });
+    return Alert.fromPersistence(record);
   }
 
   private toPersistence(alert: Alert): any {

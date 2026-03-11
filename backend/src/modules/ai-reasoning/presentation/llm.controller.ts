@@ -8,14 +8,17 @@ import {
   Query,
   UseGuards,
   Logger,
-} from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
-import { LLMService } from '../../../core/integrations/llm/llm.service';
-import { PromptManagementService, CreatePromptDto } from '../infrastructure/services/prompt-management.service';
-import { SafetyGuardrailsService } from '../infrastructure/services/safety-guardrails.service';
-import { FunctionExecutorService } from '../domain/services/function-executor.service';
-import { FunctionRegistry } from '../domain/services/function-registry.service';
-import { z } from 'zod';
+} from "@nestjs/common";
+import { ApiTags, ApiOperation, ApiResponse } from "@nestjs/swagger";
+import { LLMService } from "../../../core/integrations/llm/llm.service";
+import {
+  PromptManagementService,
+  CreatePromptDto,
+} from "../infrastructure/services/prompt-management.service";
+import { SafetyGuardrailsService } from "../infrastructure/services/safety-guardrails.service";
+import { FunctionExecutorService } from "../domain/services/function-executor.service";
+import { FunctionRegistry } from "../domain/services/function-registry.service";
+import { z } from "zod";
 
 // DTOs
 class GenerateRequestDto {
@@ -33,13 +36,13 @@ class StructuredGenerateRequestDto {
 
 class SafetyCheckRequestDto {
   text: string;
-  type: 'input' | 'output';
+  type: "input" | "output";
   userId?: string;
   ragContext?: string[];
 }
 
 class UpdatePromptStatusDto {
-  status: 'draft' | 'testing' | 'canary' | 'production' | 'deprecated';
+  status: "draft" | "testing" | "canary" | "production" | "deprecated";
 }
 
 class RollbackPromptDto {
@@ -55,20 +58,20 @@ class CreateABTestDto {
 }
 
 class ConcludeABTestDto {
-  winner: 'control' | 'treatment';
+  winner: "control" | "treatment";
 }
 
 /**
  * LLM Operations Controller
- * 
+ *
  * Provides REST endpoints for:
  * - Content generation
  * - Prompt management
  * - A/B testing
  * - Safety checks
  */
-@ApiTags('AI/LLM')
-@Controller('api/v1/ai')
+@ApiTags("AI/LLM")
+@Controller("api/v1/ai")
 export class LLMController {
   private readonly logger = new Logger(LLMController.name);
 
@@ -84,9 +87,9 @@ export class LLMController {
   // Content Generation Endpoints
   // ==========================================
 
-  @Post('generate')
-  @ApiOperation({ summary: 'Generate AI response' })
-  @ApiResponse({ status: 200, description: 'Response generated successfully' })
+  @Post("generate")
+  @ApiOperation({ summary: "Generate AI response" })
+  @ApiResponse({ status: 200, description: "Response generated successfully" })
   async generate(@Body() dto: GenerateRequestDto) {
     const startTime = Date.now();
 
@@ -100,7 +103,7 @@ export class LLMController {
       if (!inputSafety.safe) {
         return {
           success: false,
-          error: 'Safety check failed',
+          error: "Safety check failed",
           reason: inputSafety.reason,
           category: inputSafety.category,
         };
@@ -109,21 +112,18 @@ export class LLMController {
       // Get prompt config
       const promptConfig = await this.promptMgmt.getPromptForUser(
         dto.userId,
-        dto.promptName || 'default_financial_advisor',
+        dto.promptName || "default_financial_advisor",
       );
 
       // Generate response
-      const response = await this.llmService.generateText(
-        dto.query,
-        {
-          model: promptConfig.model,
-          temperature: promptConfig.temperature,
-          topP: promptConfig.topP,
-          topK: promptConfig.topK,
-          maxOutputTokens: promptConfig.maxTokens,
-          systemInstruction: promptConfig.systemInstruction,
-        },
-      );
+      const response = await this.llmService.generateText(dto.query, {
+        model: promptConfig.model,
+        temperature: promptConfig.temperature,
+        topP: promptConfig.topP,
+        topK: promptConfig.topK,
+        maxOutputTokens: promptConfig.maxTokens,
+        systemInstruction: promptConfig.systemInstruction,
+      });
 
       // Output safety check
       const outputSafety = await this.safetyService.checkOutputSafety(response);
@@ -139,16 +139,16 @@ export class LLMController {
         promptVersion: promptConfig.version,
       };
     } catch (error) {
-      this.logger.error('Generate error:', error);
+      this.logger.error("Generate error:", error);
       return {
         success: false,
-        error: 'Failed to generate response',
+        error: "Failed to generate response",
       };
     }
   }
 
-  @Post('generate/structured')
-  @ApiOperation({ summary: 'Generate structured JSON output' })
+  @Post("generate/structured")
+  @ApiOperation({ summary: "Generate structured JSON output" })
   async generateStructured(@Body() dto: StructuredGenerateRequestDto) {
     try {
       // Convert plain object to Zod schema
@@ -164,16 +164,16 @@ export class LLMController {
         data: result,
       };
     } catch (error) {
-      this.logger.error('Structured generation error:', error);
+      this.logger.error("Structured generation error:", error);
       return {
         success: false,
-        error: 'Failed to generate structured output',
+        error: "Failed to generate structured output",
       };
     }
   }
 
-  @Post('generate/with-tools')
-  @ApiOperation({ summary: 'Generate with function calling' })
+  @Post("generate/with-tools")
+  @ApiOperation({ summary: "Generate with function calling" })
   async generateWithTools(@Body() dto: GenerateRequestDto) {
     try {
       const tools = this.functionRegistry.getAllFunctions();
@@ -213,10 +213,10 @@ export class LLMController {
         usageMetadata: result.usageMetadata,
       };
     } catch (error) {
-      this.logger.error('Tool generation error:', error);
+      this.logger.error("Tool generation error:", error);
       return {
         success: false,
-        error: 'Failed to generate with tools',
+        error: "Failed to generate with tools",
       };
     }
   }
@@ -225,11 +225,11 @@ export class LLMController {
   // Prompt Management Endpoints
   // ==========================================
 
-  @Get('prompts')
-  @ApiOperation({ summary: 'List all prompts' })
+  @Get("prompts")
+  @ApiOperation({ summary: "List all prompts" })
   async listPrompts(
-    @Query('status') status?: string,
-    @Query('promptName') promptName?: string,
+    @Query("status") status?: string,
+    @Query("promptName") promptName?: string,
   ) {
     const prompts = await this.promptMgmt.listPrompts({
       status,
@@ -242,8 +242,8 @@ export class LLMController {
     };
   }
 
-  @Post('prompts')
-  @ApiOperation({ summary: 'Create new prompt version' })
+  @Post("prompts")
+  @ApiOperation({ summary: "Create new prompt version" })
   async createPrompt(@Body() dto: CreatePromptDto) {
     try {
       const promptId = await this.promptMgmt.createPromptVersion(dto);
@@ -253,7 +253,7 @@ export class LLMController {
         promptId,
       };
     } catch (error) {
-      this.logger.error('Create prompt error:', error);
+      this.logger.error("Create prompt error:", error);
       return {
         success: false,
         error: error.message,
@@ -261,10 +261,10 @@ export class LLMController {
     }
   }
 
-  @Put('prompts/:promptId/status')
-  @ApiOperation({ summary: 'Update prompt status' })
+  @Put("prompts/:promptId/status")
+  @ApiOperation({ summary: "Update prompt status" })
   async updatePromptStatus(
-    @Param('promptId') promptId: string,
+    @Param("promptId") promptId: string,
     @Body() dto: UpdatePromptStatusDto,
   ) {
     try {
@@ -275,7 +275,7 @@ export class LLMController {
         message: `Prompt status updated to ${dto.status}`,
       };
     } catch (error) {
-      this.logger.error('Update status error:', error);
+      this.logger.error("Update status error:", error);
       return {
         success: false,
         error: error.message,
@@ -283,25 +283,21 @@ export class LLMController {
     }
   }
 
-  @Post('prompts/:promptName/rollback')
-  @ApiOperation({ summary: 'Rollback to previous version' })
+  @Post("prompts/:promptName/rollback")
+  @ApiOperation({ summary: "Rollback to previous version" })
   async rollbackPrompt(
-    @Param('promptName') promptName: string,
+    @Param("promptName") promptName: string,
     @Body() dto: RollbackPromptDto,
   ) {
     try {
-      await this.promptMgmt.rollback(
-        promptName,
-        dto.targetVersion,
-        dto.reason,
-      );
+      await this.promptMgmt.rollback(promptName, dto.targetVersion, dto.reason);
 
       return {
         success: true,
         message: `Rolled back to version ${dto.targetVersion}`,
       };
     } catch (error) {
-      this.logger.error('Rollback error:', error);
+      this.logger.error("Rollback error:", error);
       return {
         success: false,
         error: error.message,
@@ -313,8 +309,8 @@ export class LLMController {
   // A/B Testing Endpoints
   // ==========================================
 
-  @Post('prompts/ab-tests')
-  @ApiOperation({ summary: 'Start A/B test' })
+  @Post("prompts/ab-tests")
+  @ApiOperation({ summary: "Start A/B test" })
   async startABTest(@Body() dto: CreateABTestDto) {
     try {
       const testId = await this.promptMgmt.startABTest(
@@ -329,7 +325,7 @@ export class LLMController {
         testId,
       };
     } catch (error) {
-      this.logger.error('Start A/B test error:', error);
+      this.logger.error("Start A/B test error:", error);
       return {
         success: false,
         error: error.message,
@@ -337,9 +333,9 @@ export class LLMController {
     }
   }
 
-  @Get('prompts/ab-tests/:testId')
-  @ApiOperation({ summary: 'Get A/B test results' })
-  async getABTestResults(@Param('testId') testId: string) {
+  @Get("prompts/ab-tests/:testId")
+  @ApiOperation({ summary: "Get A/B test results" })
+  async getABTestResults(@Param("testId") testId: string) {
     try {
       const results = await this.promptMgmt.getABTestResults(testId);
 
@@ -348,7 +344,7 @@ export class LLMController {
         results,
       };
     } catch (error) {
-      this.logger.error('Get A/B test error:', error);
+      this.logger.error("Get A/B test error:", error);
       return {
         success: false,
         error: error.message,
@@ -356,10 +352,10 @@ export class LLMController {
     }
   }
 
-  @Post('prompts/ab-tests/:testId/conclude')
-  @ApiOperation({ summary: 'Conclude A/B test' })
+  @Post("prompts/ab-tests/:testId/conclude")
+  @ApiOperation({ summary: "Conclude A/B test" })
   async concludeABTest(
-    @Param('testId') testId: string,
+    @Param("testId") testId: string,
     @Body() dto: ConcludeABTestDto,
   ) {
     try {
@@ -370,7 +366,7 @@ export class LLMController {
         message: `A/B test concluded. Winner: ${dto.winner}`,
       };
     } catch (error) {
-      this.logger.error('Conclude A/B test error:', error);
+      this.logger.error("Conclude A/B test error:", error);
       return {
         success: false,
         error: error.message,
@@ -382,12 +378,12 @@ export class LLMController {
   // Safety & Monitoring Endpoints
   // ==========================================
 
-  @Post('safety-check')
-  @ApiOperation({ summary: 'Check content safety' })
+  @Post("safety-check")
+  @ApiOperation({ summary: "Check content safety" })
   async safetyCheck(@Body() dto: SafetyCheckRequestDto) {
     let result;
 
-    if (dto.type === 'input') {
+    if (dto.type === "input") {
       result = await this.safetyService.checkInputSafety(dto.text, dto.userId);
     } else {
       result = await this.safetyService.checkOutputSafety(
@@ -405,21 +401,21 @@ export class LLMController {
     };
   }
 
-  @Get('metrics')
-  @ApiOperation({ summary: 'Get LLM metrics' })
+  @Get("metrics")
+  @ApiOperation({ summary: "Get LLM metrics" })
   async getMetrics(
-    @Query('startDate') startDate?: string,
-    @Query('endDate') endDate?: string,
+    @Query("startDate") startDate?: string,
+    @Query("endDate") endDate?: string,
   ) {
     // TODO: Implement metrics aggregation
     return {
       success: true,
-      message: 'Metrics endpoint - implementation pending',
+      message: "Metrics endpoint - implementation pending",
     };
   }
 
-  @Get('functions')
-  @ApiOperation({ summary: 'List available functions' })
+  @Get("functions")
+  @ApiOperation({ summary: "List available functions" })
   async listFunctions() {
     const functions = this.functionRegistry.getAllFunctions();
 

@@ -1,12 +1,17 @@
-import { CommandHandler, ICommandHandler, EventBus } from '@nestjs/cqrs';
-import { Inject, NotFoundException, ForbiddenException, Logger } from '@nestjs/common';
-import { MarkAlertReadCommand } from '../mark-alert-read.command';
-import { AlertResponseDto } from '../../dto/alert-response.dto';
+import { CommandHandler, ICommandHandler, EventBus } from "@nestjs/cqrs";
+import {
+  Inject,
+  NotFoundException,
+  ForbiddenException,
+  Logger,
+} from "@nestjs/common";
+import { MarkAlertReadCommand } from "../mark-alert-read.command";
+import { AlertResponseDto } from "../../dto/alert-response.dto";
 import {
   IAlertRepository,
   ALERT_REPOSITORY,
-} from '../../../domain/repositories/alert.repository.interface';
-import { AlertReadEvent } from '../../../domain/events/alert.events';
+} from "../../../domain/repositories/alert.repository.interface";
+import { AlertReadEvent } from "../../../domain/events/alert.events";
 
 @CommandHandler(MarkAlertReadCommand)
 export class MarkAlertReadHandler implements ICommandHandler<MarkAlertReadCommand> {
@@ -26,7 +31,7 @@ export class MarkAlertReadHandler implements ICommandHandler<MarkAlertReadComman
       throw new NotFoundException(`Alert ${alertId} not found`);
     }
     if (alert.userId !== userId) {
-      throw new ForbiddenException('Access denied');
+      throw new ForbiddenException("Access denied");
     }
 
     alert.markRead();

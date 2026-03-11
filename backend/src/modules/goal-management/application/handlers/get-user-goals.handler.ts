@@ -1,15 +1,21 @@
-import { IQueryHandler, QueryHandler } from '@nestjs/cqrs';
-import { Inject } from '@nestjs/common';
-import { GetUserGoalsQuery } from '../queries/get-user-goals.query';
-import { IGoalRepository, GOAL_REPOSITORY } from '../../domain/repositories/goal.repository.interface';
-import { GoalResponseDto } from '../dto/goal-response.dto';
-import { Goal, GoalStatus } from '../../domain/entities/goal.entity';
+import { IQueryHandler, QueryHandler } from "@nestjs/cqrs";
+import { Inject } from "@nestjs/common";
+import { GetUserGoalsQuery } from "../queries/get-user-goals.query";
+import {
+  IGoalRepository,
+  GOAL_REPOSITORY,
+} from "../../domain/repositories/goal.repository.interface";
+import { GoalResponseDto } from "../dto/goal-response.dto";
+import { Goal, GoalStatus } from "../../domain/entities/goal.entity";
 
 @QueryHandler(GetUserGoalsQuery)
-export class GetUserGoalsHandler implements IQueryHandler<GetUserGoalsQuery, GoalResponseDto[]> {
+export class GetUserGoalsHandler implements IQueryHandler<
+  GetUserGoalsQuery,
+  GoalResponseDto[]
+> {
   constructor(
     @Inject(GOAL_REPOSITORY) private readonly goalRepository: IGoalRepository,
-  ) { }
+  ) {}
 
   async execute(query: GetUserGoalsQuery): Promise<GoalResponseDto[]> {
     const { userId, status, category, includeCompleted } = query;
@@ -27,10 +33,10 @@ export class GetUserGoalsHandler implements IQueryHandler<GetUserGoalsQuery, Goa
 
     // Filter out completed if not requested
     if (!includeCompleted) {
-      goals = goals.filter(g => g.status !== GoalStatus.COMPLETED);
+      goals = goals.filter((g) => g.status !== GoalStatus.COMPLETED);
     }
 
-    return goals.map(goal => this.toResponseDto(goal));
+    return goals.map((goal) => this.toResponseDto(goal));
   }
 
   private toResponseDto(goal: Goal): GoalResponseDto {

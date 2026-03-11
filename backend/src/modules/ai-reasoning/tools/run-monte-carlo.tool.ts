@@ -1,4 +1,4 @@
-import { Tool } from '../types/agent.types';
+import { Tool } from "../types/agent.types";
 
 /**
  * Monte Carlo Simulation Tool
@@ -26,34 +26,34 @@ import { Tool } from '../types/agent.types';
  */
 
 interface MonteCarloInput {
-  initialInvestment?: number;    // Starting corpus
-  monthlySIP?: number;           // Monthly investment
-  expectedReturn: number;        // Expected annual return (%)
-  volatility: number;            // Annual volatility/std dev (%)
-  timelineYears: number;         // Investment duration
-  iterations?: number;           // Number of simulations (default: 10000)
-  inflationRate?: number;        // Annual inflation (%)
+  initialInvestment?: number; // Starting corpus
+  monthlySIP?: number; // Monthly investment
+  expectedReturn: number; // Expected annual return (%)
+  volatility: number; // Annual volatility/std dev (%)
+  timelineYears: number; // Investment duration
+  iterations?: number; // Number of simulations (default: 10000)
+  inflationRate?: number; // Annual inflation (%)
 }
 
 interface MonteCarloResult {
-  simulations: number;                // Number of iterations run
+  simulations: number; // Number of iterations run
   outcomes: {
-    p10: number;                      // 10th percentile (worst 10%)
-    p25: number;                      // 25th percentile
-    p50: number;                      // 50th percentile (median)
-    p75: number;                      // 75th percentile
-    p90: number;                      // 90th percentile (best 10%)
-    mean: number;                     // Average outcome
-    min: number;                      // Absolute worst case
-    max: number;                      // Absolute best case
+    p10: number; // 10th percentile (worst 10%)
+    p25: number; // 25th percentile
+    p50: number; // 50th percentile (median)
+    p75: number; // 75th percentile
+    p90: number; // 90th percentile (best 10%)
+    mean: number; // Average outcome
+    min: number; // Absolute worst case
+    max: number; // Absolute best case
   };
-  totalInvestment: number;            // Total amount invested
-  successProbability: number;         // % of scenarios meeting goal
+  totalInvestment: number; // Total amount invested
+  successProbability: number; // % of scenarios meeting goal
   riskMetrics: {
     expectedReturn: number;
     volatility: number;
-    sharpeRatio: number;              // Risk-adjusted return
-    valueAtRisk95: number;            // 95% VaR (5% worst loss)
+    sharpeRatio: number; // Risk-adjusted return
+    valueAtRisk95: number; // 95% VaR (5% worst loss)
   };
   distribution: Array<{
     range: string;
@@ -63,57 +63,58 @@ interface MonteCarloResult {
 }
 
 export const runMonteCarloSimulationTool: Tool = {
-  name: 'run_monte_carlo_simulation',
-  description: 'Run Monte Carlo simulation to estimate investment outcome probabilities with market volatility',
+  name: "run_monte_carlo_simulation",
+  description:
+    "Run Monte Carlo simulation to estimate investment outcome probabilities with market volatility",
   schema: {
-    type: 'object',
+    type: "object",
     properties: {
       initialInvestment: {
-        type: 'number',
-        description: 'Starting investment corpus in rupees (optional)',
+        type: "number",
+        description: "Starting investment corpus in rupees (optional)",
         minimum: 0,
         default: 0,
       },
       monthlySIP: {
-        type: 'number',
-        description: 'Monthly SIP amount in rupees (optional)',
+        type: "number",
+        description: "Monthly SIP amount in rupees (optional)",
         minimum: 0,
         default: 0,
       },
       expectedReturn: {
-        type: 'number',
-        description: 'Expected annual return in percentage',
+        type: "number",
+        description: "Expected annual return in percentage",
         minimum: -50,
         maximum: 100,
       },
       volatility: {
-        type: 'number',
-        description: 'Annual volatility (standard deviation) in percentage',
+        type: "number",
+        description: "Annual volatility (standard deviation) in percentage",
         minimum: 0,
         maximum: 100,
       },
       timelineYears: {
-        type: 'number',
-        description: 'Investment timeline in years',
+        type: "number",
+        description: "Investment timeline in years",
         minimum: 0.5,
         maximum: 50,
       },
       iterations: {
-        type: 'number',
-        description: 'Number of simulation iterations (default: 10000)',
+        type: "number",
+        description: "Number of simulation iterations (default: 10000)",
         minimum: 1000,
         maximum: 100000,
         default: 10000,
       },
       inflationRate: {
-        type: 'number',
-        description: 'Annual inflation rate in percentage (optional)',
+        type: "number",
+        description: "Annual inflation rate in percentage (optional)",
         minimum: 0,
         maximum: 20,
         default: 0,
       },
     },
-    required: ['expectedReturn', 'volatility', 'timelineYears'],
+    required: ["expectedReturn", "volatility", "timelineYears"],
   },
   handler: async (args: MonteCarloInput): Promise<MonteCarloResult> => {
     const {
@@ -128,13 +129,15 @@ export const runMonteCarloSimulationTool: Tool = {
 
     // Validate inputs
     if (initialInvestment === 0 && monthlySIP === 0) {
-      throw new Error('Either initialInvestment or monthlySIP must be provided');
+      throw new Error(
+        "Either initialInvestment or monthlySIP must be provided",
+      );
     }
     if (timelineYears <= 0) {
-      throw new Error('Timeline must be greater than 0');
+      throw new Error("Timeline must be greater than 0");
     }
     if (volatility < 0) {
-      throw new Error('Volatility cannot be negative');
+      throw new Error("Volatility cannot be negative");
     }
 
     const totalMonths = timelineYears * 12;
@@ -189,12 +192,15 @@ export const runMonteCarloSimulationTool: Tool = {
     };
 
     // Calculate success probability (outcomes >= total investment)
-    const successfulOutcomes = finalValues.filter((val) => val >= totalInvestment);
+    const successfulOutcomes = finalValues.filter(
+      (val) => val >= totalInvestment,
+    );
     const successProbability = (successfulOutcomes.length / iterations) * 100;
 
     // Calculate Sharpe Ratio (risk-adjusted return)
     // Sharpe = (Mean Return - Risk-Free Rate) / Volatility
-    const averageReturn = ((outcomes.mean - totalInvestment) / totalInvestment) * 100;
+    const averageReturn =
+      ((outcomes.mean - totalInvestment) / totalInvestment) * 100;
     const riskFreeRate = 6; // Assume 6% risk-free rate
     const sharpeRatio = (averageReturn - riskFreeRate) / volatility;
 
@@ -251,16 +257,18 @@ function createDistribution(
   investment: number,
 ): Array<{ range: string; count: number; percentage: number }> {
   const buckets = [
-    { range: 'Loss (< investment)', min: 0, max: investment },
-    { range: '0-25% gain', min: investment, max: investment * 1.25 },
-    { range: '25-50% gain', min: investment * 1.25, max: investment * 1.5 },
-    { range: '50-100% gain', min: investment * 1.5, max: investment * 2 },
-    { range: '100-200% gain', min: investment * 2, max: investment * 3 },
-    { range: '>200% gain', min: investment * 3, max: Infinity },
+    { range: "Loss (< investment)", min: 0, max: investment },
+    { range: "0-25% gain", min: investment, max: investment * 1.25 },
+    { range: "25-50% gain", min: investment * 1.25, max: investment * 1.5 },
+    { range: "50-100% gain", min: investment * 1.5, max: investment * 2 },
+    { range: "100-200% gain", min: investment * 2, max: investment * 3 },
+    { range: ">200% gain", min: investment * 3, max: Infinity },
   ];
 
   return buckets.map((bucket) => {
-    const count = values.filter((v) => v >= bucket.min && v < bucket.max).length;
+    const count = values.filter(
+      (v) => v >= bucket.min && v < bucket.max,
+    ).length;
     return {
       range: bucket.range,
       count,

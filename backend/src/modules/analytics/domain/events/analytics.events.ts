@@ -1,4 +1,4 @@
-import { BaseEvent } from '../../../../core/messaging/events/base.event';
+import { BaseEvent } from "../../../../core/messaging/events/base.event";
 
 export class SpendingTrendsQueriedEvent extends BaseEvent {
   constructor(
@@ -7,7 +7,7 @@ export class SpendingTrendsQueriedEvent extends BaseEvent {
     public readonly periodFrom: string,
     public readonly periodTo: string,
   ) {
-    super('analytics.spending-trends.queried');
+    super({ eventType: "analytics.spending-trends.queried" });
   }
 }
 
@@ -17,7 +17,7 @@ export class CategoryBreakdownQueriedEvent extends BaseEvent {
     public readonly periodFrom: string,
     public readonly periodTo: string,
   ) {
-    super('analytics.category-breakdown.queried');
+    super({ eventType: "analytics.category-breakdown.queried" });
   }
 }
 
@@ -27,6 +27,6 @@ export class NetWorthHistoryQueriedEvent extends BaseEvent {
     public readonly periodFrom: string,
     public readonly periodTo: string,
   ) {
-    super('analytics.net-worth-history.queried');
+    super({ eventType: "analytics.net-worth-history.queried" });
   }
 }

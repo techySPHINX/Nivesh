@@ -1,4 +1,4 @@
-import { UpdateBudgetDto } from '../dto';
+import { UpdateBudgetDto } from "../dto";
 
 export class UpdateBudgetCommand {
   constructor(

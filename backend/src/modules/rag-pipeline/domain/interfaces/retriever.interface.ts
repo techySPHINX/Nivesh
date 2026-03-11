@@ -1,5 +1,5 @@
-import { RetrievalResult } from '../entities/retrieval-result.entity';
-import { VectorSearchFilter } from './vector-store.interface';
+import { RetrievalResult } from "../entities/retrieval-result.entity";
+import { VectorSearchFilter } from "./vector-store.interface";
 
 /**
  * Retrieval strategy configuration
@@ -13,7 +13,7 @@ export interface RetrievalConfig {
 
 /**
  * Retriever Interface
- * 
+ *
  * High-level abstraction for semantic retrieval
  */
 export interface IRetriever {

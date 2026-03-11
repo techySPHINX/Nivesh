@@ -1,8 +1,8 @@
-import { EmbeddingVector } from '../entities/embedding-vector.entity';
+import { EmbeddingVector } from "../entities/embedding-vector.entity";
 
 /**
  * Embedding Service Interface
- * 
+ *
  * Abstraction for generating embeddings from text
  * Implementations: local (sentence-transformers), remote (OpenAI)
  */

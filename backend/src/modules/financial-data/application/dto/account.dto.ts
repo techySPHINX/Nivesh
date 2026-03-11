@@ -9,54 +9,57 @@ import {
   Max,
   MaxLength,
   IsDateString,
-} from 'class-validator';
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { AccountType, AccountStatus } from '../../domain/entities/account.entity';
-import { Currency } from '../../domain/value-objects/money.vo';
+} from "class-validator";
+import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
+import {
+  AccountType,
+  AccountStatus,
+} from "../../domain/entities/account.entity";
+import { Currency } from "../../domain/value-objects/money.vo";
 
 // ==========================================
 // Account DTOs
 // ==========================================
 
 export class CreateAccountDto {
-  @ApiProperty({ description: 'Account name/label', example: 'HDFC Savings' })
+  @ApiProperty({ description: "Account name/label", example: "HDFC Savings" })
   @IsString()
   @IsNotEmpty()
   @MaxLength(100)
   accountName: string;
 
-  @ApiProperty({ description: 'Account number', example: '12345678901234' })
+  @ApiProperty({ description: "Account number", example: "12345678901234" })
   @IsString()
   @IsNotEmpty()
   accountNumber: string;
 
   @ApiProperty({
     enum: AccountType,
-    description: 'Type of account',
+    description: "Type of account",
     example: AccountType.SAVINGS,
   })
   @IsEnum(AccountType)
   accountType: AccountType;
 
-  @ApiProperty({ description: 'Bank name', example: 'HDFC Bank' })
+  @ApiProperty({ description: "Bank name", example: "HDFC Bank" })
   @IsString()
   @IsNotEmpty()
   @MaxLength(100)
   bankName: string;
 
-  @ApiPropertyOptional({ description: 'IFSC code', example: 'HDFC0001234' })
+  @ApiPropertyOptional({ description: "IFSC code", example: "HDFC0001234" })
   @IsString()
   @IsOptional()
   ifscCode?: string;
 
-  @ApiProperty({ description: 'Initial balance', example: 50000 })
+  @ApiProperty({ description: "Initial balance", example: 50000 })
   @IsNumber()
   @Min(0)
   balance: number;
 
   @ApiPropertyOptional({
     enum: Currency,
-    description: 'Currency',
+    description: "Currency",
     example: Currency.INR,
     default: Currency.INR,
   })
@@ -66,19 +69,19 @@ export class CreateAccountDto {
 }
 
 export class UpdateAccountDto {
-  @ApiPropertyOptional({ description: 'Account name/label' })
+  @ApiPropertyOptional({ description: "Account name/label" })
   @IsString()
   @IsOptional()
   @MaxLength(100)
   accountName?: string;
 
-  @ApiPropertyOptional({ description: 'Current balance' })
+  @ApiPropertyOptional({ description: "Current balance" })
   @IsNumber()
   @IsOptional()
   @Min(0)
   balance?: number;
 
-  @ApiPropertyOptional({ enum: AccountStatus, description: 'Account status' })
+  @ApiPropertyOptional({ enum: AccountStatus, description: "Account status" })
   @IsEnum(AccountStatus)
   @IsOptional()
   status?: AccountStatus;

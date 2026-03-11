@@ -1,11 +1,11 @@
-import { Injectable, UnauthorizedException, Logger } from '@nestjs/common';
-import { PassportStrategy } from '@nestjs/passport';
-import { Strategy } from 'passport-firebase-jwt';
-import { ConfigService } from '@nestjs/config';
-import * as admin from 'firebase-admin';
+import { Injectable, UnauthorizedException, Logger } from "@nestjs/common";
+import { PassportStrategy } from "@nestjs/passport";
+import { Strategy } from "passport-firebase-jwt";
+import { ConfigService } from "@nestjs/config";
+import * as admin from "firebase-admin";
 
 @Injectable()
-export class FirebaseStrategy extends PassportStrategy(Strategy, 'firebase') {
+export class FirebaseStrategy extends PassportStrategy(Strategy, "firebase") {
   private readonly logger = new Logger(FirebaseStrategy.name);
   private firebaseApp: admin.app.App;
 
@@ -13,7 +13,7 @@ export class FirebaseStrategy extends PassportStrategy(Strategy, 'firebase') {
     super({
       jwtFromRequest: (req) => {
         const authHeader = req.headers.authorization;
-        if (authHeader && authHeader.startsWith('Bearer ')) {
+        if (authHeader && authHeader.startsWith("Bearer ")) {
           return authHeader.substring(7);
         }
         return null;
@@ -24,14 +24,14 @@ export class FirebaseStrategy extends PassportStrategy(Strategy, 'firebase') {
     if (!admin.apps.length) {
       this.firebaseApp = admin.initializeApp({
         credential: admin.credential.cert({
-          projectId: this.configService.get<string>('FIREBASE_PROJECT_ID'),
-          clientEmail: this.configService.get<string>('FIREBASE_CLIENT_EMAIL'),
+          projectId: this.configService.get<string>("FIREBASE_PROJECT_ID"),
+          clientEmail: this.configService.get<string>("FIREBASE_CLIENT_EMAIL"),
           privateKey: this.configService
-            .get<string>('FIREBASE_PRIVATE_KEY')
-            ?.replace(/\\n/g, '\n'),
+            .get<string>("FIREBASE_PRIVATE_KEY")
+            ?.replace(/\\n/g, "\n"),
         }),
       });
-      this.logger.log('✅ Firebase Admin initialized');
+      this.logger.log("✅ Firebase Admin initialized");
     }
   }
 
@@ -46,8 +46,8 @@ export class FirebaseStrategy extends PassportStrategy(Strategy, 'firebase') {
         firebaseUid: decodedToken.uid,
       };
     } catch (error) {
-      this.logger.error('Firebase token validation failed', error);
-      throw new UnauthorizedException('Invalid Firebase token');
+      this.logger.error("Firebase token validation failed", error);
+      throw new UnauthorizedException("Invalid Firebase token");
     }
   }
 }

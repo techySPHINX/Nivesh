@@ -1,8 +1,8 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { BaseAgent } from './base.agent';
-import { AgentMessage, AgentResponse, AgentType } from '../types/agent.types';
-import { ToolRegistry } from '../services/tool-registry.service';
-import { DecisionTraceService } from '../services/decision-trace.service';
+import { Injectable, Logger } from "@nestjs/common";
+import { BaseAgent } from "./base.agent";
+import { AgentMessage, AgentResponse, AgentType } from "../types/agent.types";
+import { ToolRegistry } from "../services/tool-registry.service";
+import { DecisionTraceService } from "../services/decision-trace.service";
 
 /**
  * Action Interface
@@ -10,10 +10,10 @@ import { DecisionTraceService } from '../services/decision-trace.service';
  */
 interface Action {
   id: string;
-  type: 'budget' | 'sip' | 'reminder' | 'alert' | 'transaction' | 'goal';
+  type: "budget" | "sip" | "reminder" | "alert" | "transaction" | "goal";
   title: string;
   description: string;
-  priority: 'high' | 'medium' | 'low';
+  priority: "high" | "medium" | "low";
   dueDate?: Date;
   completed: boolean;
   parameters: Record<string, any>;
@@ -37,7 +37,7 @@ interface BudgetAction {
 interface SIPSetup {
   fundName: string;
   amount: number;
-  frequency: 'monthly' | 'weekly';
+  frequency: "monthly" | "weekly";
   startDate: Date;
   autoDebit: boolean;
   bankAccount: string;
@@ -94,16 +94,16 @@ export class ActionExecutionAgent extends BaseAgent {
 
       let result;
       switch (task) {
-        case 'create_budget':
+        case "create_budget":
           result = await this.createBudget(context, traceId);
           break;
-        case 'setup_sip':
+        case "setup_sip":
           result = await this.setupSIP(context, traceId);
           break;
-        case 'generate_actions':
+        case "generate_actions":
           result = await this.generateActionPlan(context, traceId);
           break;
-        case 'create_reminders':
+        case "create_reminders":
           result = await this.createReminders(context, traceId);
           break;
         default:
@@ -139,7 +139,7 @@ export class ActionExecutionAgent extends BaseAgent {
       `Savings goal: ₹${savingsGoal.toLocaleString()} (${((savingsGoal / monthlyIncome) * 100).toFixed(1)}%)`,
     );
 
-    await this.recordReasoning('Creating category budgets', traceId);
+    await this.recordReasoning("Creating category budgets", traceId);
 
     const remainingForExpenses = monthlyIncome - savingsGoal;
 
@@ -177,8 +177,8 @@ export class ActionExecutionAgent extends BaseAgent {
       [],
       0.85,
       [
-        'Enable automatic alerts at 80% threshold',
-        'Review and adjust budgets monthly',
+        "Enable automatic alerts at 80% threshold",
+        "Review and adjust budgets monthly",
       ],
     );
   }
@@ -197,16 +197,16 @@ export class ActionExecutionAgent extends BaseAgent {
 
     reasoning.push(`Setting up ${products.length} SIP investments`);
 
-    await this.recordReasoning('Configuring SIP setups', traceId);
+    await this.recordReasoning("Configuring SIP setups", traceId);
 
     products.forEach((product: any) => {
       const setup: SIPSetup = {
         fundName: product.name,
         amount: product.monthlyAmount,
-        frequency: 'monthly',
+        frequency: "monthly",
         startDate: this.getNextMonthFirstDay(),
         autoDebit: true,
-        bankAccount: context.bankAccount || 'Primary Savings',
+        bankAccount: context.bankAccount || "Primary Savings",
       };
 
       sipSetups.push(setup);
@@ -217,9 +217,7 @@ export class ActionExecutionAgent extends BaseAgent {
     });
 
     const totalSIP = sipSetups.reduce((sum, sip) => sum + sip.amount, 0);
-    reasoning.push(
-      `Total monthly SIP: ₹${totalSIP.toLocaleString()}`,
-    );
+    reasoning.push(`Total monthly SIP: ₹${totalSIP.toLocaleString()}`);
 
     await this.recordReasoning(
       `Configured ${sipSetups.length} SIP setups`,
@@ -232,9 +230,9 @@ export class ActionExecutionAgent extends BaseAgent {
       [],
       0.9,
       [
-        'Complete KYC if not done',
-        'Link bank account for auto-debit',
-        'Set calendar reminder for SIP dates',
+        "Complete KYC if not done",
+        "Link bank account for auto-debit",
+        "Set calendar reminder for SIP dates",
       ],
     );
   }
@@ -249,11 +247,13 @@ export class ActionExecutionAgent extends BaseAgent {
     const reasoning: string[] = [];
     const actions: Action[] = [];
 
-    await this.recordReasoning('Generating comprehensive action plan', traceId);
+    await this.recordReasoning("Generating comprehensive action plan", traceId);
 
     // Extract actions from all agent results
     if (context.financial_planning_result) {
-      actions.push(...this.extractPlanningActions(context.financial_planning_result));
+      actions.push(
+        ...this.extractPlanningActions(context.financial_planning_result),
+      );
     }
 
     if (context.risk_assessment_result) {
@@ -261,7 +261,9 @@ export class ActionExecutionAgent extends BaseAgent {
     }
 
     if (context.investment_advisor_result) {
-      actions.push(...this.extractInvestmentActions(context.investment_advisor_result));
+      actions.push(
+        ...this.extractInvestmentActions(context.investment_advisor_result),
+      );
     }
 
     // Sort by priority
@@ -272,13 +274,13 @@ export class ActionExecutionAgent extends BaseAgent {
 
     reasoning.push(`Generated ${actions.length} actionable items`);
     reasoning.push(
-      `High priority: ${actions.filter((a) => a.priority === 'high').length}`,
+      `High priority: ${actions.filter((a) => a.priority === "high").length}`,
     );
     reasoning.push(
-      `Medium priority: ${actions.filter((a) => a.priority === 'medium').length}`,
+      `Medium priority: ${actions.filter((a) => a.priority === "medium").length}`,
     );
     reasoning.push(
-      `Low priority: ${actions.filter((a) => a.priority === 'low').length}`,
+      `Low priority: ${actions.filter((a) => a.priority === "low").length}`,
     );
 
     await this.recordReasoning(
@@ -292,9 +294,9 @@ export class ActionExecutionAgent extends BaseAgent {
       [],
       0.88,
       [
-        'Start with high-priority actions',
-        'Set weekly review reminder',
-        'Track completion progress',
+        "Start with high-priority actions",
+        "Set weekly review reminder",
+        "Track completion progress",
       ],
     );
   }
@@ -308,57 +310,54 @@ export class ActionExecutionAgent extends BaseAgent {
   ): Promise<AgentResponse> {
     const reminders = [
       {
-        title: 'Review Monthly Budget',
-        frequency: 'monthly',
+        title: "Review Monthly Budget",
+        frequency: "monthly",
         day: 1,
-        description: 'Check spending vs budget for all categories',
+        description: "Check spending vs budget for all categories",
       },
       {
-        title: 'Portfolio Rebalancing',
-        frequency: 'quarterly',
-        description: 'Review and rebalance investment allocation',
+        title: "Portfolio Rebalancing",
+        frequency: "quarterly",
+        description: "Review and rebalance investment allocation",
       },
       {
-        title: 'Goal Progress Check',
-        frequency: 'monthly',
+        title: "Goal Progress Check",
+        frequency: "monthly",
         day: 15,
-        description: 'Track progress towards financial goals',
+        description: "Track progress towards financial goals",
       },
       {
-        title: 'Tax Planning Review',
-        frequency: 'annually',
+        title: "Tax Planning Review",
+        frequency: "annually",
         month: 1,
-        description: 'Review tax-saving investments (80C, 80D)',
+        description: "Review tax-saving investments (80C, 80D)",
       },
     ];
 
     const reasoning = [
       `Created ${reminders.length} recurring reminders`,
-      'Monthly: Budget review, Goal check',
-      'Quarterly: Portfolio rebalancing',
-      'Annual: Tax planning',
+      "Monthly: Budget review, Goal check",
+      "Quarterly: Portfolio rebalancing",
+      "Annual: Tax planning",
     ];
 
-    return this.createSuccessResponse(
-      { reminders },
-      reasoning,
-      [],
-      0.9,
-      ['Enable notifications', 'Sync with calendar'],
-    );
+    return this.createSuccessResponse({ reminders }, reasoning, [], 0.9, [
+      "Enable notifications",
+      "Sync with calendar",
+    ]);
   }
 
   private extractPlanningActions(result: any): Action[] {
     return [
       {
-        id: 'action-planning-1',
-        type: 'goal',
-        title: 'Start Monthly Savings Plan',
+        id: "action-planning-1",
+        type: "goal",
+        title: "Start Monthly Savings Plan",
         description: `Save ₹${result.monthlySavingsRequired?.toLocaleString()}/month`,
-        priority: 'high',
+        priority: "high",
         completed: false,
         parameters: { amount: result.monthlySavingsRequired },
-        estimatedImpact: 'Achieve goal on time',
+        estimatedImpact: "Achieve goal on time",
       },
     ];
   }
@@ -368,10 +367,13 @@ export class ActionExecutionAgent extends BaseAgent {
     result.mitigations?.forEach((mitigation: any, index: number) => {
       actions.push({
         id: `action-risk-${index}`,
-        type: 'alert',
+        type: "alert",
         title: mitigation.risk,
         description: mitigation.recommendation,
-        priority: mitigation.severity === 'critical' || mitigation.severity === 'high' ? 'high' : 'medium',
+        priority:
+          mitigation.severity === "critical" || mitigation.severity === "high"
+            ? "high"
+            : "medium",
         completed: false,
         parameters: { severity: mitigation.severity },
         estimatedImpact: mitigation.estimatedImpact,
@@ -383,14 +385,14 @@ export class ActionExecutionAgent extends BaseAgent {
   private extractInvestmentActions(result: any): Action[] {
     return [
       {
-        id: 'action-investment-1',
-        type: 'sip',
-        title: 'Setup Investment SIPs',
+        id: "action-investment-1",
+        type: "sip",
+        title: "Setup Investment SIPs",
         description: `Configure ${result.products?.length || 0} SIP investments`,
-        priority: 'high',
+        priority: "high",
         completed: false,
         parameters: { products: result.products },
-        estimatedImpact: 'Automated investing',
+        estimatedImpact: "Automated investing",
       },
     ];
   }

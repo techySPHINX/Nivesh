@@ -1,9 +1,16 @@
-import { EventsHandler, IEventHandler } from '@nestjs/cqrs';
-import { Injectable, Inject, Logger } from '@nestjs/common';
-import { BudgetExceededEvent, BudgetThresholdReachedEvent } from '../../domain/events/budget.events';
-import { ALERT_REPOSITORY } from '../../../alerts/domain/repositories/alert.repository.interface';
-import { IAlertRepository } from '../../../alerts/domain/repositories/alert.repository.interface';
-import { Alert, AlertType, AlertSeverity } from '../../../alerts/domain/entities/alert.entity';
+import { EventsHandler, IEventHandler } from "@nestjs/cqrs";
+import { Injectable, Inject, Logger } from "@nestjs/common";
+import {
+  BudgetExceededEvent,
+  BudgetThresholdReachedEvent,
+} from "../../domain/events/budget.events";
+import { ALERT_REPOSITORY } from "../../../alerts/domain/repositories/alert.repository.interface";
+import { IAlertRepository } from "../../../alerts/domain/repositories/alert.repository.interface";
+import {
+  Alert,
+  AlertType,
+  AlertSeverity,
+} from "../../../alerts/domain/entities/alert.entity";
 
 /**
  * BudgetAlertHandler
@@ -35,7 +42,7 @@ export class BudgetExceededAlertHandler implements IEventHandler<BudgetExceededE
       alertType: AlertType.OVERSPENDING,
       severity: AlertSeverity.CRITICAL,
       title: `Budget Exceeded: ${event.name}`,
-      message: `You have exceeded your ${event.name} budget. Spent ₹${event.totalSpent.toLocaleString('en-IN')} (${pct}%) of ₹${event.totalLimit.toLocaleString('en-IN')} limit.`,
+      message: `You have exceeded your ${event.name} budget. Spent ₹${event.totalSpent.toLocaleString("en-IN")} (${pct}%) of ₹${event.totalLimit.toLocaleString("en-IN")} limit.`,
       actionable: true,
       actionUrl: `/dashboard/budgets/${event.budgetId}`,
       metadata: {
@@ -50,7 +57,7 @@ export class BudgetExceededAlertHandler implements IEventHandler<BudgetExceededE
     try {
       await this.alertRepository.save(alert);
     } catch (err) {
-      this.logger.error('Failed to create budget exceeded alert', err);
+      this.logger.error("Failed to create budget exceeded alert", err);
     }
   }
 }
@@ -76,9 +83,10 @@ export class BudgetThresholdAlertHandler implements IEventHandler<BudgetThreshol
       id: crypto.randomUUID(),
       userId: event.userId,
       alertType: AlertType.BUDGET_THRESHOLD,
-      severity: event.threshold >= 100 ? AlertSeverity.CRITICAL : AlertSeverity.WARNING,
+      severity:
+        event.threshold >= 100 ? AlertSeverity.CRITICAL : AlertSeverity.WARNING,
       title: `Budget Alert (${pct}%): ${event.name}`,
-      message: `You have used ${pct}% of your ${event.name} budget. Spent ₹${event.totalSpent.toLocaleString('en-IN')} of ₹${event.totalLimit.toLocaleString('en-IN')}.`,
+      message: `You have used ${pct}% of your ${event.name} budget. Spent ₹${event.totalSpent.toLocaleString("en-IN")} of ₹${event.totalLimit.toLocaleString("en-IN")}.`,
       actionable: true,
       actionUrl: `/dashboard/budgets/${event.budgetId}`,
       metadata: {
@@ -93,10 +101,13 @@ export class BudgetThresholdAlertHandler implements IEventHandler<BudgetThreshol
     try {
       await this.alertRepository.save(alert);
     } catch (err) {
-      this.logger.error('Failed to create budget threshold alert', err);
+      this.logger.error("Failed to create budget threshold alert", err);
     }
   }
 }
 
 /** Barrel export used by the module */
-export const BudgetAlertHandler = [BudgetExceededAlertHandler, BudgetThresholdAlertHandler];
+export const BudgetAlertHandler = [
+  BudgetExceededAlertHandler,
+  BudgetThresholdAlertHandler,
+];

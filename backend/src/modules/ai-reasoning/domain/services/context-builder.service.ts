@@ -3,13 +3,13 @@
  * Builds anonymized financial context from user's financial data
  */
 
-import { Injectable } from '@nestjs/common';
+import { Injectable } from "@nestjs/common";
 import {
   FinancialContext,
   FinancialSnapshot,
   GoalSummary,
   RiskProfile,
-} from '../value-objects/financial-context.vo';
+} from "../value-objects/financial-context.vo";
 
 export interface BuildContextParams {
   userId: string;
@@ -44,40 +44,41 @@ export class FinancialContextBuilderService {
     // Calculate income (credit transactions with income categories)
     const incomeTransactions = transactions.filter(
       (t) =>
-        t.type === 'CREDIT' &&
-        ['SALARY', 'FREELANCE', 'OTHER_INCOME'].includes(t.category),
+        t.type === "CREDIT" &&
+        ["SALARY", "FREELANCE", "OTHER_INCOME"].includes(t.category),
     );
     const totalIncome =
       incomeTransactions.reduce((sum, t) => sum + t.amount, 0) || 0;
 
     // Calculate expenses (debit transactions)
-    const expenseTransactions = transactions.filter((t) => t.type === 'DEBIT');
+    const expenseTransactions = transactions.filter((t) => t.type === "DEBIT");
     const totalExpenses =
       expenseTransactions.reduce((sum, t) => sum + t.amount, 0) || 0;
 
     // Calculate savings (account balances for savings/current accounts)
     const savingsAccounts = accounts.filter(
-      (a) => a.accountType === 'SAVINGS' || a.accountType === 'CURRENT',
+      (a) => a.accountType === "SAVINGS" || a.accountType === "CURRENT",
     );
     const totalSavings =
       savingsAccounts.reduce((sum, a) => sum + a.balance, 0) || 0;
 
     // Calculate investments
     const investmentAccounts = accounts.filter(
-      (a) => a.accountType === 'INVESTMENT',
+      (a) => a.accountType === "INVESTMENT",
     );
     const totalInvestments =
       investmentAccounts.reduce((sum, a) => sum + a.balance, 0) || 0;
 
     // Calculate debt (credit cards, loans)
     const debtAccounts = accounts.filter(
-      (a) => a.accountType === 'CREDIT_CARD' || a.accountType === 'LOAN',
+      (a) => a.accountType === "CREDIT_CARD" || a.accountType === "LOAN",
     );
     const totalDebt =
       debtAccounts.reduce((sum, a) => sum + Math.abs(a.balance), 0) || 0;
 
     // Monthly spending by category
-    const categorySpending = this.calculateCategorySpending(expenseTransactions);
+    const categorySpending =
+      this.calculateCategorySpending(expenseTransactions);
 
     // Calculate metrics
     const savingsRate =
@@ -134,11 +135,14 @@ export class FinancialContextBuilderService {
         monthsRemaining > 0 ? amountRemaining / monthsRemaining : 0;
 
       const onTrack =
-        goal.currentAmount >= (goal.targetAmount * this.getProgressPercentage(
-          new Date(goal.startDate),
-          new Date(),
-          new Date(goal.targetDate),
-        )) / 100;
+        goal.currentAmount >=
+        (goal.targetAmount *
+          this.getProgressPercentage(
+            new Date(goal.startDate),
+            new Date(),
+            new Date(goal.targetDate),
+          )) /
+          100;
 
       return {
         id: goal.id,
@@ -157,17 +161,19 @@ export class FinancialContextBuilderService {
     snapshot: FinancialSnapshot,
   ): RiskProfile {
     const age = userProfile?.dateOfBirth
-      ? new Date().getFullYear() - new Date(userProfile.dateOfBirth).getFullYear()
+      ? new Date().getFullYear() -
+        new Date(userProfile.dateOfBirth).getFullYear()
       : 30;
 
-    const hasEmergencyFund = snapshot.totalSavings >= snapshot.totalExpenses * 3;
+    const hasEmergencyFund =
+      snapshot.totalSavings >= snapshot.totalExpenses * 3;
 
     // Determine job stability based on income consistency
-    const jobStability: 'high' | 'medium' | 'low' =
-      snapshot.totalIncome > snapshot.totalExpenses * 2 ? 'high' : 'medium';
+    const jobStability: "high" | "medium" | "low" =
+      snapshot.totalIncome > snapshot.totalExpenses * 2 ? "high" : "medium";
 
     return {
-      level: userProfile?.riskProfile || 'moderate',
+      level: userProfile?.riskProfile || "moderate",
       age,
       dependents: 0, // TODO: Add dependents to user profile
       hasEmergencyFund,

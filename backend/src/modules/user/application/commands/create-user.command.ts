@@ -1,4 +1,4 @@
-import { ICommand } from '@nestjs/cqrs';
+import { ICommand } from "@nestjs/cqrs";
 
 export class CreateUserCommand implements ICommand {
   constructor(
@@ -8,5 +8,5 @@ export class CreateUserCommand implements ICommand {
     public readonly phoneNumber?: string,
     public readonly dateOfBirth?: Date,
     public readonly firebaseUid?: string,
-  ) { }
+  ) {}
 }

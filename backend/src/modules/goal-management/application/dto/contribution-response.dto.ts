@@ -1,4 +1,4 @@
-import { ContributionType } from '../../domain/entities/goal-contribution.entity';
+import { ContributionType } from "../../domain/entities/goal-contribution.entity";
 
 export class ContributionResponseDto {
   id: string;

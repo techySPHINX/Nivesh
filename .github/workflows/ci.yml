@@ -87,26 +87,6 @@ jobs:
           name: backend-coverage
           path: backend/coverage/lcov.info
 
-  # ──────────────── Frontend ────────────────
-  frontend-lint:
-    name: Frontend Lint
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: frontend
-    steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v2
-        with:
-          version: 9.15.4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: pnpm
-          cache-dependency-path: frontend/package.json
-      - run: pnpm install --no-frozen-lockfile
-      - run: pnpm lint
-      - run: pnpm build
 
   # ──────────────── ML Services ────────────────
   ml-lint:
@@ -136,9 +116,8 @@ jobs:
         with:
           python-version: "3.11"
           cache: pip
-          cache-dependency-path: ml-services/requirements.txt
-      - run: pip install -r requirements.txt
-      - run: pip install pytest pytest-cov
+          cache-dependency-path: ml-services/requirements-test.txt
+      - run: pip install -r requirements-test.txt
       - run: pytest --cov=. --cov-report=xml --cov-report=term --cov-fail-under=60 -v
       - name: Upload coverage
         if: always()

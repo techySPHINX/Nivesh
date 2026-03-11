@@ -1,5 +1,15 @@
-import { IsString, IsEnum, IsNumber, IsOptional, IsBoolean, IsDateString, Min, MaxLength, IsObject } from 'class-validator';
-import { GoalPriority } from '../../domain/entities/goal.entity';
+import {
+  IsString,
+  IsEnum,
+  IsNumber,
+  IsOptional,
+  IsBoolean,
+  IsDateString,
+  Min,
+  MaxLength,
+  IsObject,
+} from "class-validator";
+import { GoalPriority } from "../../domain/entities/goal.entity";
 
 export class UpdateGoalDto {
   @IsString()

@@ -1,8 +1,8 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { BaseAgent } from './base.agent';
-import { AgentMessage, AgentResponse, AgentType } from '../types/agent.types';
-import { ToolRegistry } from '../services/tool-registry.service';
-import { DecisionTraceService } from '../services/decision-trace.service';
+import { Injectable, Logger } from "@nestjs/common";
+import { BaseAgent } from "./base.agent";
+import { AgentMessage, AgentResponse, AgentType } from "../types/agent.types";
+import { ToolRegistry } from "../services/tool-registry.service";
+import { DecisionTraceService } from "../services/decision-trace.service";
 
 /**
  * Risk Metrics Interface
@@ -20,7 +20,7 @@ interface RiskMetrics {
 /**
  * Risk Level Type
  */
-type RiskLevel = 'low' | 'medium' | 'high' | 'critical';
+type RiskLevel = "low" | "medium" | "high" | "critical";
 
 /**
  * Risk Mitigation Strategy Interface
@@ -111,19 +111,19 @@ export class RiskAssessmentAgent extends BaseAgent {
 
       // Validate required context
       if (!context.userId) {
-        throw new Error('Missing required context: userId');
+        throw new Error("Missing required context: userId");
       }
 
       // Route to appropriate handler
       let result;
       switch (task) {
-        case 'assess_risk':
+        case "assess_risk":
           result = await this.assessOverallRisk(context, traceId);
           break;
-        case 'analyze_debt':
+        case "analyze_debt":
           result = await this.analyzeDebtRisk(context, traceId);
           break;
-        case 'check_emergency_fund':
+        case "check_emergency_fund":
           result = await this.checkEmergencyFund(context, traceId);
           break;
         default:
@@ -154,27 +154,27 @@ export class RiskAssessmentAgent extends BaseAgent {
 
     // Step 1: Query financial graph for risk indicators
     await this.recordReasoning(
-      'Querying financial graph for risk indicators',
+      "Querying financial graph for risk indicators",
       traceId,
     );
 
     const graphData = await this.callTool(
-      'query_financial_graph',
+      "query_financial_graph",
       {
         userId,
-        queryType: 'risk_indicators',
+        queryType: "risk_indicators",
       },
       traceId,
     );
 
-    toolsUsed.push('query_financial_graph');
+    toolsUsed.push("query_financial_graph");
 
     reasoning.push(
-      `Retrieved financial data: ${Object.keys(graphData).join(', ')}`,
+      `Retrieved financial data: ${Object.keys(graphData).join(", ")}`,
     );
 
     // Step 2: Calculate risk metrics
-    await this.recordReasoning('Calculating risk metrics', traceId);
+    await this.recordReasoning("Calculating risk metrics", traceId);
 
     const metrics = this.calculateRiskMetrics(graphData);
 
@@ -203,7 +203,9 @@ export class RiskAssessmentAgent extends BaseAgent {
 
     // Step 4: Generate mitigation strategies
     const mitigations = this.generateMitigations(metrics, riskLevel);
-    reasoning.push(`Generated ${mitigations.length} risk mitigation strategies`);
+    reasoning.push(
+      `Generated ${mitigations.length} risk mitigation strategies`,
+    );
 
     // Step 5: Calculate confidence
     const confidence = this.calculateConfidence(graphData);
@@ -218,7 +220,10 @@ export class RiskAssessmentAgent extends BaseAgent {
       reasoning,
       toolsUsed,
       confidence,
-      ['Review mitigation strategies', 'Update financial plan based on risk level'],
+      [
+        "Review mitigation strategies",
+        "Update financial plan based on risk level",
+      ],
     );
   }
 
@@ -300,10 +305,10 @@ export class RiskAssessmentAgent extends BaseAgent {
 
     // Risk weights: Crypto=100, Equity=70, Gold=30, Debt=10
     const riskScore =
-      ((crypto / totalInvestment) * 100 +
-        (equity / totalInvestment) * 70 +
-        (gold / totalInvestment) * 30 +
-        (debt / totalInvestment) * 10);
+      (crypto / totalInvestment) * 100 +
+      (equity / totalInvestment) * 70 +
+      (gold / totalInvestment) * 30 +
+      (debt / totalInvestment) * 10;
 
     return Math.min(100, riskScore);
   }
@@ -312,7 +317,9 @@ export class RiskAssessmentAgent extends BaseAgent {
    * Calculate concentration risk using Herfindahl index
    * Returns 0-1 (1 = highly concentrated, risky)
    */
-  private calculateConcentrationRisk(categories: Record<string, number>): number {
+  private calculateConcentrationRisk(
+    categories: Record<string, number>,
+  ): number {
     const values = Object.values(categories);
     const total = values.reduce((sum, val) => sum + val, 0);
 
@@ -335,30 +342,34 @@ export class RiskAssessmentAgent extends BaseAgent {
 
     // Debt-to-income contribution (0-4 points)
     if (metrics.debtToIncomeRatio > this.DTI_HIGH_THRESHOLD) riskScore += 4;
-    else if (metrics.debtToIncomeRatio > this.DTI_MEDIUM_THRESHOLD) riskScore += 2;
+    else if (metrics.debtToIncomeRatio > this.DTI_MEDIUM_THRESHOLD)
+      riskScore += 2;
     else if (metrics.debtToIncomeRatio > this.DTI_LOW_THRESHOLD) riskScore += 1;
 
     // Emergency fund contribution (0-3 points)
     if (metrics.emergencyFundCoverage < 0.5) riskScore += 3;
     else if (
-      metrics.emergencyFundCoverage < this.EMERGENCY_FUND_MINIMUM_MONTHS / this.EMERGENCY_FUND_IDEAL_MONTHS
+      metrics.emergencyFundCoverage <
+      this.EMERGENCY_FUND_MINIMUM_MONTHS / this.EMERGENCY_FUND_IDEAL_MONTHS
     )
       riskScore += 2;
     else if (metrics.emergencyFundCoverage < 1) riskScore += 1;
 
     // Income volatility contribution (0-3 points)
-    if (metrics.incomeVolatility > this.VOLATILITY_HIGH_THRESHOLD) riskScore += 3;
-    else if (metrics.incomeVolatility > this.VOLATILITY_LOW_THRESHOLD) riskScore += 1;
+    if (metrics.incomeVolatility > this.VOLATILITY_HIGH_THRESHOLD)
+      riskScore += 3;
+    else if (metrics.incomeVolatility > this.VOLATILITY_LOW_THRESHOLD)
+      riskScore += 1;
 
     // Investment risk contribution (0-2 points)
     if (metrics.investmentRiskScore > 70) riskScore += 2;
     else if (metrics.investmentRiskScore > 50) riskScore += 1;
 
     // Determine level based on total score
-    if (riskScore >= 8) return 'critical';
-    if (riskScore >= 5) return 'high';
-    if (riskScore >= 2) return 'medium';
-    return 'low';
+    if (riskScore >= 8) return "critical";
+    if (riskScore >= 5) return "high";
+    if (riskScore >= 2) return "medium";
+    return "low";
   }
 
   /**
@@ -373,44 +384,50 @@ export class RiskAssessmentAgent extends BaseAgent {
     // Emergency fund mitigation
     if (metrics.emergencyFundCoverage < 1) {
       mitigations.push({
-        risk: 'Insufficient Emergency Fund',
-        severity: metrics.emergencyFundCoverage < 0.5 ? 'critical' : 'high',
+        risk: "Insufficient Emergency Fund",
+        severity: metrics.emergencyFundCoverage < 0.5 ? "critical" : "high",
         recommendation: `Build emergency fund to ₹${Math.ceil(metrics.emergencyFundCoverage * 100000)} (${this.EMERGENCY_FUND_IDEAL_MONTHS} months expenses)`,
         priority: 5,
-        estimatedImpact: 'Protects against income loss or unexpected expenses',
+        estimatedImpact: "Protects against income loss or unexpected expenses",
       });
     }
 
     // Debt mitigation
     if (metrics.debtToIncomeRatio > this.DTI_MEDIUM_THRESHOLD) {
       mitigations.push({
-        risk: 'High Debt-to-Income Ratio',
-        severity: metrics.debtToIncomeRatio > this.DTI_HIGH_THRESHOLD ? 'critical' : 'high',
-        recommendation: 'Reduce debt obligations through early repayment or consolidation',
+        risk: "High Debt-to-Income Ratio",
+        severity:
+          metrics.debtToIncomeRatio > this.DTI_HIGH_THRESHOLD
+            ? "critical"
+            : "high",
+        recommendation:
+          "Reduce debt obligations through early repayment or consolidation",
         priority: 4,
-        estimatedImpact: 'Frees up monthly cash flow and reduces financial stress',
+        estimatedImpact:
+          "Frees up monthly cash flow and reduces financial stress",
       });
     }
 
     // Income volatility mitigation
     if (metrics.incomeVolatility > this.VOLATILITY_HIGH_THRESHOLD) {
       mitigations.push({
-        risk: 'High Income Volatility',
-        severity: 'high',
-        recommendation: 'Diversify income sources or build larger emergency buffer',
+        risk: "High Income Volatility",
+        severity: "high",
+        recommendation:
+          "Diversify income sources or build larger emergency buffer",
         priority: 3,
-        estimatedImpact: 'Reduces impact of income fluctuations',
+        estimatedImpact: "Reduces impact of income fluctuations",
       });
     }
 
     // Investment risk mitigation
     if (metrics.investmentRiskScore > 70) {
       mitigations.push({
-        risk: 'High-Risk Investment Portfolio',
-        severity: 'medium',
-        recommendation: 'Rebalance portfolio with more debt/stable instruments',
+        risk: "High-Risk Investment Portfolio",
+        severity: "medium",
+        recommendation: "Rebalance portfolio with more debt/stable instruments",
         priority: 2,
-        estimatedImpact: 'Reduces volatility and protects capital',
+        estimatedImpact: "Reduces volatility and protects capital",
       });
     }
 
@@ -453,9 +470,9 @@ export class RiskAssessmentAgent extends BaseAgent {
     context: any,
     traceId?: string,
   ): Promise<AgentResponse> {
-    const graphData = await this.callTool('query_financial_graph', {
+    const graphData = await this.callTool("query_financial_graph", {
       userId: context.userId,
-      queryType: 'debt_details',
+      queryType: "debt_details",
     });
 
     const reasoning: string[] = [];
@@ -469,17 +486,17 @@ export class RiskAssessmentAgent extends BaseAgent {
 
     const severity: RiskLevel =
       dti > this.DTI_HIGH_THRESHOLD
-        ? 'critical'
+        ? "critical"
         : dti > this.DTI_MEDIUM_THRESHOLD
-          ? 'high'
+          ? "high"
           : dti > this.DTI_LOW_THRESHOLD
-            ? 'medium'
-            : 'low';
+            ? "medium"
+            : "low";
 
     return this.createSuccessResponse(
       { totalDebt, dti, severity },
       reasoning,
-      ['query_financial_graph'],
+      ["query_financial_graph"],
       0.9,
     );
   }
@@ -491,9 +508,9 @@ export class RiskAssessmentAgent extends BaseAgent {
     context: any,
     traceId?: string,
   ): Promise<AgentResponse> {
-    const graphData = await this.callTool('query_financial_graph', {
+    const graphData = await this.callTool("query_financial_graph", {
       userId: context.userId,
-      queryType: 'emergency_fund',
+      queryType: "emergency_fund",
     });
 
     const emergencyFund = graphData.emergencyFund || 0;
@@ -507,13 +524,15 @@ export class RiskAssessmentAgent extends BaseAgent {
 
     const adequate = coverage >= this.EMERGENCY_FUND_IDEAL_MONTHS;
     reasoning.push(
-      adequate ? '✓ Emergency fund is adequate' : `✗ Need ${this.EMERGENCY_FUND_IDEAL_MONTHS - coverage} more months`,
+      adequate
+        ? "✓ Emergency fund is adequate"
+        : `✗ Need ${this.EMERGENCY_FUND_IDEAL_MONTHS - coverage} more months`,
     );
 
     return this.createSuccessResponse(
       { emergencyFund, coverage, adequate },
       reasoning,
-      ['query_financial_graph'],
+      ["query_financial_graph"],
       0.95,
     );
   }
@@ -523,12 +542,12 @@ export class RiskAssessmentAgent extends BaseAgent {
    */
   private calculateConfidence(graphData: any): number {
     const requiredFields = [
-      'incomeHistory',
-      'totalDebt',
-      'monthlyIncome',
-      'monthlyExpenses',
-      'emergencyFund',
-      'investments',
+      "incomeHistory",
+      "totalDebt",
+      "monthlyIncome",
+      "monthlyExpenses",
+      "emergencyFund",
+      "investments",
     ];
 
     const presentFields = requiredFields.filter(

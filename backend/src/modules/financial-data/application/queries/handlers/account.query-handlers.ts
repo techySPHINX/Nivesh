@@ -1,16 +1,16 @@
-import { QueryHandler, IQueryHandler } from '@nestjs/cqrs';
-import { Inject, Logger } from '@nestjs/common';
+import { QueryHandler, IQueryHandler } from "@nestjs/cqrs";
+import { Inject, Logger } from "@nestjs/common";
 import {
   GetAccountQuery,
   GetAccountsByUserQuery,
   GetAllAccountsQuery,
-} from '../account.queries';
+} from "../account.queries";
 import {
   IAccountRepository,
   ACCOUNT_REPOSITORY,
-} from '../../../domain/repositories/account.repository.interface';
-import { Account } from '../../../domain/entities/account.entity';
-import { EntityNotFoundException } from '../../../../../core/exceptions/base.exception';
+} from "../../../domain/repositories/account.repository.interface";
+import { Account } from "../../../domain/entities/account.entity";
+import { EntityNotFoundException } from "../../../../../core/exceptions/base.exception";
 
 @QueryHandler(GetAccountQuery)
 export class GetAccountHandler implements IQueryHandler<GetAccountQuery> {
@@ -19,7 +19,7 @@ export class GetAccountHandler implements IQueryHandler<GetAccountQuery> {
   constructor(
     @Inject(ACCOUNT_REPOSITORY)
     private readonly accountRepository: IAccountRepository,
-  ) { }
+  ) {}
 
   async execute(query: GetAccountQuery): Promise<Account> {
     this.logger.debug(`Getting account: ${query.accountId}`);
@@ -27,7 +27,7 @@ export class GetAccountHandler implements IQueryHandler<GetAccountQuery> {
     const account = await this.accountRepository.findById(query.accountId);
 
     if (!account) {
-      throw new EntityNotFoundException('Account', query.accountId);
+      throw new EntityNotFoundException("Account", query.accountId);
     }
 
     return account;
@@ -41,7 +41,7 @@ export class GetAccountsByUserHandler implements IQueryHandler<GetAccountsByUser
   constructor(
     @Inject(ACCOUNT_REPOSITORY)
     private readonly accountRepository: IAccountRepository,
-  ) { }
+  ) {}
 
   async execute(query: GetAccountsByUserQuery): Promise<Account[]> {
     this.logger.debug(`Getting accounts for user: ${query.userId}`);
@@ -61,9 +61,11 @@ export class GetAllAccountsHandler implements IQueryHandler<GetAllAccountsQuery>
   constructor(
     @Inject(ACCOUNT_REPOSITORY)
     private readonly accountRepository: IAccountRepository,
-  ) { }
+  ) {}
 
-  async execute(query: GetAllAccountsQuery): Promise<{ accounts: Account[]; total: number }> {
+  async execute(
+    query: GetAllAccountsQuery,
+  ): Promise<{ accounts: Account[]; total: number }> {
     this.logger.debug(`Getting all accounts with pagination`);
 
     return this.accountRepository.findAll({

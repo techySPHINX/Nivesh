@@ -1,9 +1,9 @@
 export enum TimeGranularity {
-  DAILY = 'DAILY',
-  WEEKLY = 'WEEKLY',
-  MONTHLY = 'MONTHLY',
-  QUARTERLY = 'QUARTERLY',
-  YEARLY = 'YEARLY',
+  DAILY = "DAILY",
+  WEEKLY = "WEEKLY",
+  MONTHLY = "MONTHLY",
+  QUARTERLY = "QUARTERLY",
+  YEARLY = "YEARLY",
 }
 
 export interface SpendingTrendPoint {
@@ -20,7 +20,7 @@ export interface CategoryBreakdown {
   percentage: number;
   transactionCount: number;
   averageAmount: number;
-  trend: 'UP' | 'DOWN' | 'STABLE';
+  trend: "UP" | "DOWN" | "STABLE";
   changePercentage: number;
 }
 

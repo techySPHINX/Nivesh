@@ -1,9 +1,9 @@
-import { Module } from '@nestjs/common';
-import { CqrsModule } from '@nestjs/cqrs';
-import { DatabaseModule } from '../../core/database/database.module';
+import { Module } from "@nestjs/common";
+import { CqrsModule } from "@nestjs/cqrs";
+import { DatabaseModule } from "../../core/database/database.module";
 
 // Presentation
-import { AlertController } from './presentation/alert.controller';
+import { AlertController } from "./presentation/alert.controller";
 
 // Command Handlers
 import {
@@ -11,7 +11,7 @@ import {
   MarkAlertReadHandler,
   DismissAlertHandler,
   DeleteAlertRuleHandler,
-} from './application/commands/handlers';
+} from "./application/commands/handlers";
 
 // Query Handlers
 import {
@@ -19,15 +19,15 @@ import {
   GetUserAlertsHandler,
   GetAlertRulesHandler,
   GetUnreadCountHandler,
-} from './application/queries/handlers';
+} from "./application/queries/handlers";
 
 // Infrastructure
-import { PrismaAlertRepository } from './infrastructure/repositories/alert.repository';
-import { PrismaAlertRuleRepository } from './infrastructure/repositories/alert-rule.repository';
+import { PrismaAlertRepository } from "./infrastructure/repositories/alert.repository";
+import { PrismaAlertRuleRepository } from "./infrastructure/repositories/alert-rule.repository";
 
 // Domain tokens
-import { ALERT_REPOSITORY } from './domain/repositories/alert.repository.interface';
-import { ALERT_RULE_REPOSITORY } from './domain/repositories/alert-rule.repository.interface';
+import { ALERT_REPOSITORY } from "./domain/repositories/alert.repository.interface";
+import { ALERT_RULE_REPOSITORY } from "./domain/repositories/alert-rule.repository.interface";
 
 const CommandHandlers = [
   CreateAlertRuleHandler,

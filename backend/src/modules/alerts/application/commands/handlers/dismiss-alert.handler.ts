@@ -1,12 +1,17 @@
-import { CommandHandler, ICommandHandler, EventBus } from '@nestjs/cqrs';
-import { Inject, NotFoundException, ForbiddenException, Logger } from '@nestjs/common';
-import { DismissAlertCommand } from '../dismiss-alert.command';
-import { AlertResponseDto } from '../../dto/alert-response.dto';
+import { CommandHandler, ICommandHandler, EventBus } from "@nestjs/cqrs";
+import {
+  Inject,
+  NotFoundException,
+  ForbiddenException,
+  Logger,
+} from "@nestjs/common";
+import { DismissAlertCommand } from "../dismiss-alert.command";
+import { AlertResponseDto } from "../../dto/alert-response.dto";
 import {
   IAlertRepository,
   ALERT_REPOSITORY,
-} from '../../../domain/repositories/alert.repository.interface';
-import { AlertDismissedEvent } from '../../../domain/events/alert.events';
+} from "../../../domain/repositories/alert.repository.interface";
+import { AlertDismissedEvent } from "../../../domain/events/alert.events";
 
 @CommandHandler(DismissAlertCommand)
 export class DismissAlertHandler implements ICommandHandler<DismissAlertCommand> {
@@ -26,7 +31,7 @@ export class DismissAlertHandler implements ICommandHandler<DismissAlertCommand>
       throw new NotFoundException(`Alert ${alertId} not found`);
     }
     if (alert.userId !== userId) {
-      throw new ForbiddenException('Access denied');
+      throw new ForbiddenException("Access denied");
     }
 
     alert.dismiss();

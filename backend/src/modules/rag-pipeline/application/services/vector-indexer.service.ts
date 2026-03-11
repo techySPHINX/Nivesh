@@ -1,19 +1,19 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
-import { v4 as uuidv4 } from 'uuid';
-import { QdrantService } from '../../infrastructure/qdrant/qdrant.service';
-import { LocalEmbeddingService } from './local-embedding.service';
-import { VectorDocument } from '../../domain/entities/vector-document.entity';
+import { Injectable, Logger } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
+import { EventEmitter2, OnEvent } from "@nestjs/event-emitter";
+import { v4 as uuidv4 } from "uuid";
+import { QdrantService } from "../../infrastructure/qdrant/qdrant.service";
+import { LocalEmbeddingService } from "./local-embedding.service";
+import { VectorDocument } from "../../domain/entities/vector-document.entity";
 import {
   UserFinancialContextVector,
   FinancialKnowledgeVector,
   ConversationVector,
-} from '../../domain/entities/vector-document.entity';
+} from "../../domain/entities/vector-document.entity";
 
 /**
  * Vector Indexer Service
- * 
+ *
  * Handles automatic indexing of various entities into vector collections
  * - Listens to domain events (transaction.created, goal.updated, etc.)
  * - Generates embeddings
@@ -36,8 +36,8 @@ export class VectorIndexerService {
    * Index a transaction
    * Triggered by: transaction.created, transaction.updated events
    */
-  @OnEvent('transaction.created')
-  @OnEvent('transaction.updated')
+  @OnEvent("transaction.created")
+  @OnEvent("transaction.updated")
   async indexTransaction(payload: {
     id: string;
     userId: string;
@@ -61,26 +61,33 @@ export class VectorIndexerService {
         vector: embedding.vector,
         metadata: {
           userId: payload.userId,
-          contextType: 'transaction',
+          contextType: "transaction",
           entityId: payload.id,
           amount: payload.amount,
           category: payload.category,
           merchant: payload.merchant,
           date: payload.date.toISOString(),
-          source: 'transaction_system',
+          source: "transaction_system",
         },
         createdAt: new Date(),
       });
 
       // Index to Qdrant
-      const collectionName = this.configService.get('qdrant.collections.userContext.name');
-      const vectorId = await this.vectorStore.indexDocument(collectionName, document);
+      const collectionName = this.configService.get(
+        "qdrant.collections.userContext.name",
+      );
+      const vectorId = await this.vectorStore.indexDocument(
+        collectionName,
+        document,
+      );
 
-      this.logger.log(`Indexed transaction ${payload.id} as vector ${vectorId}`);
+      this.logger.log(
+        `Indexed transaction ${payload.id} as vector ${vectorId}`,
+      );
 
       // Emit indexing completed event
-      this.eventEmitter.emit('vector.indexed', {
-        entityType: 'transaction',
+      this.eventEmitter.emit("vector.indexed", {
+        entityType: "transaction",
         entityId: payload.id,
         vectorId,
         collection: collectionName,
@@ -105,8 +112,8 @@ export class VectorIndexerService {
   }): string {
     const parts: string[] = [];
 
-    parts.push(`₹${transaction.amount.toLocaleString('en-IN')} spent`);
-    
+    parts.push(`₹${transaction.amount.toLocaleString("en-IN")} spent`);
+
     if (transaction.category) {
       parts.push(`on ${transaction.category}`);
     }
@@ -115,20 +122,20 @@ export class VectorIndexerService {
       parts.push(`at ${transaction.merchant}`);
     }
 
-    parts.push(`on ${transaction.date.toLocaleDateString('en-IN')}`);
+    parts.push(`on ${transaction.date.toLocaleDateString("en-IN")}`);
 
     if (transaction.description) {
       parts.push(`(${transaction.description})`);
     }
 
-    return parts.join(' ');
+    return parts.join(" ");
   }
 
   /**
    * Index a goal
    */
-  @OnEvent('goal.created')
-  @OnEvent('goal.updated')
+  @OnEvent("goal.created")
+  @OnEvent("goal.updated")
   async indexGoal(payload: {
     id: string;
     userId: string;
@@ -140,7 +147,7 @@ export class VectorIndexerService {
     category: string;
   }): Promise<string> {
     try {
-      const text = `Financial goal: ${payload.title}. ${payload.description || ''}. Target: ₹${payload.targetAmount.toLocaleString('en-IN')} by ${payload.targetDate.toLocaleDateString('en-IN')}. Current progress: ₹${payload.currentAmount.toLocaleString('en-IN')} (${((payload.currentAmount / payload.targetAmount) * 100).toFixed(0)}%). Category: ${payload.category}`;
+      const text = `Financial goal: ${payload.title}. ${payload.description || ""}. Target: ₹${payload.targetAmount.toLocaleString("en-IN")} by ${payload.targetDate.toLocaleDateString("en-IN")}. Current progress: ₹${payload.currentAmount.toLocaleString("en-IN")} (${((payload.currentAmount / payload.targetAmount) * 100).toFixed(0)}%). Category: ${payload.category}`;
 
       const embedding = await this.embeddingService.generateEmbedding(text);
 
@@ -150,19 +157,24 @@ export class VectorIndexerService {
         vector: embedding.vector,
         metadata: {
           userId: payload.userId,
-          contextType: 'goal',
+          contextType: "goal",
           entityId: payload.id,
           amount: payload.targetAmount,
           category: payload.category,
           date: payload.targetDate.toISOString(),
           progress: payload.currentAmount / payload.targetAmount,
-          source: 'goal_system',
+          source: "goal_system",
         },
         createdAt: new Date(),
       });
 
-      const collectionName = this.configService.get('qdrant.collections.userContext.name');
-      const vectorId = await this.vectorStore.indexDocument(collectionName, document);
+      const collectionName = this.configService.get(
+        "qdrant.collections.userContext.name",
+      );
+      const vectorId = await this.vectorStore.indexDocument(
+        collectionName,
+        document,
+      );
 
       this.logger.log(`Indexed goal ${payload.id} as vector ${vectorId}`);
       return vectorId;
@@ -175,8 +187,8 @@ export class VectorIndexerService {
   /**
    * Index budget information
    */
-  @OnEvent('budget.created')
-  @OnEvent('budget.updated')
+  @OnEvent("budget.created")
+  @OnEvent("budget.updated")
   async indexBudget(payload: {
     id: string;
     userId: string;
@@ -189,7 +201,7 @@ export class VectorIndexerService {
       const remaining = payload.limit - payload.spent;
       const percentUsed = (payload.spent / payload.limit) * 100;
 
-      const text = `Budget for ${payload.category}: ₹${payload.limit.toLocaleString('en-IN')} ${payload.period}. Spent: ₹${payload.spent.toLocaleString('en-IN')} (${percentUsed.toFixed(0)}%). Remaining: ₹${remaining.toLocaleString('en-IN')}`;
+      const text = `Budget for ${payload.category}: ₹${payload.limit.toLocaleString("en-IN")} ${payload.period}. Spent: ₹${payload.spent.toLocaleString("en-IN")} (${percentUsed.toFixed(0)}%). Remaining: ₹${remaining.toLocaleString("en-IN")}`;
 
       const embedding = await this.embeddingService.generateEmbedding(text);
 
@@ -199,19 +211,24 @@ export class VectorIndexerService {
         vector: embedding.vector,
         metadata: {
           userId: payload.userId,
-          contextType: 'budget',
+          contextType: "budget",
           entityId: payload.id,
           category: payload.category,
           amount: payload.limit,
           spent: payload.spent,
           percentUsed,
-          source: 'budget_system',
+          source: "budget_system",
         },
         createdAt: new Date(),
       });
 
-      const collectionName = this.configService.get('qdrant.collections.userContext.name');
-      const vectorId = await this.vectorStore.indexDocument(collectionName, document);
+      const collectionName = this.configService.get(
+        "qdrant.collections.userContext.name",
+      );
+      const vectorId = await this.vectorStore.indexDocument(
+        collectionName,
+        document,
+      );
 
       this.logger.log(`Indexed budget ${payload.id} as vector ${vectorId}`);
       return vectorId;
@@ -234,7 +251,9 @@ export class VectorIndexerService {
   }): Promise<string> {
     try {
       // Embed the query (user's question)
-      const embedding = await this.embeddingService.generateEmbedding(payload.query);
+      const embedding = await this.embeddingService.generateEmbedding(
+        payload.query,
+      );
 
       const document = new VectorDocument({
         id: uuidv4(),
@@ -248,18 +267,23 @@ export class VectorIndexerService {
           sessionId: payload.sessionId,
           contextUsed: payload.contextUsed,
           timestamp: new Date().toISOString(),
-          source: 'conversation_system',
+          source: "conversation_system",
         },
         createdAt: new Date(),
       });
 
-      const collectionName = this.configService.get('qdrant.collections.conversations.name');
-      const vectorId = await this.vectorStore.indexDocument(collectionName, document);
+      const collectionName = this.configService.get(
+        "qdrant.collections.conversations.name",
+      );
+      const vectorId = await this.vectorStore.indexDocument(
+        collectionName,
+        document,
+      );
 
       this.logger.log(`Indexed conversation as vector ${vectorId}`);
       return vectorId;
     } catch (error) {
-      this.logger.error('Failed to index conversation:', error);
+      this.logger.error("Failed to index conversation:", error);
       throw error;
     }
   }
@@ -270,7 +294,7 @@ export class VectorIndexerService {
   async indexKnowledge(payload: {
     question: string;
     answer: string;
-    knowledgeType: 'faq' | 'regulation' | 'product' | 'strategy' | 'guideline';
+    knowledgeType: "faq" | "regulation" | "product" | "strategy" | "guideline";
     tags: string[];
     source: string;
     authority?: string;
@@ -296,13 +320,18 @@ export class VectorIndexerService {
         createdAt: new Date(),
       });
 
-      const collectionName = this.configService.get('qdrant.collections.knowledgeBase.name');
-      const vectorId = await this.vectorStore.indexDocument(collectionName, document);
+      const collectionName = this.configService.get(
+        "qdrant.collections.knowledgeBase.name",
+      );
+      const vectorId = await this.vectorStore.indexDocument(
+        collectionName,
+        document,
+      );
 
       this.logger.log(`Indexed knowledge article as vector ${vectorId}`);
       return vectorId;
     } catch (error) {
-      this.logger.error('Failed to index knowledge:', error);
+      this.logger.error("Failed to index knowledge:", error);
       throw error;
     }
   }
@@ -331,7 +360,10 @@ export class VectorIndexerService {
           await this.indexTransaction({ ...transaction, userId });
           indexed++;
         } catch (error) {
-          this.logger.error(`Failed to index transaction ${transaction.id}:`, error);
+          this.logger.error(
+            `Failed to index transaction ${transaction.id}:`,
+            error,
+          );
           failed++;
         }
       }
@@ -375,8 +407,12 @@ export class VectorIndexerService {
    */
   async deleteUserVectors(userId: string): Promise<number> {
     try {
-      const collectionName = this.configService.get('qdrant.collections.userContext.name');
-      const deleted = await this.vectorStore.deleteBatch(collectionName, { userId });
+      const collectionName = this.configService.get(
+        "qdrant.collections.userContext.name",
+      );
+      const deleted = await this.vectorStore.deleteBatch(collectionName, {
+        userId,
+      });
 
       this.logger.log(`Deleted ${deleted} vectors for user ${userId}`);
       return deleted;

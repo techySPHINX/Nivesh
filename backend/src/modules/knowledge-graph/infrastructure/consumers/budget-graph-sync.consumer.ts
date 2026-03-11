@@ -1,17 +1,17 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { EventsHandler, IEventHandler } from '@nestjs/cqrs';
-import { BudgetCreatedEvent } from '../../../budget-management/domain/events/budget.events';
+import { Injectable, Logger } from "@nestjs/common";
+import { EventsHandler, IEventHandler } from "@nestjs/cqrs";
+import { BudgetCreatedEvent } from "../../../budget-management/domain/events/budget.events";
 import {
   GraphNode,
   GraphRelationship,
   NodeType,
   RelationshipType,
-} from '../../domain';
+} from "../../domain";
 
 /**
  * Kafka Consumer for Budget Graph Synchronization
  * Handles budget lifecycle events and maintains budget nodes + relationships
- * 
+ *
  * Creates:
  * - Budget nodes
  * - User -[HAS_BUDGET]-> Budget
@@ -19,14 +19,13 @@ import {
  */
 @EventsHandler(BudgetCreatedEvent)
 @Injectable()
-export class BudgetGraphSyncConsumer
-  implements IEventHandler<BudgetCreatedEvent> {
+export class BudgetGraphSyncConsumer implements IEventHandler<BudgetCreatedEvent> {
   private readonly logger = new Logger(BudgetGraphSyncConsumer.name);
 
-  constructor(
+  constructor() {
     // Will inject IKnowledgeGraphRepository in next commit
     // private readonly graphRepository: IKnowledgeGraphRepository,
-  ) { }
+  }
 
   /**
    * Handle budget created event
@@ -65,7 +64,7 @@ export class BudgetGraphSyncConsumer
       startDate: event.startDate,
       endDate: event.endDate,
       metadata: {
-        source: 'budget-service',
+        source: "budget-service",
         synced: true,
       },
     });
@@ -97,9 +96,14 @@ export class BudgetGraphSyncConsumer
       //   await this.graphRepository.createRelationship(relationship);
       // }
 
-      this.logger.debug(`Created HAS_BUDGET relationship for ${event.budgetId}`);
+      this.logger.debug(
+        `Created HAS_BUDGET relationship for ${event.budgetId}`,
+      );
     } catch (error) {
-      this.logger.error('Failed to create user-budget relationship', error.stack);
+      this.logger.error(
+        "Failed to create user-budget relationship",
+        error.stack,
+      );
     }
   }
 
@@ -113,13 +117,12 @@ export class BudgetGraphSyncConsumer
     try {
       // Find Category node
       // const categoryNode = await this.graphRepository.findNodeById(event.categoryId);
-
       // if (categoryNode) {
       //   // Budget is linked to category (no direct relationship in schema, but stored in properties)
       //   this.logger.debug(`Budget ${event.budgetId} linked to category ${event.categoryId}`);
       // }
     } catch (error) {
-      this.logger.error('Failed to link budget to category', error.stack);
+      this.logger.error("Failed to link budget to category", error.stack);
     }
   }
 
@@ -187,7 +190,9 @@ export class BudgetGraphSyncConsumer
    */
   async handleBudgetDeleted(event: any): Promise<void> {
     try {
-      this.logger.log(`Deleting budget from knowledge graph: ${event.budgetId}`);
+      this.logger.log(
+        `Deleting budget from knowledge graph: ${event.budgetId}`,
+      );
 
       // Delete node and relationships
       // await this.graphRepository.deleteNode(event.budgetId);
@@ -231,7 +236,7 @@ export class BudgetGraphSyncConsumer
         `Linked transaction ${transactionId} to budget ${budgetId}`,
       );
     } catch (error) {
-      this.logger.error('Failed to link transaction to budget', error.stack);
+      this.logger.error("Failed to link transaction to budget", error.stack);
     }
   }
 }

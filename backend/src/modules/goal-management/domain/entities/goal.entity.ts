@@ -3,39 +3,39 @@
  * Represents different states in the goal lifecycle
  */
 export enum GoalStatus {
-  ACTIVE = 'ACTIVE',
-  COMPLETED = 'COMPLETED',
-  PAUSED = 'PAUSED',
-  CANCELLED = 'CANCELLED',
-  EXPIRED = 'EXPIRED',
+  ACTIVE = "ACTIVE",
+  COMPLETED = "COMPLETED",
+  PAUSED = "PAUSED",
+  CANCELLED = "CANCELLED",
+  EXPIRED = "EXPIRED",
 }
 
 /**
  * Goal Priority Enum
  */
 export enum GoalPriority {
-  LOW = 'LOW',
-  MEDIUM = 'MEDIUM',
-  HIGH = 'HIGH',
-  CRITICAL = 'CRITICAL',
+  LOW = "LOW",
+  MEDIUM = "MEDIUM",
+  HIGH = "HIGH",
+  CRITICAL = "CRITICAL",
 }
 
 /**
  * Goal Category Enum
  */
 export enum GoalCategory {
-  SAVINGS = 'SAVINGS',
-  INVESTMENT = 'INVESTMENT',
-  DEBT_PAYMENT = 'DEBT_PAYMENT',
-  EMERGENCY_FUND = 'EMERGENCY_FUND',
-  RETIREMENT = 'RETIREMENT',
-  EDUCATION = 'EDUCATION',
-  VACATION = 'VACATION',
-  REAL_ESTATE = 'REAL_ESTATE',
-  VEHICLE = 'VEHICLE',
-  WEDDING = 'WEDDING',
-  BUSINESS = 'BUSINESS',
-  OTHER = 'OTHER',
+  SAVINGS = "SAVINGS",
+  INVESTMENT = "INVESTMENT",
+  DEBT_PAYMENT = "DEBT_PAYMENT",
+  EMERGENCY_FUND = "EMERGENCY_FUND",
+  RETIREMENT = "RETIREMENT",
+  EDUCATION = "EDUCATION",
+  VACATION = "VACATION",
+  REAL_ESTATE = "REAL_ESTATE",
+  VEHICLE = "VEHICLE",
+  WEDDING = "WEDDING",
+  BUSINESS = "BUSINESS",
+  OTHER = "OTHER",
 }
 
 /**
@@ -63,7 +63,7 @@ export class Goal {
     public metadata: Record<string, any> | null,
     public readonly createdAt: Date,
     public updatedAt: Date,
-  ) { }
+  ) {}
 
   /**
    * Factory method to create a new goal
@@ -87,12 +87,12 @@ export class Goal {
   }): Goal {
     // Validate target date is in future
     if (params.targetDate <= params.startDate) {
-      throw new Error('Target date must be after start date');
+      throw new Error("Target date must be after start date");
     }
 
     // Validate target amount
     if (params.targetAmount <= 0) {
-      throw new Error('Target amount must be positive');
+      throw new Error("Target amount must be positive");
     }
 
     return new Goal(
@@ -123,11 +123,13 @@ export class Goal {
    */
   addContribution(amount: number): void {
     if (this.status !== GoalStatus.ACTIVE) {
-      throw new Error(`Cannot add contribution to goal with status ${this.status}`);
+      throw new Error(
+        `Cannot add contribution to goal with status ${this.status}`,
+      );
     }
 
     if (amount <= 0) {
-      throw new Error('Contribution amount must be positive');
+      throw new Error("Contribution amount must be positive");
     }
 
     this.currentAmount += amount;
@@ -148,11 +150,11 @@ export class Goal {
     }
 
     if (amount <= 0) {
-      throw new Error('Withdrawal amount must be positive');
+      throw new Error("Withdrawal amount must be positive");
     }
 
     if (amount > this.currentAmount) {
-      throw new Error('Insufficient balance in goal');
+      throw new Error("Insufficient balance in goal");
     }
 
     this.currentAmount -= amount;
@@ -179,19 +181,22 @@ export class Goal {
 
     if (params.targetAmount !== undefined) {
       if (params.targetAmount <= 0) {
-        throw new Error('Target amount must be positive');
+        throw new Error("Target amount must be positive");
       }
       this.targetAmount = params.targetAmount;
 
       // Update status if goal is now completed
-      if (this.currentAmount >= this.targetAmount && this.status === GoalStatus.ACTIVE) {
+      if (
+        this.currentAmount >= this.targetAmount &&
+        this.status === GoalStatus.ACTIVE
+      ) {
         this.status = GoalStatus.COMPLETED;
       }
     }
 
     if (params.targetDate !== undefined) {
       if (params.targetDate <= this.startDate) {
-        throw new Error('Target date must be after start date');
+        throw new Error("Target date must be after start date");
       }
       this.targetDate = params.targetDate;
     }
@@ -232,7 +237,7 @@ export class Goal {
    */
   cancel(): void {
     if (this.status === GoalStatus.COMPLETED) {
-      throw new Error('Cannot cancel completed goal');
+      throw new Error("Cannot cancel completed goal");
     }
 
     this.status = GoalStatus.CANCELLED;
@@ -254,13 +259,17 @@ export class Goal {
   /**
    * Enable auto-contribution
    */
-  enableAutoContribution(amount: number, frequency: string, accountId: string): void {
+  enableAutoContribution(
+    amount: number,
+    frequency: string,
+    accountId: string,
+  ): void {
     if (amount <= 0) {
-      throw new Error('Contribution amount must be positive');
+      throw new Error("Contribution amount must be positive");
     }
 
-    if (!['DAILY', 'WEEKLY', 'MONTHLY'].includes(frequency)) {
-      throw new Error('Invalid contribution frequency');
+    if (!["DAILY", "WEEKLY", "MONTHLY"].includes(frequency)) {
+      throw new Error("Invalid contribution frequency");
     }
 
     this.autoContribute = true;
@@ -322,8 +331,11 @@ export class Goal {
    */
   isOnTrack(): boolean {
     const progress = this.getProgressPercentage();
-    const totalDays = (this.targetDate.getTime() - this.startDate.getTime()) / (1000 * 60 * 60 * 24);
-    const elapsedDays = (new Date().getTime() - this.startDate.getTime()) / (1000 * 60 * 60 * 24);
+    const totalDays =
+      (this.targetDate.getTime() - this.startDate.getTime()) /
+      (1000 * 60 * 60 * 24);
+    const elapsedDays =
+      (new Date().getTime() - this.startDate.getTime()) / (1000 * 60 * 60 * 24);
     const expectedProgress = (elapsedDays / totalDays) * 100;
 
     return progress >= expectedProgress * 0.9; // 90% of expected progress

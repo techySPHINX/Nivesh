@@ -1,6 +1,9 @@
-import { Transaction, TransactionCategory } from '../entities/transaction.entity';
+import {
+  Transaction,
+  TransactionCategory,
+} from "../entities/transaction.entity";
 
-export const TRANSACTION_REPOSITORY = Symbol('TRANSACTION_REPOSITORY');
+export const TRANSACTION_REPOSITORY = Symbol("TRANSACTION_REPOSITORY");
 
 export interface TransactionFilters {
   userId?: string;
@@ -27,18 +30,28 @@ export interface ITransactionRepository {
     skip?: number;
     take?: number;
     filters?: TransactionFilters;
-    sortBy?: 'transactionDate' | 'amount' | 'createdAt';
-    sortOrder?: 'asc' | 'desc';
+    sortBy?: "transactionDate" | "amount" | "createdAt";
+    sortOrder?: "asc" | "desc";
   }): Promise<{ transactions: Transaction[]; total: number }>;
 
   // Analytics methods
-  getTotalByCategory(userId: string, startDate: Date, endDate: Date): Promise<
-    Array<{ category: string; total: number }>
-  >;
+  getTotalByCategory(
+    userId: string,
+    startDate: Date,
+    endDate: Date,
+  ): Promise<Array<{ category: string; total: number }>>;
 
-  getMonthlySpending(userId: string, year: number, month: number): Promise<number>;
+  getMonthlySpending(
+    userId: string,
+    year: number,
+    month: number,
+  ): Promise<number>;
 
-  getRecentTransactions(userId: string, days: number, limit?: number): Promise<Transaction[]>;
+  getRecentTransactions(
+    userId: string,
+    days: number,
+    limit?: number,
+  ): Promise<Transaction[]>;
 
   delete(id: string): Promise<void>;
 }

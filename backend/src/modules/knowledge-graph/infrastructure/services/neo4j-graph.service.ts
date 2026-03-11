@@ -1,5 +1,10 @@
-import { Injectable, Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
+import {
+  Injectable,
+  Logger,
+  OnModuleDestroy,
+  OnModuleInit,
+} from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
 import neo4j, {
   Driver,
   Session,
@@ -7,7 +12,7 @@ import neo4j, {
   Result,
   Node as Neo4jNode,
   Relationship as Neo4jRelationship,
-} from 'neo4j-driver';
+} from "neo4j-driver";
 import {
   GraphNode,
   GraphRelationship,
@@ -21,13 +26,13 @@ import {
   GraphPath,
   GraphNeighborhood,
   GraphStatistics,
-} from '../../domain';
+} from "../../domain";
 
 /**
  * Neo4j Graph Service
  * Implements IKnowledgeGraphRepository using Neo4j driver
  * Handles connection pooling, transactions, and Cypher query execution
- * 
+ *
  * Features:
  * - Connection lifecycle management
  * - CRUD operations for nodes and relationships
@@ -38,21 +43,28 @@ import {
  */
 @Injectable()
 export class Neo4jGraphService
-  implements IKnowledgeGraphRepository, OnModuleInit, OnModuleDestroy {
+  implements IKnowledgeGraphRepository, OnModuleInit, OnModuleDestroy
+{
   private readonly logger = new Logger(Neo4jGraphService.name);
   private driver: Driver;
 
-  constructor(private readonly configService: ConfigService) { }
+  constructor(private readonly configService: ConfigService) {}
 
   /**
    * Initialize Neo4j driver on module initialization
    */
   async onModuleInit(): Promise<void> {
-    const uri = this.configService.get<string>('neo4j.uri', 'bolt://localhost:7687');
-    const username = this.configService.get<string>('neo4j.username', 'neo4j');
-    const password = this.configService.get<string>('neo4j.password', 'password');
+    const uri = this.configService.get<string>(
+      "neo4j.uri",
+      "bolt://localhost:7687",
+    );
+    const username = this.configService.get<string>("neo4j.username", "neo4j");
+    const password = this.configService.get<string>(
+      "neo4j.password",
+      "password",
+    );
     const maxConnectionPoolSize = this.configService.get<number>(
-      'neo4j.maxConnectionPoolSize',
+      "neo4j.maxConnectionPoolSize",
       50,
     );
 
@@ -67,9 +79,9 @@ export class Neo4jGraphService
     // Verify connectivity
     try {
       await this.driver.verifyConnectivity();
-      this.logger.log('Neo4j connection established successfully');
+      this.logger.log("Neo4j connection established successfully");
     } catch (error) {
-      this.logger.error('Failed to connect to Neo4j', error);
+      this.logger.error("Failed to connect to Neo4j", error);
       throw error;
     }
   }
@@ -80,7 +92,7 @@ export class Neo4jGraphService
   async onModuleDestroy(): Promise<void> {
     if (this.driver) {
       await this.driver.close();
-      this.logger.log('Neo4j connection closed');
+      this.logger.log("Neo4j connection closed");
     }
   }
 
@@ -183,8 +195,8 @@ export class Neo4jGraphService
       }
 
       const record = result.records[0];
-      const node = record.get('n');
-      const labels = record.get('labels') as string[];
+      const node = record.get("n");
+      const labels = record.get("labels") as string[];
       const nodeType = labels[0] as NodeType;
 
       return GraphNode.fromPersistence(
@@ -216,8 +228,12 @@ export class Neo4jGraphService
       );
 
       return result.records.map((record) => {
-        const node = record.get('n');
-        return GraphNode.fromPersistence(node.properties.id, type, node.properties);
+        const node = record.get("n");
+        return GraphNode.fromPersistence(
+          node.properties.id,
+          type,
+          node.properties,
+        );
       });
     } finally {
       await session.close();
@@ -235,7 +251,7 @@ export class Neo4jGraphService
     try {
       const whereClause = Object.keys(properties)
         .map((key) => `n.${key} = $${key}`)
-        .join(' AND ');
+        .join(" AND ");
 
       const query = CypherQuery.create(
         `
@@ -252,8 +268,12 @@ export class Neo4jGraphService
       );
 
       return result.records.map((record) => {
-        const node = record.get('n');
-        return GraphNode.fromPersistence(node.properties.id, type, node.properties);
+        const node = record.get("n");
+        return GraphNode.fromPersistence(
+          node.properties.id,
+          type,
+          node.properties,
+        );
       });
     } finally {
       await session.close();
@@ -345,7 +365,9 @@ export class Neo4jGraphService
    * Find relationship by ID
    * Neo4j requires storing relationship ID as a property
    */
-  async findRelationshipById(relationshipId: string): Promise<GraphRelationship | null> {
+  async findRelationshipById(
+    relationshipId: string,
+  ): Promise<GraphRelationship | null> {
     const session = this.driver.session();
     try {
       const query = CypherQuery.create(
@@ -367,15 +389,15 @@ export class Neo4jGraphService
 
       const record = result.records[0];
       const fromNode = this.neo4jNodeToGraphNode(
-        record.get('from'),
-        record.get('fromLabels')[0],
+        record.get("from"),
+        record.get("fromLabels")[0],
       );
       const toNode = this.neo4jNodeToGraphNode(
-        record.get('to'),
-        record.get('toLabels')[0],
+        record.get("to"),
+        record.get("toLabels")[0],
       );
-      const rel = record.get('r');
-      const relType = record.get('relType') as RelationshipType;
+      const rel = record.get("r");
+      const relType = record.get("relType") as RelationshipType;
 
       return GraphRelationship.fromPersistence(
         relationshipId,
@@ -392,7 +414,9 @@ export class Neo4jGraphService
   /**
    * Find all relationships of a specific type
    */
-  async findRelationshipsByType(type: RelationshipType): Promise<GraphRelationship[]> {
+  async findRelationshipsByType(
+    type: RelationshipType,
+  ): Promise<GraphRelationship[]> {
     const session = this.driver.session();
     try {
       const query = CypherQuery.create(
@@ -409,14 +433,14 @@ export class Neo4jGraphService
 
       return result.records.map((record) => {
         const fromNode = this.neo4jNodeToGraphNode(
-          record.get('from'),
-          record.get('fromLabels')[0],
+          record.get("from"),
+          record.get("fromLabels")[0],
         );
         const toNode = this.neo4jNodeToGraphNode(
-          record.get('to'),
-          record.get('toLabels')[0],
+          record.get("to"),
+          record.get("toLabels")[0],
         );
-        const rel = record.get('r');
+        const rel = record.get("r");
 
         return GraphRelationship.fromPersistence(
           rel.properties.id || `${fromNode.id}_${toNode.id}`,
@@ -436,17 +460,17 @@ export class Neo4jGraphService
    */
   async findRelationshipsForNode(
     nodeId: string,
-    direction: 'incoming' | 'outgoing' | 'both' = 'both',
+    direction: "incoming" | "outgoing" | "both" = "both",
   ): Promise<GraphRelationship[]> {
     const session = this.driver.session();
     try {
       let pattern: string;
-      if (direction === 'incoming') {
-        pattern = '(from)-[r]->(n {id: $id})';
-      } else if (direction === 'outgoing') {
-        pattern = '(n {id: $id})-[r]->(to)';
+      if (direction === "incoming") {
+        pattern = "(from)-[r]->(n {id: $id})";
+      } else if (direction === "outgoing") {
+        pattern = "(n {id: $id})-[r]->(to)";
       } else {
-        pattern = '(n {id: $id})-[r]-(other)';
+        pattern = "(n {id: $id})-[r]-(other)";
       }
 
       const query = CypherQuery.create(
@@ -469,31 +493,31 @@ export class Neo4jGraphService
 
       return result.records.map((record) => {
         const centerNode = this.neo4jNodeToGraphNode(
-          record.get('n'),
-          record.get('nLabels')[0],
+          record.get("n"),
+          record.get("nLabels")[0],
         );
-        const rel = record.get('r');
-        const relType = record.get('relType') as RelationshipType;
+        const rel = record.get("r");
+        const relType = record.get("relType") as RelationshipType;
 
         let fromNode: GraphNode;
         let toNode: GraphNode;
 
-        if (direction === 'incoming') {
+        if (direction === "incoming") {
           fromNode = this.neo4jNodeToGraphNode(
-            record.get('from'),
-            record.get('fromLabels')[0],
+            record.get("from"),
+            record.get("fromLabels")[0],
           );
           toNode = centerNode;
-        } else if (direction === 'outgoing') {
+        } else if (direction === "outgoing") {
           fromNode = centerNode;
           toNode = this.neo4jNodeToGraphNode(
-            record.get('to'),
-            record.get('toLabels')[0],
+            record.get("to"),
+            record.get("toLabels")[0],
           );
         } else {
           const otherNode = this.neo4jNodeToGraphNode(
-            record.get('other'),
-            record.get('otherLabels')[0],
+            record.get("other"),
+            record.get("otherLabels")[0],
           );
           // Determine direction based on relationship
           fromNode = centerNode;
@@ -529,11 +553,7 @@ export class Neo4jGraphService
    */
   private neo4jNodeToGraphNode(node: Neo4jNode, typeLabel: string): GraphNode {
     const props = node.properties as unknown as NodeProperties;
-    return GraphNode.fromPersistence(
-      props.id,
-      typeLabel as NodeType,
-      props,
-    );
+    return GraphNode.fromPersistence(props.id, typeLabel as NodeType, props);
   }
 
   /**
@@ -589,13 +609,16 @@ export class Neo4jGraphService
         this.executeInTransaction(tx, query),
       );
 
-      return result.records.map((record) => record.get('p').properties);
+      return result.records.map((record) => record.get("p").properties);
     } finally {
       await session.close();
     }
   }
 
-  async findPatternsByType(userId: string, patternType: string): Promise<any[]> {
+  async findPatternsByType(
+    userId: string,
+    patternType: string,
+  ): Promise<any[]> {
     const session = this.driver.session();
     try {
       const query = CypherQuery.create(
@@ -611,7 +634,7 @@ export class Neo4jGraphService
         this.executeInTransaction(tx, query),
       );
 
-      return result.records.map((record) => record.get('p').properties);
+      return result.records.map((record) => record.get("p").properties);
     } finally {
       await session.close();
     }
@@ -643,9 +666,9 @@ export class Neo4jGraphService
       );
 
       return result.records.map((record) => {
-        const nodes = record.get('nodesList') as Neo4jNode[];
-        const rels = record.get('rels') as Neo4jRelationship[];
-        const length = record.get('pathLength').toNumber();
+        const nodes = record.get("nodesList") as Neo4jNode[];
+        const rels = record.get("rels") as Neo4jRelationship[];
+        const length = record.get("pathLength").toNumber();
 
         return {
           nodes: nodes.map((n) =>
@@ -654,7 +677,7 @@ export class Neo4jGraphService
               id: n.properties.id,
               createdAt: n.properties.createdAt || new Date(),
               updatedAt: n.properties.updatedAt || new Date(),
-            } as NodeProperties)
+            } as NodeProperties),
           ),
           relationships: rels.map((r, idx) => {
             const from = nodes[idx];
@@ -718,9 +741,9 @@ export class Neo4jGraphService
       }
 
       const record = result.records[0];
-      const nodes = record.get('nodesList') as Neo4jNode[];
-      const rels = record.get('rels') as Neo4jRelationship[];
-      const length = record.get('pathLength').toNumber();
+      const nodes = record.get("nodesList") as Neo4jNode[];
+      const rels = record.get("rels") as Neo4jRelationship[];
+      const length = record.get("pathLength").toNumber();
 
       return {
         nodes: nodes.map((n) =>
@@ -729,7 +752,7 @@ export class Neo4jGraphService
             id: n.properties.id,
             createdAt: n.properties.createdAt || new Date(),
             updatedAt: n.properties.updatedAt || new Date(),
-          } as NodeProperties)
+          } as NodeProperties),
         ),
         relationships: rels.map((r, idx) => {
           const from = nodes[idx];
@@ -772,8 +795,8 @@ export class Neo4jGraphService
     const session = this.driver.session();
     try {
       const relTypeFilter = relationshipTypes
-        ? `:${relationshipTypes.join('|')}`
-        : '';
+        ? `:${relationshipTypes.join("|")}`
+        : "";
 
       const query = CypherQuery.create(
         `
@@ -805,7 +828,7 @@ export class Neo4jGraphService
 
       const record = result.records[0];
       const centerNode = await this.findNodeById(nodeId);
-      const neighbors = record.get('neighbors') as Neo4jNode[];
+      const neighbors = record.get("neighbors") as Neo4jNode[];
 
       return {
         centerNode: centerNode!,
@@ -837,7 +860,7 @@ export class Neo4jGraphService
       };
     } catch (error) {
       // Fallback if APOC is not available
-      this.logger.warn('APOC not available, using basic neighbor query');
+      this.logger.warn("APOC not available, using basic neighbor query");
       return this.findNeighborsFallback(nodeId, depth);
     } finally {
       await session.close();
@@ -869,7 +892,7 @@ export class Neo4jGraphService
       );
 
       const neighbors = result.records.map((record) => {
-        const n = record.get('neighbor');
+        const n = record.get("neighbor");
         return {
           node: GraphNode.fromPersistence(n.properties.id, NodeType.USER, {
             ...n.properties,
@@ -942,13 +965,17 @@ export class Neo4jGraphService
 
       const records = result.records.map((record) => record.toObject() as T);
 
-      return GraphQueryResult.success(records, {
-        nodesCreated: 0,
-        nodesDeleted: 0,
-        relationshipsCreated: 0,
-        relationshipsDeleted: 0,
-        propertiesSet: 0,
-      }, executionTime);
+      return GraphQueryResult.success(
+        records,
+        {
+          nodesCreated: 0,
+          nodesDeleted: 0,
+          relationshipsCreated: 0,
+          relationshipsDeleted: 0,
+          propertiesSet: 0,
+        },
+        executionTime,
+      );
     } finally {
       await session.close();
     }
@@ -965,13 +992,17 @@ export class Neo4jGraphService
 
       const records = result.records.map((record) => record.toObject() as T);
 
-      return GraphQueryResult.success(records, {
-        nodesCreated: 0,
-        nodesDeleted: 0,
-        relationshipsCreated: 0,
-        relationshipsDeleted: 0,
-        propertiesSet: 0,
-      }, executionTime);
+      return GraphQueryResult.success(
+        records,
+        {
+          nodesCreated: 0,
+          nodesDeleted: 0,
+          relationshipsCreated: 0,
+          relationshipsDeleted: 0,
+          propertiesSet: 0,
+        },
+        executionTime,
+      );
     } finally {
       await session.close();
     }
@@ -1034,7 +1065,7 @@ export class Neo4jGraphService
           this.executeInTransaction(tx, query),
         );
 
-        result[type] = queryResult.records[0]?.get('count').toNumber() || 0;
+        result[type] = queryResult.records[0]?.get("count").toNumber() || 0;
       }
 
       return result;
@@ -1058,7 +1089,7 @@ export class Neo4jGraphService
           this.executeInTransaction(tx, query),
         );
 
-        result[type] = queryResult.records[0]?.get('count').toNumber() || 0;
+        result[type] = queryResult.records[0]?.get("count").toNumber() || 0;
       }
 
       return result;
@@ -1083,8 +1114,8 @@ export class Neo4jGraphService
       );
 
       const record = result.records[0];
-      const totalNodes = record.get('nodeCount').toNumber();
-      const totalRelationships = record.get('relationshipCount').toNumber();
+      const totalNodes = record.get("nodeCount").toNumber();
+      const totalRelationships = record.get("relationshipCount").toNumber();
 
       return {
         totalNodes,

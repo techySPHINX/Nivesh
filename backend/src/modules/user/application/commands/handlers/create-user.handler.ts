@@ -1,18 +1,18 @@
-import { CommandHandler, ICommandHandler, EventBus } from '@nestjs/cqrs';
-import { Inject, Logger } from '@nestjs/common';
-import { CreateUserCommand } from '../create-user.command';
-import { User } from '../../../domain/entities/user.entity';
-import { Email } from '../../../domain/value-objects/email.vo';
-import { PhoneNumber } from '../../../domain/value-objects/phone-number.vo';
-import { UserName } from '../../../domain/value-objects/user-name.vo';
+import { CommandHandler, ICommandHandler, EventBus } from "@nestjs/cqrs";
+import { Inject, Logger } from "@nestjs/common";
+import { CreateUserCommand } from "../create-user.command";
+import { User } from "../../../domain/entities/user.entity";
+import { Email } from "../../../domain/value-objects/email.vo";
+import { PhoneNumber } from "../../../domain/value-objects/phone-number.vo";
+import { UserName } from "../../../domain/value-objects/user-name.vo";
 import {
   IUserRepository,
   USER_REPOSITORY,
-} from '../../../domain/repositories/user.repository.interface';
-import { ConflictException } from '../../../../../core/exceptions/base.exception';
-import { UserCreatedEvent } from '../../../../../core/messaging/events/domain.events';
-import { KafkaProducerService } from '../../../../../core/messaging/kafka/kafka.producer';
-import { KafkaTopic } from '../../../../../core/messaging/kafka/topics.enum';
+} from "../../../domain/repositories/user.repository.interface";
+import { ConflictException } from "../../../../../core/exceptions/base.exception";
+import { UserCreatedEvent } from "../../../../../core/messaging/events/domain.events";
+import { KafkaProducerService } from "../../../../../core/messaging/kafka/kafka.producer";
+import { KafkaTopic } from "../../../../../core/messaging/kafka/topics.enum";
 
 @CommandHandler(CreateUserCommand)
 export class CreateUserHandler implements ICommandHandler<CreateUserCommand> {
@@ -23,7 +23,7 @@ export class CreateUserHandler implements ICommandHandler<CreateUserCommand> {
     private readonly userRepository: IUserRepository,
     private readonly eventBus: EventBus,
     private readonly kafkaProducer: KafkaProducerService,
-  ) { }
+  ) {}
 
   async execute(command: CreateUserCommand): Promise<User> {
     this.logger.log(`Creating user with email: ${command.email}`);
@@ -31,7 +31,7 @@ export class CreateUserHandler implements ICommandHandler<CreateUserCommand> {
     // Check if user already exists
     const existingUser = await this.userRepository.findByEmail(command.email);
     if (existingUser) {
-      throw new ConflictException('User with this email already exists', {
+      throw new ConflictException("User with this email already exists", {
         email: command.email,
       });
     }
@@ -42,7 +42,9 @@ export class CreateUserHandler implements ICommandHandler<CreateUserCommand> {
         command.phoneNumber,
       );
       if (phoneExists) {
-        throw new ConflictException('User with this phone number already exists');
+        throw new ConflictException(
+          "User with this phone number already exists",
+        );
       }
     }
 

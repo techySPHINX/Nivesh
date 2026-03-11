@@ -1,11 +1,11 @@
-import { QueryHandler, IQueryHandler } from '@nestjs/cqrs';
-import { Inject, NotFoundException, ForbiddenException } from '@nestjs/common';
-import { GetSimulationQuery } from '../get-simulation.query';
-import { SimulationResponseDto } from '../../dto/simulation-response.dto';
+import { QueryHandler, IQueryHandler } from "@nestjs/cqrs";
+import { Inject, NotFoundException, ForbiddenException } from "@nestjs/common";
+import { GetSimulationQuery } from "../get-simulation.query";
+import { SimulationResponseDto } from "../../dto/simulation-response.dto";
 import {
   ISimulationRepository,
   SIMULATION_REPOSITORY,
-} from '../../../domain/repositories/simulation.repository.interface';
+} from "../../../domain/repositories/simulation.repository.interface";
 
 @QueryHandler(GetSimulationQuery)
 export class GetSimulationHandler implements IQueryHandler<GetSimulationQuery> {
@@ -22,7 +22,7 @@ export class GetSimulationHandler implements IQueryHandler<GetSimulationQuery> {
       throw new NotFoundException(`Simulation ${simulationId} not found`);
     }
     if (simulation.userId !== userId) {
-      throw new ForbiddenException('Access denied');
+      throw new ForbiddenException("Access denied");
     }
 
     return SimulationResponseDto.fromEntity(simulation);

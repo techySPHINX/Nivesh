@@ -1,10 +1,10 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { INestApplication } from '@nestjs/common';
-import * as request from 'supertest';
-import { AIReasoningModule } from '../ai-reasoning.module';
-import { PrismaService } from '../../core/database/prisma.service';
+import { Test, TestingModule } from "@nestjs/testing";
+import { INestApplication } from "@nestjs/common";
+import * as request from "supertest";
+import { AIReasoningModule } from "../ai-reasoning.module";
+import { PrismaService } from "../../core/database/prisma.service";
 
-describe('Agent Orchestration Integration Tests', () => {
+describe("Agent Orchestration Integration Tests", () => {
   let app: INestApplication;
   let prisma: PrismaService;
 
@@ -23,19 +23,19 @@ describe('Agent Orchestration Integration Tests', () => {
     await app.close();
   });
 
-  describe('POST /agents/orchestrate', () => {
-    it('should execute goal planning workflow', async () => {
+  describe("POST /agents/orchestrate", () => {
+    it("should execute goal planning workflow", async () => {
       const request_data = {
-        query: 'I want to save ₹50 lakhs for my child education in 10 years',
+        query: "I want to save ₹50 lakhs for my child education in 10 years",
         userContext: {
-          userId: 'test-user-1',
-          riskTolerance: 'moderate',
-          investmentStyle: 'balanced',
+          userId: "test-user-1",
+          riskTolerance: "moderate",
+          investmentStyle: "balanced",
         },
       };
 
       const response = await request(app.getHttpServer())
-        .post('/agents/orchestrate')
+        .post("/agents/orchestrate")
         .send(request_data)
         .expect(200);
 
@@ -46,28 +46,28 @@ describe('Agent Orchestration Integration Tests', () => {
       expect(response.body.confidence).toBeGreaterThan(0);
     });
 
-    it('should validate required fields', async () => {
+    it("should validate required fields", async () => {
       const invalid_request = {
-        query: 'Test query',
+        query: "Test query",
         // Missing userContext
       };
 
       await request(app.getHttpServer())
-        .post('/agents/orchestrate')
+        .post("/agents/orchestrate")
         .send(invalid_request)
         .expect(400);
     });
   });
 
-  describe('GET /agents/trace/:traceId', () => {
-    it('should return decision trace', async () => {
+  describe("GET /agents/trace/:traceId", () => {
+    it("should return decision trace", async () => {
       // First, execute an orchestration
       const orchestrationResponse = await request(app.getHttpServer())
-        .post('/agents/orchestrate')
+        .post("/agents/orchestrate")
         .send({
-          query: 'Portfolio risk analysis',
+          query: "Portfolio risk analysis",
           userContext: {
-            userId: 'test-user-2',
+            userId: "test-user-2",
           },
         });
 
@@ -83,9 +83,9 @@ describe('Agent Orchestration Integration Tests', () => {
       expect(traceResponse.body.executions).toBeDefined();
     });
 
-    it('should return 404 for non-existent trace', async () => {
+    it("should return 404 for non-existent trace", async () => {
       await request(app.getHttpServer())
-        .get('/agents/trace/non-existent-trace')
+        .get("/agents/trace/non-existent-trace")
         .expect(200); // Returns 200 with error message
 
       // Note: Current implementation returns 200 with error object
@@ -93,15 +93,15 @@ describe('Agent Orchestration Integration Tests', () => {
     });
   });
 
-  describe('POST /agents/feedback/:traceId', () => {
-    it('should accept positive feedback', async () => {
+  describe("POST /agents/feedback/:traceId", () => {
+    it("should accept positive feedback", async () => {
       // Execute orchestration
       const orchestrationResponse = await request(app.getHttpServer())
-        .post('/agents/orchestrate')
+        .post("/agents/orchestrate")
         .send({
-          query: 'Investment recommendations',
+          query: "Investment recommendations",
           userContext: {
-            userId: 'test-user-3',
+            userId: "test-user-3",
           },
         });
 
@@ -111,9 +111,9 @@ describe('Agent Orchestration Integration Tests', () => {
       const feedbackResponse = await request(app.getHttpServer())
         .post(`/agents/feedback/${traceId}`)
         .send({
-          feedback: 'positive',
+          feedback: "positive",
           rating: 5,
-          comment: 'Very helpful recommendations!',
+          comment: "Very helpful recommendations!",
         })
         .expect(200);
 
@@ -121,20 +121,20 @@ describe('Agent Orchestration Integration Tests', () => {
       expect(feedbackResponse.body.traceId).toBe(traceId);
     });
 
-    it('should validate feedback data', async () => {
+    it("should validate feedback data", async () => {
       await request(app.getHttpServer())
-        .post('/agents/feedback/some-trace')
+        .post("/agents/feedback/some-trace")
         .send({
-          feedback: 'invalid-type', // Invalid enum value
+          feedback: "invalid-type", // Invalid enum value
         })
         .expect(400);
     });
   });
 
-  describe('GET /agents/performance', () => {
-    it('should return agent performance metrics', async () => {
+  describe("GET /agents/performance", () => {
+    it("should return agent performance metrics", async () => {
       const response = await request(app.getHttpServer())
-        .get('/agents/performance')
+        .get("/agents/performance")
         .expect(200);
 
       expect(response.body).toBeDefined();
@@ -144,10 +144,10 @@ describe('Agent Orchestration Integration Tests', () => {
     });
   });
 
-  describe('GET /agents/insights', () => {
-    it('should generate learning insights', async () => {
+  describe("GET /agents/insights", () => {
+    it("should generate learning insights", async () => {
       const response = await request(app.getHttpServer())
-        .get('/agents/insights')
+        .get("/agents/insights")
         .expect(200);
 
       expect(response.body).toBeDefined();
@@ -157,19 +157,19 @@ describe('Agent Orchestration Integration Tests', () => {
     });
   });
 
-  describe('End-to-End Workflow', () => {
-    it('should complete full orchestration cycle', async () => {
-      const userId = 'e2e-test-user';
+  describe("End-to-End Workflow", () => {
+    it("should complete full orchestration cycle", async () => {
+      const userId = "e2e-test-user";
 
       // Step 1: Execute orchestration
       const orchestrationResponse = await request(app.getHttpServer())
-        .post('/agents/orchestrate')
+        .post("/agents/orchestrate")
         .send({
-          query: 'Create a retirement savings plan for ₹2 crore in 25 years',
+          query: "Create a retirement savings plan for ₹2 crore in 25 years",
           userContext: {
             userId,
-            riskTolerance: 'moderate',
-            investmentStyle: 'growth',
+            riskTolerance: "moderate",
+            investmentStyle: "growth",
           },
         })
         .expect(200);
@@ -188,7 +188,7 @@ describe('Agent Orchestration Integration Tests', () => {
       const feedbackResponse = await request(app.getHttpServer())
         .post(`/agents/feedback/${traceId}`)
         .send({
-          feedback: 'positive',
+          feedback: "positive",
           rating: 5,
         })
         .expect(200);
@@ -197,14 +197,14 @@ describe('Agent Orchestration Integration Tests', () => {
 
       // Step 4: Verify performance metrics updated
       const performanceResponse = await request(app.getHttpServer())
-        .get('/agents/performance')
+        .get("/agents/performance")
         .expect(200);
 
       expect(performanceResponse.body.agents.length).toBeGreaterThan(0);
 
       // Step 5: Generate insights
       const insightsResponse = await request(app.getHttpServer())
-        .get('/agents/insights')
+        .get("/agents/insights")
         .expect(200);
 
       expect(insightsResponse.body.patterns).toBeDefined();

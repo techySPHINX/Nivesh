@@ -1,6 +1,11 @@
-import { Injectable, Logger, NotFoundException, ConflictException } from '@nestjs/common';
-import { PrismaService } from '../../../../core/database/postgres/prisma.service';
-import { createHash } from 'crypto';
+import {
+  Injectable,
+  Logger,
+  NotFoundException,
+  ConflictException,
+} from "@nestjs/common";
+import { PrismaService } from "../../../../core/database/postgres/prisma.service";
+import { createHash } from "crypto";
 
 export interface PromptConfig {
   id: string;
@@ -50,7 +55,7 @@ export interface ABTestMetrics {
 
 /**
  * Prompt Management Service
- * 
+ *
  * Handles:
  * - Prompt versioning and lifecycle
  * - A/B testing infrastructure
@@ -72,22 +77,22 @@ export class PromptManagementService {
   ): Promise<PromptConfig> {
     // Check if user is in active A/B test
     const activeTest = await this.getActiveABTest(promptName);
-    
+
     if (activeTest) {
       const userHash = this.hashUserId(userId);
       const inTreatment = userHash % 100 < activeTest.trafficSplitPercentage;
-      
-      const promptId = inTreatment 
-        ? activeTest.treatmentPromptId 
+
+      const promptId = inTreatment
+        ? activeTest.treatmentPromptId
         : activeTest.controlPromptId;
-      
+
       const prompt = await this.prisma.promptRegistry.findUnique({
         where: { id: promptId },
       });
 
       if (prompt) {
         this.logger.debug(
-          `User ${userId} assigned to ${inTreatment ? 'treatment' : 'control'} for test ${activeTest.testName}`,
+          `User ${userId} assigned to ${inTreatment ? "treatment" : "control"} for test ${activeTest.testName}`,
         );
         return this.mapToPromptConfig(prompt);
       }
@@ -104,10 +109,10 @@ export class PromptManagementService {
     const prompt = await this.prisma.promptRegistry.findFirst({
       where: {
         promptName,
-        status: 'production',
+        status: "production",
       },
       orderBy: {
-        deployedAt: 'desc',
+        deployedAt: "desc",
       },
     });
 
@@ -157,8 +162,8 @@ export class PromptManagementService {
         topP: dto.topP ?? 0.9,
         topK: dto.topK ?? 40,
         maxTokens: dto.maxTokens ?? 2048,
-        model: dto.model ?? 'llama3:8b-instruct-q4_K_M',
-        status: 'draft',
+        model: dto.model ?? "llama3:8b-instruct-q4_K_M",
+        status: "draft",
         createdBy: dto.createdBy,
       },
     });
@@ -175,7 +180,7 @@ export class PromptManagementService {
    */
   async updatePromptStatus(
     promptId: string,
-    status: 'draft' | 'testing' | 'canary' | 'production' | 'deprecated',
+    status: "draft" | "testing" | "canary" | "production" | "deprecated",
   ): Promise<void> {
     const prompt = await this.prisma.promptRegistry.findUnique({
       where: { id: promptId },
@@ -191,15 +196,15 @@ export class PromptManagementService {
     const updateData: any = { status };
 
     // Set rollout percentage based on status
-    if (status === 'canary') {
+    if (status === "canary") {
       updateData.rolloutPercentage = 5;
-    } else if (status === 'production') {
+    } else if (status === "production") {
       updateData.rolloutPercentage = 100;
       updateData.deployedAt = new Date();
-      
+
       // Deprecate previous production version
       await this.deprecatePreviousProduction(prompt.promptName, promptId);
-    } else if (status === 'deprecated') {
+    } else if (status === "deprecated") {
       updateData.deprecatedAt = new Date();
     }
 
@@ -208,23 +213,21 @@ export class PromptManagementService {
       data: updateData,
     });
 
-    this.logger.log(
-      `Updated prompt ${promptId} status to ${status}`,
-    );
+    this.logger.log(`Updated prompt ${promptId} status to ${status}`);
   }
 
   /**
    * Deploy prompt to canary (5% traffic)
    */
   async deployCanary(promptId: string): Promise<void> {
-    await this.updatePromptStatus(promptId, 'canary');
+    await this.updatePromptStatus(promptId, "canary");
   }
 
   /**
    * Promote canary to production
    */
   async promoteToProduction(promptId: string): Promise<void> {
-    await this.updatePromptStatus(promptId, 'production');
+    await this.updatePromptStatus(promptId, "production");
   }
 
   /**
@@ -255,7 +258,7 @@ export class PromptManagementService {
     const currentProduction = await this.prisma.promptRegistry.findFirst({
       where: {
         promptName,
-        status: 'production',
+        status: "production",
       },
     });
 
@@ -264,7 +267,7 @@ export class PromptManagementService {
       await this.prisma.promptRegistry.update({
         where: { id: currentProduction.id },
         data: {
-          status: 'deprecated',
+          status: "deprecated",
           deprecatedAt: new Date(),
           rollbackTrigger: reason,
         },
@@ -275,7 +278,7 @@ export class PromptManagementService {
     await this.prisma.promptRegistry.update({
       where: { id: targetPrompt.id },
       data: {
-        status: 'production',
+        status: "production",
         deployedAt: new Date(),
         rolloutPercentage: 100,
       },
@@ -298,27 +301,31 @@ export class PromptManagementService {
     // Validate prompts exist
     const [control, treatment] = await Promise.all([
       this.prisma.promptRegistry.findUnique({ where: { id: controlPromptId } }),
-      this.prisma.promptRegistry.findUnique({ where: { id: treatmentPromptId } }),
+      this.prisma.promptRegistry.findUnique({
+        where: { id: treatmentPromptId },
+      }),
     ]);
 
     if (!control || !treatment) {
-      throw new NotFoundException('One or both prompts not found');
+      throw new NotFoundException("One or both prompts not found");
     }
 
     if (control.promptName !== treatment.promptName) {
-      throw new ConflictException('Prompts must have the same name');
+      throw new ConflictException("Prompts must have the same name");
     }
 
     // Check for existing active test
     const existingTest = await this.prisma.promptABTest.findFirst({
       where: {
         testName,
-        status: 'running',
+        status: "running",
       },
     });
 
     if (existingTest) {
-      throw new ConflictException(`Active test with name ${testName} already exists`);
+      throw new ConflictException(
+        `Active test with name ${testName} already exists`,
+      );
     }
 
     // Create test
@@ -328,7 +335,7 @@ export class PromptManagementService {
         controlPromptId,
         treatmentPromptId,
         trafficSplitPercentage: trafficSplit,
-        status: 'running',
+        status: "running",
       },
     });
 
@@ -351,10 +358,12 @@ export class PromptManagementService {
             executions: {
               where: {
                 createdAt: {
-                  gte: (await this.prisma.promptABTest.findUnique({
-                    where: { id: testId },
-                    select: { startDate: true },
-                  }))?.startDate,
+                  gte: (
+                    await this.prisma.promptABTest.findUnique({
+                      where: { id: testId },
+                      select: { startDate: true },
+                    })
+                  )?.startDate,
                 },
               },
             },
@@ -365,10 +374,12 @@ export class PromptManagementService {
             executions: {
               where: {
                 createdAt: {
-                  gte: (await this.prisma.promptABTest.findUnique({
-                    where: { id: testId },
-                    select: { startDate: true },
-                  }))?.startDate,
+                  gte: (
+                    await this.prisma.promptABTest.findUnique({
+                      where: { id: testId },
+                      select: { startDate: true },
+                    })
+                  )?.startDate,
                 },
               },
             },
@@ -382,7 +393,9 @@ export class PromptManagementService {
     }
 
     const controlMetrics = this.calculateMetrics(test.controlPrompt.executions);
-    const treatmentMetrics = this.calculateMetrics(test.treatmentPrompt.executions);
+    const treatmentMetrics = this.calculateMetrics(
+      test.treatmentPrompt.executions,
+    );
 
     // Calculate statistical significance (Chi-square test for satisfaction)
     const statisticalSignificance = this.calculateChiSquare(
@@ -402,7 +415,7 @@ export class PromptManagementService {
    */
   async concludeABTest(
     testId: string,
-    winner: 'control' | 'treatment',
+    winner: "control" | "treatment",
   ): Promise<void> {
     const test = await this.prisma.promptABTest.findUnique({
       where: { id: testId },
@@ -416,22 +429,19 @@ export class PromptManagementService {
     await this.prisma.promptABTest.update({
       where: { id: testId },
       data: {
-        status: 'completed',
+        status: "completed",
         endDate: new Date(),
         winner,
       },
     });
 
     // Promote winner to production
-    const winnerPromptId = winner === 'control' 
-      ? test.controlPromptId 
-      : test.treatmentPromptId;
-    
+    const winnerPromptId =
+      winner === "control" ? test.controlPromptId : test.treatmentPromptId;
+
     await this.promoteToProduction(winnerPromptId);
 
-    this.logger.log(
-      `Concluded A/B test ${test.testName}. Winner: ${winner}`,
-    );
+    this.logger.log(`Concluded A/B test ${test.testName}. Winner: ${winner}`);
   }
 
   /**
@@ -447,7 +457,7 @@ export class PromptManagementService {
         promptName: filters?.promptName,
       },
       orderBy: {
-        createdAt: 'desc',
+        createdAt: "desc",
       },
     });
 
@@ -461,7 +471,7 @@ export class PromptManagementService {
   private async getActiveABTest(promptName: string) {
     return this.prisma.promptABTest.findFirst({
       where: {
-        status: 'running',
+        status: "running",
         controlPrompt: {
           promptName,
         },
@@ -470,7 +480,7 @@ export class PromptManagementService {
   }
 
   private hashUserId(userId: string): number {
-    const hash = createHash('sha256').update(userId).digest('hex');
+    const hash = createHash("sha256").update(userId).digest("hex");
     return parseInt(hash.substring(0, 8), 16);
   }
 
@@ -501,10 +511,10 @@ export class PromptManagementService {
     newStatus: string,
   ): void {
     const allowedTransitions: Record<string, string[]> = {
-      draft: ['testing', 'deprecated'],
-      testing: ['canary', 'draft', 'deprecated'],
-      canary: ['production', 'deprecated'],
-      production: ['deprecated'],
+      draft: ["testing", "deprecated"],
+      testing: ["canary", "draft", "deprecated"],
+      canary: ["production", "deprecated"],
+      production: ["deprecated"],
       deprecated: [],
     };
 
@@ -522,11 +532,11 @@ export class PromptManagementService {
     await this.prisma.promptRegistry.updateMany({
       where: {
         promptName,
-        status: 'production',
+        status: "production",
         id: { not: excludeId },
       },
       data: {
-        status: 'deprecated',
+        status: "deprecated",
         deprecatedAt: new Date(),
       },
     });
@@ -543,7 +553,9 @@ export class PromptManagementService {
       };
     }
 
-    const validConfidence = executions.filter((e) => e.confidenceScore !== null);
+    const validConfidence = executions.filter(
+      (e) => e.confidenceScore !== null,
+    );
     const validLatency = executions.filter((e) => e.latencyMs !== null);
     const feedbackExecutions = executions.filter((e) => e.userFeedback !== 0);
 
@@ -567,19 +579,21 @@ export class PromptManagementService {
     // Simplified Chi-square test for satisfaction difference
     const n1 = control.totalExecutions;
     const n2 = treatment.totalExecutions;
-    
+
     if (n1 === 0 || n2 === 0) return 0;
 
     const p1 = control.satisfaction;
     const p2 = treatment.satisfaction;
 
     const pPooled = (p1 * n1 + p2 * n2) / (n1 + n2);
-    const standardError = Math.sqrt(pPooled * (1 - pPooled) * (1 / n1 + 1 / n2));
+    const standardError = Math.sqrt(
+      pPooled * (1 - pPooled) * (1 / n1 + 1 / n2),
+    );
 
     if (standardError === 0) return 0;
 
     const zScore = (p2 - p1) / standardError;
-    
+
     // Return p-value approximation (two-tailed test)
     return Math.abs(zScore);
   }

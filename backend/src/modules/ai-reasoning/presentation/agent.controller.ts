@@ -9,31 +9,32 @@ import {
   UseGuards,
   Request,
   Logger,
-} from '@nestjs/common';
+} from "@nestjs/common";
 import {
   ApiTags,
   ApiOperation,
   ApiResponse,
   ApiBearerAuth,
   ApiParam,
-} from '@nestjs/swagger';
-import { AgentRequestDto, AgentFeedbackDto } from './dto/agent.dto';
-import { OrchestratorAgent } from '../agents/orchestrator.agent';
-import { DecisionTraceService } from '../services/decision-trace.service';
-import { AgentMemoryService } from '../services/agent-memory.service';
-import { AgentLearningService } from '../services/agent-learning.service';
-import { JwtAuthGuard } from '../../../core/security/auth/guards/jwt-auth.guard';
+} from "@nestjs/swagger";
+import { AgentRequestDto, AgentFeedbackDto } from "./dto/agent.dto";
+import { AgentMessage, AgentType } from "../types/agent.types";
+import { OrchestratorAgent } from "../agents/orchestrator.agent";
+import { DecisionTraceService } from "../services/decision-trace.service";
+import { AgentMemoryService } from "../services/agent-memory.service";
+import { AgentLearningService } from "../services/agent-learning.service";
+import { JwtAuthGuard } from "../../../core/security/auth/guards/jwt-auth.guard";
 
 /**
  * Agent Orchestration Controller
- * 
+ *
  * Provides API endpoints for multi-agent system:
  * - POST /orchestrate: Execute agent workflows
  * - GET /trace/:traceId: Retrieve decision traces
  * - POST /feedback/:traceId: Submit user feedback
  * - GET /performance: Get agent performance metrics
  * - GET /insights: Generate learning insights
- * 
+ *
  * Example:
  * POST /api/v1/agents/orchestrate
  * {
@@ -44,7 +45,7 @@ import { JwtAuthGuard } from '../../../core/security/auth/guards/jwt-auth.guard'
  *     "investmentStyle": "balanced"
  *   }
  * }
- * 
+ *
  * Response:
  * {
  *   "traceId": "trace_abc123",
@@ -57,10 +58,10 @@ import { JwtAuthGuard } from '../../../core/security/auth/guards/jwt-auth.guard'
  *   "confidence": 0.85
  * }
  */
-@ApiTags('AI Agents')
+@ApiTags("AI Agents")
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
-@Controller('agents')
+@Controller("agents")
 export class AgentController {
   private readonly logger = new Logger(AgentController.name);
 
@@ -74,85 +75,95 @@ export class AgentController {
   /**
    * Execute multi-agent orchestration
    */
-  @Post('orchestrate')
+  @Post("orchestrate")
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
-    summary: 'Execute multi-agent financial reasoning',
+    summary: "Execute multi-agent financial reasoning",
     description:
-      'Processes user query through multi-agent system. Automatically selects and coordinates specialized agents based on query type.',
+      "Processes user query through multi-agent system. Automatically selects and coordinates specialized agents based on query type.",
   })
   @ApiResponse({
     status: 200,
-    description: 'Agent orchestration completed successfully',
+    description: "Agent orchestration completed successfully",
     schema: {
-      type: 'object',
+      type: "object",
       properties: {
-        traceId: { type: 'string', example: 'trace_abc123' },
+        traceId: { type: "string", example: "trace_abc123" },
         executionPlan: {
-          type: 'array',
+          type: "array",
           items: {
-            type: 'object',
+            type: "object",
             properties: {
-              agentType: { type: 'string', example: 'financial_planning' },
-              task: { type: 'string', example: 'Calculate savings rate' },
-              estimatedDuration: { type: 'number', example: 2000 },
+              agentType: { type: "string", example: "financial_planning" },
+              task: { type: "string", example: "Calculate savings rate" },
+              estimatedDuration: { type: "number", example: 2000 },
             },
           },
         },
         result: {
-          type: 'object',
+          type: "object",
           properties: {
-            summary: { type: 'string' },
-            recommendations: { type: 'array', items: { type: 'object' } },
-            data: { type: 'object' },
+            summary: { type: "string" },
+            recommendations: { type: "array", items: { type: "object" } },
+            data: { type: "object" },
           },
         },
-        confidence: { type: 'number', example: 0.85 },
+        confidence: { type: "number", example: 0.85 },
       },
     },
   })
-  @ApiResponse({ status: 400, description: 'Invalid request parameters' })
-  @ApiResponse({ status: 500, description: 'Agent execution failed' })
+  @ApiResponse({ status: 400, description: "Invalid request parameters" })
+  @ApiResponse({ status: 500, description: "Agent execution failed" })
   async orchestrate(@Body() request: AgentRequestDto) {
     this.logger.log(`Orchestration request: ${request.query}`);
 
     try {
       // Store user message in memory
       const conversationId =
-        request.conversationId || `conv_${Date.now()}_${request.userContext.userId}`;
+        request.conversationId ||
+        `conv_${Date.now()}_${request.userContext.userId}`;
 
       await this.memory.storeMessage(
         conversationId,
         request.userContext.userId,
-        request.query,
+        {
+          id: `msg_${Date.now()}`,
+          from: AgentType.ORCHESTRATOR,
+          to: [AgentType.ORCHESTRATOR],
+          type: "request",
+          payload: { task: request.query, context: request.userContext || {} },
+          timestamp: new Date(),
+        } as AgentMessage,
       );
 
       // Execute orchestration
-      const response = await this.orchestrator.execute({
-        query: request.query,
-        userContext: request.userContext,
-        additionalContext: request.additionalContext,
-      });
+      const agentMessage: AgentMessage = {
+        id: `msg_${Date.now()}_exec`,
+        from: AgentType.ORCHESTRATOR,
+        to: [AgentType.ORCHESTRATOR],
+        type: "request",
+        payload: {
+          task: request.query,
+          context: { ...request.userContext, ...request.additionalContext },
+        },
+        timestamp: new Date(),
+      };
+      const response = await this.orchestrator.execute(agentMessage);
 
       // Store agent response in memory
-      await this.memory.storeResponse(conversationId, {
-        agentType: 'orchestrator',
-        result: response.result,
-        confidence: response.confidence || 0,
-        timestamp: new Date(),
-      });
+      await this.memory.storeResponse(conversationId, response);
 
       return {
-        traceId: response.metadata?.traceId || 'unknown',
+        traceId: response.result?.traceId || "unknown",
         conversationId,
-        executionPlan: response.metadata?.executionPlan || [],
+        executionPlan: response.result?.executionPlan || [],
         result: response.result,
         confidence: response.confidence,
         reasoning: response.reasoning,
         timestamp: new Date().toISOString(),
       };
     } catch (error) {
-      this.logger.error('Orchestration failed', error.stack);
+      this.logger.error("Orchestration failed", error.stack);
       throw error;
     }
   }
@@ -160,42 +171,48 @@ export class AgentController {
   /**
    * Get decision trace details
    */
-  @Get('trace/:traceId')
+  @Get("trace/:traceId")
   @ApiOperation({
-    summary: 'Get decision trace details',
+    summary: "Get decision trace details",
     description:
-      'Retrieves complete execution trace for transparency and debugging.',
+      "Retrieves complete execution trace for transparency and debugging.",
   })
-  @ApiParam({ name: 'traceId', description: 'Trace ID from orchestration response' })
+  @ApiParam({
+    name: "traceId",
+    description: "Trace ID from orchestration response",
+  })
   @ApiResponse({
     status: 200,
-    description: 'Decision trace retrieved successfully',
+    description: "Decision trace retrieved successfully",
     schema: {
-      type: 'object',
+      type: "object",
       properties: {
-        traceId: { type: 'string' },
-        status: { type: 'string', enum: ['pending', 'running', 'completed', 'failed'] },
+        traceId: { type: "string" },
+        status: {
+          type: "string",
+          enum: ["pending", "running", "completed", "failed"],
+        },
         executions: {
-          type: 'array',
+          type: "array",
           items: {
-            type: 'object',
+            type: "object",
             properties: {
-              agentType: { type: 'string' },
-              inputPayload: { type: 'object' },
-              outputPayload: { type: 'object' },
-              reasoning: { type: 'array', items: { type: 'string' } },
-              toolsUsed: { type: 'array', items: { type: 'string' } },
-              confidence: { type: 'number' },
-              durationMs: { type: 'number' },
-              success: { type: 'boolean' },
+              agentType: { type: "string" },
+              inputPayload: { type: "object" },
+              outputPayload: { type: "object" },
+              reasoning: { type: "array", items: { type: "string" } },
+              toolsUsed: { type: "array", items: { type: "string" } },
+              confidence: { type: "number" },
+              durationMs: { type: "number" },
+              success: { type: "boolean" },
             },
           },
         },
       },
     },
   })
-  @ApiResponse({ status: 404, description: 'Trace not found' })
-  async getTrace(@Param('traceId') traceId: string) {
+  @ApiResponse({ status: 404, description: "Trace not found" })
+  async getTrace(@Param("traceId") traceId: string) {
     this.logger.log(`Fetching trace: ${traceId}`);
 
     try {
@@ -203,14 +220,14 @@ export class AgentController {
 
       if (!trace) {
         return {
-          error: 'Trace not found',
+          error: "Trace not found",
           traceId,
         };
       }
 
       return trace;
     } catch (error) {
-      this.logger.error('Failed to fetch trace', error.stack);
+      this.logger.error("Failed to fetch trace", error.stack);
       throw error;
     }
   }
@@ -218,21 +235,24 @@ export class AgentController {
   /**
    * Submit user feedback
    */
-  @Post('feedback/:traceId')
+  @Post("feedback/:traceId")
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
-    summary: 'Submit user feedback',
+    summary: "Submit user feedback",
     description:
-      'Collects user feedback on agent responses for continuous learning.',
+      "Collects user feedback on agent responses for continuous learning.",
   })
-  @ApiParam({ name: 'traceId', description: 'Trace ID to provide feedback for' })
+  @ApiParam({
+    name: "traceId",
+    description: "Trace ID to provide feedback for",
+  })
   @ApiResponse({
     status: 200,
-    description: 'Feedback submitted successfully',
+    description: "Feedback submitted successfully",
   })
-  @ApiResponse({ status: 404, description: 'Trace not found' })
+  @ApiResponse({ status: 404, description: "Trace not found" })
   async submitFeedback(
-    @Param('traceId') traceId: string,
+    @Param("traceId") traceId: string,
     @Body() feedback: AgentFeedbackDto,
   ) {
     this.logger.log(
@@ -245,14 +265,14 @@ export class AgentController {
 
       if (!trace) {
         return {
-          error: 'Trace not found',
+          error: "Trace not found",
           traceId,
         };
       }
 
       // Extract userId from first execution
       const userId =
-        trace.executions?.[0]?.inputPayload?.userContext?.userId || 'unknown';
+        trace.steps?.[0]?.input?.userContext?.userId || "unknown";
 
       // Record feedback
       await this.learning.recordFeedback({
@@ -266,11 +286,11 @@ export class AgentController {
 
       return {
         success: true,
-        message: 'Feedback recorded successfully',
+        message: "Feedback recorded successfully",
         traceId,
       };
     } catch (error) {
-      this.logger.error('Failed to submit feedback', error.stack);
+      this.logger.error("Failed to submit feedback", error.stack);
       throw error;
     }
   }
@@ -278,49 +298,49 @@ export class AgentController {
   /**
    * Get agent performance metrics
    */
-  @Get('performance')
+  @Get("performance")
   @ApiOperation({
-    summary: 'Get agent performance metrics',
-    description: 'Retrieves performance metrics for all agents.',
+    summary: "Get agent performance metrics",
+    description: "Retrieves performance metrics for all agents.",
   })
   @ApiResponse({
     status: 200,
-    description: 'Performance metrics retrieved successfully',
+    description: "Performance metrics retrieved successfully",
     schema: {
-      type: 'object',
+      type: "object",
       properties: {
         agents: {
-          type: 'array',
+          type: "array",
           items: {
-            type: 'object',
+            type: "object",
             properties: {
-              agentType: { type: 'string' },
-              totalExecutions: { type: 'number' },
-              successRate: { type: 'number' },
-              averageConfidence: { type: 'number' },
-              averageDuration: { type: 'number' },
-              positiveFeedbackRate: { type: 'number' },
-              improvementScore: { type: 'number' },
+              agentType: { type: "string" },
+              totalExecutions: { type: "number" },
+              successRate: { type: "number" },
+              averageConfidence: { type: "number" },
+              averageDuration: { type: "number" },
+              positiveFeedbackRate: { type: "number" },
+              improvementScore: { type: "number" },
             },
           },
         },
-        agentWeights: { type: 'object' },
+        agentWeights: { type: "object" },
       },
     },
   })
   async getPerformance() {
-    this.logger.log('Fetching agent performance metrics');
+    this.logger.log("Fetching agent performance metrics");
 
     try {
       const agentTypes = [
-        'orchestrator',
-        'financial_planning',
-        'risk_assessment',
-        'investment_advisor',
-        'simulation',
-        'financial_graph',
-        'action_execution',
-        'monitoring',
+        "orchestrator",
+        "financial_planning",
+        "risk_assessment",
+        "investment_advisor",
+        "simulation",
+        "financial_graph",
+        "action_execution",
+        "monitoring",
       ];
 
       const metrics = await Promise.all(
@@ -340,7 +360,7 @@ export class AgentController {
         timestamp: new Date().toISOString(),
       };
     } catch (error) {
-      this.logger.error('Failed to fetch performance metrics', error.stack);
+      this.logger.error("Failed to fetch performance metrics", error.stack);
       throw error;
     }
   }
@@ -348,53 +368,53 @@ export class AgentController {
   /**
    * Get learning insights
    */
-  @Get('insights')
+  @Get("insights")
   @ApiOperation({
-    summary: 'Get AI learning insights',
+    summary: "Get AI learning insights",
     description:
-      'Generates insights from agent execution patterns and user behavior.',
+      "Generates insights from agent execution patterns and user behavior.",
   })
   @ApiResponse({
     status: 200,
-    description: 'Insights generated successfully',
+    description: "Insights generated successfully",
     schema: {
-      type: 'object',
+      type: "object",
       properties: {
         patterns: {
-          type: 'array',
+          type: "array",
           items: {
-            type: 'object',
+            type: "object",
             properties: {
-              pattern: { type: 'string' },
-              frequency: { type: 'number' },
-              successRate: { type: 'number' },
+              pattern: { type: "string" },
+              frequency: { type: "number" },
+              successRate: { type: "number" },
             },
           },
         },
         improvements: {
-          type: 'array',
+          type: "array",
           items: {
-            type: 'object',
+            type: "object",
             properties: {
-              area: { type: 'string' },
-              suggestion: { type: 'string' },
-              impact: { type: 'string', enum: ['high', 'medium', 'low'] },
+              area: { type: "string" },
+              suggestion: { type: "string" },
+              impact: { type: "string", enum: ["high", "medium", "low"] },
             },
           },
         },
         userBehavior: {
-          type: 'object',
+          type: "object",
           properties: {
-            preferredWorkflows: { type: 'array', items: { type: 'string' } },
-            peakUsageHours: { type: 'array', items: { type: 'number' } },
-            averageSessionDuration: { type: 'number' },
+            preferredWorkflows: { type: "array", items: { type: "string" } },
+            peakUsageHours: { type: "array", items: { type: "number" } },
+            averageSessionDuration: { type: "number" },
           },
         },
       },
     },
   })
   async getInsights() {
-    this.logger.log('Generating learning insights');
+    this.logger.log("Generating learning insights");
 
     try {
       const insights = await this.learning.generateLearningInsights();
@@ -404,7 +424,7 @@ export class AgentController {
         timestamp: new Date().toISOString(),
       };
     } catch (error) {
-      this.logger.error('Failed to generate insights', error.stack);
+      this.logger.error("Failed to generate insights", error.stack);
       throw error;
     }
   }

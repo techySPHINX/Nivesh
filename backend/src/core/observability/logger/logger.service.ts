@@ -1,7 +1,11 @@
-import { Injectable, LoggerService as NestLoggerService, Scope } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import * as winston from 'winston';
-import 'winston-daily-rotate-file';
+import {
+  Injectable,
+  LoggerService as NestLoggerService,
+  Scope,
+} from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
+import * as winston from "winston";
+import "winston-daily-rotate-file";
 
 @Injectable({ scope: Scope.TRANSIENT })
 export class LoggerService implements NestLoggerService {
@@ -13,9 +17,9 @@ export class LoggerService implements NestLoggerService {
   }
 
   private initializeLogger() {
-    const logLevel = this.configService.get<string>('LOG_LEVEL', 'info');
-    const nodeEnv = this.configService.get<string>('NODE_ENV', 'development');
-    const logsDir = this.configService.get<string>('LOG_DIR', 'logs');
+    const logLevel = this.configService.get<string>("LOG_LEVEL", "info");
+    const nodeEnv = this.configService.get<string>("NODE_ENV", "development");
+    const logsDir = this.configService.get<string>("LOG_DIR", "logs");
 
     const jsonFormat = winston.format.combine(
       winston.format.timestamp(),
@@ -28,32 +32,34 @@ export class LoggerService implements NestLoggerService {
       new winston.transports.Console({
         format: winston.format.combine(
           winston.format.colorize(),
-          winston.format.printf(({ timestamp, level, message, context, ...meta }) => {
-            return `${timestamp} [${context || 'App'}] ${level}: ${message} ${
-              Object.keys(meta).length ? JSON.stringify(meta) : ''
-            }`;
-          }),
+          winston.format.printf(
+            ({ timestamp, level, message, context, ...meta }) => {
+              return `${timestamp} [${context || "App"}] ${level}: ${message} ${
+                Object.keys(meta).length ? JSON.stringify(meta) : ""
+              }`;
+            },
+          ),
         ),
       }),
 
       // Rotate daily log file — combined logs
       new (winston.transports as any).DailyRotateFile({
         dirname: logsDir,
-        filename: 'nivesh-%DATE%.log',
-        datePattern: 'YYYY-MM-DD',
-        maxSize: '50m',
-        maxFiles: '14d',
+        filename: "nivesh-%DATE%.log",
+        datePattern: "YYYY-MM-DD",
+        maxSize: "50m",
+        maxFiles: "14d",
         format: jsonFormat,
       }),
 
       // Separate error log file
       new (winston.transports as any).DailyRotateFile({
         dirname: logsDir,
-        filename: 'nivesh-error-%DATE%.log',
-        datePattern: 'YYYY-MM-DD',
-        level: 'error',
-        maxSize: '20m',
-        maxFiles: '30d',
+        filename: "nivesh-error-%DATE%.log",
+        datePattern: "YYYY-MM-DD",
+        level: "error",
+        maxSize: "20m",
+        maxFiles: "30d",
         format: jsonFormat,
       }),
     ];
@@ -61,7 +67,7 @@ export class LoggerService implements NestLoggerService {
     this.logger = winston.createLogger({
       level: logLevel,
       format: jsonFormat,
-      defaultMeta: { service: 'nivesh-backend', environment: nodeEnv },
+      defaultMeta: { service: "nivesh-backend", environment: nodeEnv },
       transports,
     });
   }

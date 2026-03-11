@@ -1,17 +1,17 @@
-import { CommandHandler, ICommandHandler, EventBus } from '@nestjs/cqrs';
-import { Inject, Logger } from '@nestjs/common';
-import { UpdateUserCommand } from '../update-user.command';
-import { User, RiskProfile } from '../../../domain/entities/user.entity';
-import { PhoneNumber } from '../../../domain/value-objects/phone-number.vo';
-import { UserName } from '../../../domain/value-objects/user-name.vo';
+import { CommandHandler, ICommandHandler, EventBus } from "@nestjs/cqrs";
+import { Inject, Logger } from "@nestjs/common";
+import { UpdateUserCommand } from "../update-user.command";
+import { User, RiskProfile } from "../../../domain/entities/user.entity";
+import { PhoneNumber } from "../../../domain/value-objects/phone-number.vo";
+import { UserName } from "../../../domain/value-objects/user-name.vo";
 import {
   IUserRepository,
   USER_REPOSITORY,
-} from '../../../domain/repositories/user.repository.interface';
-import { EntityNotFoundException } from '../../../../../core/exceptions/base.exception';
-import { UserUpdatedEvent } from '../../../../../core/messaging/events/domain.events';
-import { KafkaProducerService } from '../../../../../core/messaging/kafka/kafka.producer';
-import { KafkaTopic } from '../../../../../core/messaging/kafka/topics.enum';
+} from "../../../domain/repositories/user.repository.interface";
+import { EntityNotFoundException } from "../../../../../core/exceptions/base.exception";
+import { UserUpdatedEvent } from "../../../../../core/messaging/events/domain.events";
+import { KafkaProducerService } from "../../../../../core/messaging/kafka/kafka.producer";
+import { KafkaTopic } from "../../../../../core/messaging/kafka/topics.enum";
 
 @CommandHandler(UpdateUserCommand)
 export class UpdateUserHandler implements ICommandHandler<UpdateUserCommand> {
@@ -22,7 +22,7 @@ export class UpdateUserHandler implements ICommandHandler<UpdateUserCommand> {
     private readonly userRepository: IUserRepository,
     private readonly eventBus: EventBus,
     private readonly kafkaProducer: KafkaProducerService,
-  ) { }
+  ) {}
 
   async execute(command: UpdateUserCommand): Promise<User> {
     this.logger.log(`Updating user: ${command.userId}`);
@@ -30,7 +30,7 @@ export class UpdateUserHandler implements ICommandHandler<UpdateUserCommand> {
     // Find user
     const user = await this.userRepository.findById(command.userId);
     if (!user) {
-      throw new EntityNotFoundException('User', command.userId);
+      throw new EntityNotFoundException("User", command.userId);
     }
 
     const updates: any = {};

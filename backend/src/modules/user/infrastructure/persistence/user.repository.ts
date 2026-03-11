@@ -1,16 +1,20 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { PrismaService } from '../../../../core/database/postgres/prisma.service';
-import { IUserRepository } from '../../domain/repositories/user.repository.interface';
-import { User, KycStatus, RiskProfile } from '../../domain/entities/user.entity';
-import { Email } from '../../domain/value-objects/email.vo';
-import { PhoneNumber } from '../../domain/value-objects/phone-number.vo';
-import { UserName } from '../../domain/value-objects/user-name.vo';
+import { Injectable, Logger } from "@nestjs/common";
+import { PrismaService } from "../../../../core/database/postgres/prisma.service";
+import { IUserRepository } from "../../domain/repositories/user.repository.interface";
+import {
+  User,
+  KycStatus,
+  RiskProfile,
+} from "../../domain/entities/user.entity";
+import { Email } from "../../domain/value-objects/email.vo";
+import { PhoneNumber } from "../../domain/value-objects/phone-number.vo";
+import { UserName } from "../../domain/value-objects/user-name.vo";
 
 @Injectable()
 export class UserRepository implements IUserRepository {
   private readonly logger = new Logger(UserRepository.name);
 
-  constructor(private readonly prisma: PrismaService) { }
+  constructor(private readonly prisma: PrismaService) {}
 
   async save(user: User): Promise<User> {
     const data = user.toPersistence();
@@ -91,14 +95,15 @@ export class UserRepository implements IUserRepository {
     take?: number;
     isActive?: boolean;
   }): Promise<{ users: User[]; total: number }> {
-    const where = options.isActive !== undefined ? { isActive: options.isActive } : {};
+    const where =
+      options.isActive !== undefined ? { isActive: options.isActive } : {};
 
     const [users, total] = await Promise.all([
       this.prisma.user.findMany({
         where,
         skip: options.skip || 0,
         take: options.take || 10,
-        orderBy: { createdAt: 'desc' },
+        orderBy: { createdAt: "desc" },
       }),
       this.prisma.user.count({ where }),
     ]);

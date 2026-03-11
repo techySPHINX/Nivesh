@@ -1,16 +1,20 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { PrismaService } from '../../../../core/database/postgres/prisma.service';
-import { IAccountRepository } from '../../domain/repositories/account.repository.interface';
-import { Account, AccountStatus, AccountType } from '../../domain/entities/account.entity';
-import { AccountNumber } from '../../domain/value-objects/account-number.vo';
-import { IFSCCode } from '../../domain/value-objects/ifsc-code.vo';
-import { Money, Currency } from '../../domain/value-objects/money.vo';
+import { Injectable, Logger } from "@nestjs/common";
+import { PrismaService } from "../../../../core/database/postgres/prisma.service";
+import { IAccountRepository } from "../../domain/repositories/account.repository.interface";
+import {
+  Account,
+  AccountStatus,
+  AccountType,
+} from "../../domain/entities/account.entity";
+import { AccountNumber } from "../../domain/value-objects/account-number.vo";
+import { IFSCCode } from "../../domain/value-objects/ifsc-code.vo";
+import { Money, Currency } from "../../domain/value-objects/money.vo";
 
 @Injectable()
 export class AccountRepository implements IAccountRepository {
   private readonly logger = new Logger(AccountRepository.name);
 
-  constructor(private readonly prisma: PrismaService) { }
+  constructor(private readonly prisma: PrismaService) {}
 
   async save(account: Account): Promise<Account> {
     const data = account.toPersistence();
@@ -40,7 +44,7 @@ export class AccountRepository implements IAccountRepository {
   async findByUserId(userId: string): Promise<Account[]> {
     const accounts = await this.prisma.account.findMany({
       where: { userId },
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: "desc" },
     });
     return accounts.map((a) => this.toDomain(a));
   }
@@ -60,7 +64,7 @@ export class AccountRepository implements IAccountRepository {
   async findActiveByUserId(userId: string): Promise<Account[]> {
     const accounts = await this.prisma.account.findMany({
       where: { userId, status: AccountStatus.ACTIVE },
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: "desc" },
     });
     return accounts.map((a) => this.toDomain(a));
   }
@@ -68,7 +72,7 @@ export class AccountRepository implements IAccountRepository {
   async findLinkedByUserId(userId: string): Promise<Account[]> {
     const accounts = await this.prisma.account.findMany({
       where: { userId, isLinked: true },
-      orderBy: { lastSyncedAt: 'desc' },
+      orderBy: { lastSyncedAt: "desc" },
     });
     return accounts.map((a) => this.toDomain(a));
   }
@@ -85,7 +89,7 @@ export class AccountRepository implements IAccountRepository {
         where,
         skip: options.skip || 0,
         take: options.take || 10,
-        orderBy: { createdAt: 'desc' },
+        orderBy: { createdAt: "desc" },
       }),
       this.prisma.account.count({ where }),
     ]);
@@ -104,7 +108,10 @@ export class AccountRepository implements IAccountRepository {
   private toDomain(data: any): Account {
     const accountNumber = new AccountNumber(data.accountNumber);
     const ifscCode = data.ifscCode ? new IFSCCode(data.ifscCode) : undefined;
-    const balance = new Money(parseFloat(data.balance.toString()), data.currency as Currency);
+    const balance = new Money(
+      parseFloat(data.balance.toString()),
+      data.currency as Currency,
+    );
 
     return Account.fromPersistence({
       id: data.id,

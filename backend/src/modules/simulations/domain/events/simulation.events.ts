@@ -1,5 +1,5 @@
-import { BaseEvent } from '../../../../core/messaging/events/base.event';
-import { SimulationType } from '../entities/simulation.entity';
+import { BaseEvent } from "../../../../core/messaging/events/base.event";
+import { SimulationType } from "../entities/simulation.entity";
 
 export class SimulationStartedEvent extends BaseEvent {
   constructor(
@@ -9,9 +9,9 @@ export class SimulationStartedEvent extends BaseEvent {
     public readonly name: string,
   ) {
     super({
-      eventType: 'simulation.started',
+      eventType: "simulation.started",
       aggregateId: simulationId,
-      aggregateType: 'Simulation',
+      aggregateType: "Simulation",
     });
   }
 }
@@ -25,9 +25,9 @@ export class SimulationCompletedEvent extends BaseEvent {
     public readonly completedAt: Date,
   ) {
     super({
-      eventType: 'simulation.completed',
+      eventType: "simulation.completed",
       aggregateId: simulationId,
-      aggregateType: 'Simulation',
+      aggregateType: "Simulation",
     });
   }
 }
@@ -39,9 +39,9 @@ export class SimulationFailedEvent extends BaseEvent {
     public readonly error: string,
   ) {
     super({
-      eventType: 'simulation.failed',
+      eventType: "simulation.failed",
       aggregateId: simulationId,
-      aggregateType: 'Simulation',
+      aggregateType: "Simulation",
     });
   }
 }

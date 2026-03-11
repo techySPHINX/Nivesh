@@ -1,11 +1,11 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { PrismaService } from '../../../core/database/postgres/prisma.service';
+import { Injectable, Logger } from "@nestjs/common";
+import { PrismaService } from "../../../core/database/postgres/prisma.service";
 import {
   AgentType,
   DecisionTrace,
   DecisionTraceStep,
-} from '../types/agent.types';
-import { v4 as uuidv4 } from 'uuid';
+} from "../types/agent.types";
+import { v4 as uuidv4 } from "uuid";
 
 /**
  * Agent Execution Log Interface
@@ -52,7 +52,7 @@ export class DecisionTraceService {
   private readonly logger = new Logger(DecisionTraceService.name);
 
   constructor(private readonly prisma: PrismaService) {
-    this.logger.log('DecisionTraceService initialized');
+    this.logger.log("DecisionTraceService initialized");
   }
 
   /**
@@ -160,7 +160,7 @@ export class DecisionTraceService {
           agentType: data.agent,
         },
         orderBy: {
-          createdAt: 'desc',
+          createdAt: "desc",
         },
       });
 
@@ -229,7 +229,7 @@ export class DecisionTraceService {
           agentType: data.agent,
         },
         orderBy: {
-          createdAt: 'desc',
+          createdAt: "desc",
         },
       });
 
@@ -291,7 +291,7 @@ export class DecisionTraceService {
           agentType: data.agent,
         },
         orderBy: {
-          createdAt: 'desc',
+          createdAt: "desc",
         },
       });
 
@@ -336,7 +336,7 @@ export class DecisionTraceService {
     try {
       const executions = await this.prisma.agentExecution.findMany({
         where: { traceId },
-        orderBy: { createdAt: 'asc' },
+        orderBy: { createdAt: "asc" },
       });
 
       if (executions.length === 0) {
@@ -356,17 +356,14 @@ export class DecisionTraceService {
         error: exec.errorMessage || undefined,
       }));
 
-      const totalDuration = steps.reduce(
-        (sum, step) => sum + step.duration,
-        0,
-      );
+      const totalDuration = steps.reduce((sum, step) => sum + step.duration, 0);
       const success = executions.every((exec) => exec.success);
       const lastExecution = executions[executions.length - 1];
 
       const trace: DecisionTrace = {
         traceId,
-        userId: '', // Will be populated from context if available
-        query: '', // Will be populated from context if available
+        userId: "", // Will be populated from context if available
+        query: "", // Will be populated from context if available
         steps,
         finalResult: lastExecution.outputPayload,
         totalDuration,
@@ -374,7 +371,9 @@ export class DecisionTraceService {
         createdAt: executions[0].createdAt,
       };
 
-      this.logger.debug(`Retrieved trace ${traceId} with ${steps.length} steps`);
+      this.logger.debug(
+        `Retrieved trace ${traceId} with ${steps.length} steps`,
+      );
 
       return trace;
     } catch (error) {
@@ -391,21 +390,18 @@ export class DecisionTraceService {
    * @param limit - Maximum number of traces to return
    * @returns Promise resolving to array of trace IDs
    */
-  async getRecentTraces(
-    userId: string,
-    limit: number = 10,
-  ): Promise<string[]> {
+  async getRecentTraces(userId: string, limit: number = 10): Promise<string[]> {
     try {
       const executions = await this.prisma.agentExecution.findMany({
         where: {
           inputPayload: {
-            path: ['context', 'userId'],
+            path: ["context", "userId"],
             equals: userId,
           },
         },
         select: { traceId: true },
-        distinct: ['traceId'],
-        orderBy: { createdAt: 'desc' },
+        distinct: ["traceId"],
+        orderBy: { createdAt: "desc" },
         take: limit,
       });
 

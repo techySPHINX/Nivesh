@@ -6,13 +6,13 @@ import {
   ConnectedSocket,
   OnGatewayConnection,
   OnGatewayDisconnect,
-} from '@nestjs/websockets';
-import { Logger, UseGuards } from '@nestjs/common';
-import { Server, Socket } from 'socket.io';
-import { StreamingResponseService } from '../../infrastructure/services/streaming-response.service';
-import { PromptManagementService } from '../../infrastructure/services/prompt-management.service';
-import { SafetyGuardrailsService } from '../../infrastructure/services/safety-guardrails.service';
-import { PrismaService } from '../../../../core/database/postgres/prisma.service';
+} from "@nestjs/websockets";
+import { Logger, UseGuards } from "@nestjs/common";
+import { Server, Socket } from "socket.io";
+import { StreamingResponseService } from "../../infrastructure/services/streaming-response.service";
+import { PromptManagementService } from "../../infrastructure/services/prompt-management.service";
+import { SafetyGuardrailsService } from "../../infrastructure/services/safety-guardrails.service";
+import { PrismaService } from "../../../../core/database/postgres/prisma.service";
 
 interface QueryPayload {
   query: string;
@@ -23,7 +23,7 @@ interface QueryPayload {
 
 /**
  * AI Chat WebSocket Gateway
- * 
+ *
  * Handles:
  * - Real-time streaming responses
  * - Connection lifecycle management
@@ -32,10 +32,10 @@ interface QueryPayload {
  */
 @WebSocketGateway({
   cors: {
-    origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+    origin: process.env.FRONTEND_URL || "http://localhost:3000",
     credentials: true,
   },
-  namespace: '/ai-chat',
+  namespace: "/ai-chat",
 })
 export class AIChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer()
@@ -53,34 +53,34 @@ export class AIChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   handleConnection(client: Socket) {
     this.logger.log(`Client connected: ${client.id}`);
-    
+
     // Send welcome message
-    client.emit('connection_established', {
-      message: 'Connected to AI Chat',
+    client.emit("connection_established", {
+      message: "Connected to AI Chat",
       socketId: client.id,
     });
   }
 
   handleDisconnect(client: Socket) {
     this.logger.log(`Client disconnected: ${client.id}`);
-    
+
     // Clean up active streams
     this.activeStreams.delete(client.id);
   }
 
-  @SubscribeMessage('query')
+  @SubscribeMessage("query")
   async handleQuery(
     @MessageBody() data: QueryPayload,
     @ConnectedSocket() client: Socket,
   ) {
     const startTime = Date.now();
     const traceId = `${client.id}_${Date.now()}`;
-    
+
     try {
       // Check if already streaming
       if (this.activeStreams.get(client.id)) {
-        client.emit('error', {
-          message: 'Already processing a query. Please wait.',
+        client.emit("error", {
+          message: "Already processing a query. Please wait.",
         });
         return;
       }
@@ -94,7 +94,7 @@ export class AIChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       );
 
       if (!inputSafety.safe) {
-        client.emit('safety_blocked', {
+        client.emit("safety_blocked", {
           reason: inputSafety.reason,
           category: inputSafety.category,
         });
@@ -105,17 +105,20 @@ export class AIChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       // 2. Get prompt configuration
       const promptConfig = await this.promptMgmt.getPromptForUser(
         data.userId,
-        data.promptName || 'default_financial_advisor',
+        data.promptName || "default_financial_advisor",
       );
 
       // 3. Build prompt with system instruction
-      const fullPrompt = this.buildPrompt(data.query, promptConfig.systemInstruction);
+      const fullPrompt = this.buildPrompt(
+        data.query,
+        promptConfig.systemInstruction,
+      );
 
       // 4. Stream response
-      client.emit('stream_started', { traceId });
+      client.emit("stream_started", { traceId });
 
-      let fullResponse = '';
-      let tokenCount = 0;
+      let fullResponse = "";
+      const tokenCount = 0;
 
       try {
         const stream = this.streamingService.streamResponse(fullPrompt, {
@@ -128,7 +131,7 @@ export class AIChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
         for await (const chunk of stream) {
           fullResponse += chunk;
-          client.emit('response_chunk', { text: chunk, traceId });
+          client.emit("response_chunk", { text: chunk, traceId });
         }
 
         // 5. Post-stream safety check
@@ -140,15 +143,17 @@ export class AIChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
         // Apply modifications if needed (e.g., disclaimer injection)
         if (outputSafety.modifiedResponse) {
-          const disclaimerChunk = outputSafety.modifiedResponse.substring(fullResponse.length);
-          client.emit('response_chunk', { text: disclaimerChunk, traceId });
+          const disclaimerChunk = outputSafety.modifiedResponse.substring(
+            fullResponse.length,
+          );
+          client.emit("response_chunk", { text: disclaimerChunk, traceId });
           fullResponse = outputSafety.modifiedResponse;
         }
 
         // 6. Complete stream
         const latencyMs = Date.now() - startTime;
-        
-        client.emit('stream_complete', {
+
+        client.emit("stream_complete", {
           traceId,
           latencyMs,
           tokenCount: Math.ceil(fullResponse.length / 4), // Rough estimate
@@ -171,30 +176,30 @@ export class AIChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
           `Query processed successfully. TraceId: ${traceId}, Latency: ${latencyMs}ms`,
         );
       } catch (streamError) {
-        this.logger.error('Streaming error:', streamError);
-        client.emit('error', {
-          message: 'Failed to generate response',
+        this.logger.error("Streaming error:", streamError);
+        client.emit("error", {
+          message: "Failed to generate response",
           traceId,
         });
       }
     } catch (error) {
-      this.logger.error('Query handling error:', error);
-      client.emit('error', {
-        message: 'An error occurred processing your query',
+      this.logger.error("Query handling error:", error);
+      client.emit("error", {
+        message: "An error occurred processing your query",
       });
     } finally {
       this.activeStreams.delete(client.id);
     }
   }
 
-  @SubscribeMessage('cancel_stream')
+  @SubscribeMessage("cancel_stream")
   handleCancelStream(@ConnectedSocket() client: Socket) {
     this.logger.log(`Stream cancellation requested: ${client.id}`);
     this.activeStreams.delete(client.id);
-    client.emit('stream_cancelled');
+    client.emit("stream_cancelled");
   }
 
-  @SubscribeMessage('feedback')
+  @SubscribeMessage("feedback")
   async handleFeedback(
     @MessageBody() data: { traceId: string; feedback: number },
     @ConnectedSocket() client: Socket,
@@ -206,17 +211,19 @@ export class AIChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         data: { userFeedback: data.feedback },
       });
 
-      client.emit('feedback_received', { traceId: data.traceId });
-      
-      this.logger.debug(`Feedback received for trace ${data.traceId}: ${data.feedback}`);
+      client.emit("feedback_received", { traceId: data.traceId });
+
+      this.logger.debug(
+        `Feedback received for trace ${data.traceId}: ${data.feedback}`,
+      );
     } catch (error) {
-      this.logger.error('Failed to save feedback:', error);
+      this.logger.error("Failed to save feedback:", error);
     }
   }
 
-  @SubscribeMessage('ping')
+  @SubscribeMessage("ping")
   handlePing(@ConnectedSocket() client: Socket) {
-    client.emit('pong', { timestamp: Date.now() });
+    client.emit("pong", { timestamp: Date.now() });
   }
 
   private buildPrompt(userQuery: string, systemInstruction?: string): string {
@@ -261,7 +268,7 @@ Your role:
         },
       });
     } catch (error) {
-      this.logger.error('Failed to log execution:', error);
+      this.logger.error("Failed to log execution:", error);
       // Don't throw - logging failure shouldn't break the flow
     }
   }

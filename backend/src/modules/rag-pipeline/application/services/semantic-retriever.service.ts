@@ -1,15 +1,24 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import { IRetriever, RetrievalConfig } from '../../domain/interfaces/retriever.interface';
-import { RetrievalResult, AggregatedRetrievalResults } from '../../domain/entities/retrieval-result.entity';
-import { IVectorStore, VectorSearchFilter } from '../../domain/interfaces/vector-store.interface';
-import { IEmbeddingService } from '../../domain/interfaces/embedding-service.interface';
-import { QdrantService } from '../../infrastructure/qdrant/qdrant.service';
-import { LocalEmbeddingService } from './local-embedding.service';
+import { Injectable, Logger } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
+import {
+  IRetriever,
+  RetrievalConfig,
+} from "../../domain/interfaces/retriever.interface";
+import {
+  RetrievalResult,
+  AggregatedRetrievalResults,
+} from "../../domain/entities/retrieval-result.entity";
+import {
+  IVectorStore,
+  VectorSearchFilter,
+} from "../../domain/interfaces/vector-store.interface";
+import { IEmbeddingService } from "../../domain/interfaces/embedding-service.interface";
+import { QdrantService } from "../../infrastructure/qdrant/qdrant.service";
+import { LocalEmbeddingService } from "./local-embedding.service";
 
 /**
  * Semantic Retriever Service
- * 
+ *
  * Implements hybrid search and re-ranking for RAG pipeline
  * - Searches multiple collections
  * - Re-ranks by relevance, recency, and user feedback
@@ -19,7 +28,7 @@ import { LocalEmbeddingService } from './local-embedding.service';
 @Injectable()
 export class SemanticRetrieverService implements IRetriever {
   private readonly logger = new Logger(SemanticRetrieverService.name);
-  
+
   private readonly defaultConfig: RetrievalConfig = {
     topK: 10,
     scoreThreshold: 0.7,
@@ -47,15 +56,19 @@ export class SemanticRetrieverService implements IRetriever {
 
     try {
       // 1. Generate query embedding
-      const queryEmbedding = await this.embeddingService.generateEmbedding(query);
-      
+      const queryEmbedding =
+        await this.embeddingService.generateEmbedding(query);
+
       // 2. Search user's financial context (if userId provided)
       const userContext = userId
         ? await this.searchUserContext(queryEmbedding.vector, userId, 5)
         : [];
 
       // 3. Search knowledge base
-      const knowledge = await this.searchKnowledgeBase(queryEmbedding.vector, 3);
+      const knowledge = await this.searchKnowledgeBase(
+        queryEmbedding.vector,
+        3,
+      );
 
       // 4. Search conversation history (if userId provided)
       const conversations = userId
@@ -78,7 +91,7 @@ export class SemanticRetrieverService implements IRetriever {
 
       return topResults;
     } catch (error) {
-      this.logger.error('Context retrieval failed:', error);
+      this.logger.error("Context retrieval failed:", error);
       throw error;
     }
   }
@@ -91,8 +104,10 @@ export class SemanticRetrieverService implements IRetriever {
     userId: string,
     limit: number,
   ): Promise<RetrievalResult[]> {
-    const collectionName = this.configService.get('qdrant.collections.userContext.name');
-    
+    const collectionName = this.configService.get(
+      "qdrant.collections.userContext.name",
+    );
+
     const results = await this.vectorStore.search({
       collection: collectionName,
       vector,
@@ -101,13 +116,16 @@ export class SemanticRetrieverService implements IRetriever {
       scoreThreshold: 0.6,
     });
 
-    return results.map(r => new RetrievalResult({
-      id: r.id,
-      text: r.payload.text,
-      score: r.score,
-      metadata: r.payload,
-      collection: 'user_context',
-    }));
+    return results.map(
+      (r) =>
+        new RetrievalResult({
+          id: r.id,
+          text: r.payload.text,
+          score: r.score,
+          metadata: r.payload,
+          collection: "user_context",
+        }),
+    );
   }
 
   /**
@@ -117,8 +135,10 @@ export class SemanticRetrieverService implements IRetriever {
     vector: number[],
     limit: number,
   ): Promise<RetrievalResult[]> {
-    const collectionName = this.configService.get('qdrant.collections.knowledgeBase.name');
-    
+    const collectionName = this.configService.get(
+      "qdrant.collections.knowledgeBase.name",
+    );
+
     const results = await this.vectorStore.search({
       collection: collectionName,
       vector,
@@ -126,13 +146,16 @@ export class SemanticRetrieverService implements IRetriever {
       scoreThreshold: 0.7,
     });
 
-    return results.map(r => new RetrievalResult({
-      id: r.id,
-      text: r.payload.answer || r.payload.text,
-      score: r.score,
-      metadata: r.payload,
-      collection: 'knowledge',
-    }));
+    return results.map(
+      (r) =>
+        new RetrievalResult({
+          id: r.id,
+          text: r.payload.answer || r.payload.text,
+          score: r.score,
+          metadata: r.payload,
+          collection: "knowledge",
+        }),
+    );
   }
 
   /**
@@ -143,8 +166,10 @@ export class SemanticRetrieverService implements IRetriever {
     userId: string,
     limit: number,
   ): Promise<RetrievalResult[]> {
-    const collectionName = this.configService.get('qdrant.collections.conversations.name');
-    
+    const collectionName = this.configService.get(
+      "qdrant.collections.conversations.name",
+    );
+
     const results = await this.vectorStore.search({
       collection: collectionName,
       vector,
@@ -153,13 +178,16 @@ export class SemanticRetrieverService implements IRetriever {
       scoreThreshold: 0.65,
     });
 
-    return results.map(r => new RetrievalResult({
-      id: r.id,
-      text: `Q: ${r.payload.query}\nA: ${r.payload.response}`,
-      score: r.score,
-      metadata: r.payload,
-      collection: 'conversation',
-    }));
+    return results.map(
+      (r) =>
+        new RetrievalResult({
+          id: r.id,
+          text: `Q: ${r.payload.query}\nA: ${r.payload.response}`,
+          score: r.score,
+          metadata: r.payload,
+          collection: "conversation",
+        }),
+    );
   }
 
   /**
@@ -172,7 +200,7 @@ export class SemanticRetrieverService implements IRetriever {
     limit: number = 10,
   ): Promise<RetrievalResult[]> {
     const queryEmbedding = await this.embeddingService.generateEmbedding(query);
-    
+
     const results = await this.vectorStore.search({
       collection,
       vector: queryEmbedding.vector,
@@ -181,13 +209,16 @@ export class SemanticRetrieverService implements IRetriever {
       scoreThreshold: 0.6,
     });
 
-    return results.map(r => new RetrievalResult({
-      id: r.id,
-      text: r.payload.text,
-      score: r.score,
-      metadata: r.payload,
-      collection,
-    }));
+    return results.map(
+      (r) =>
+        new RetrievalResult({
+          id: r.id,
+          text: r.payload.text,
+          score: r.score,
+          metadata: r.payload,
+          collection,
+        }),
+    );
   }
 
   /**
@@ -200,12 +231,12 @@ export class SemanticRetrieverService implements IRetriever {
     topK: number = 10,
   ): Promise<RetrievalResult[]> {
     const queryEmbedding = await this.embeddingService.generateEmbedding(query);
-    
+
     const allResults: RetrievalResult[] = [];
 
     for (const collection of collections) {
       const filter = userId ? { userId } : undefined;
-      
+
       const results = await this.vectorStore.search({
         collection,
         vector: queryEmbedding.vector,
@@ -214,13 +245,18 @@ export class SemanticRetrieverService implements IRetriever {
         scoreThreshold: 0.6,
       });
 
-      allResults.push(...results.map(r => new RetrievalResult({
-        id: r.id,
-        text: r.payload.text,
-        score: r.score,
-        metadata: r.payload,
-        collection,
-      })));
+      allResults.push(
+        ...results.map(
+          (r) =>
+            new RetrievalResult({
+              id: r.id,
+              text: r.payload.text,
+              score: r.score,
+              metadata: r.payload,
+              collection,
+            }),
+        ),
+      );
     }
 
     // Re-rank and take top K
@@ -230,7 +266,7 @@ export class SemanticRetrieverService implements IRetriever {
 
   /**
    * Re-rank results using composite scoring
-   * 
+   *
    * Score = vector_similarity * (1 - diversityWeight - recencyWeight)
    *       + recency_score * recencyWeight
    *       + diversity_bonus * diversityWeight
@@ -243,9 +279,9 @@ export class SemanticRetrieverService implements IRetriever {
     if (results.length === 0) return [];
 
     const finalConfig = { ...this.defaultConfig, ...config };
-    
+
     // Calculate min/max scores for normalization
-    const scores = results.map(r => r.score);
+    const scores = results.map((r) => r.score);
     const minScore = Math.min(...scores);
     const maxScore = Math.max(...scores);
 
@@ -253,7 +289,7 @@ export class SemanticRetrieverService implements IRetriever {
     const collectionCounts = new Map<string, number>();
 
     // Calculate composite scores
-    const scoredResults = results.map(result => {
+    const scoredResults = results.map((result) => {
       // Normalize vector similarity
       const normalizedSimilarity = result.normalizeScore(minScore, maxScore);
 
@@ -272,7 +308,8 @@ export class SemanticRetrieverService implements IRetriever {
 
       // Composite score
       const compositeScore =
-        normalizedSimilarity * (1 - finalConfig.diversityWeight - finalConfig.recencyWeight) +
+        normalizedSimilarity *
+          (1 - finalConfig.diversityWeight - finalConfig.recencyWeight) +
         recencyScore * finalConfig.recencyWeight +
         diversityBonus * finalConfig.diversityWeight +
         feedbackScore * 0.1;
@@ -291,7 +328,7 @@ export class SemanticRetrieverService implements IRetriever {
       result.rank = index + 1;
     });
 
-    return scoredResults;
+    return scoredResults as unknown as RetrievalResult[];
   }
 
   /**

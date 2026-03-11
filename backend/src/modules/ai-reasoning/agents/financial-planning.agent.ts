@@ -1,8 +1,8 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { BaseAgent } from './base.agent';
-import { AgentMessage, AgentResponse, AgentType } from '../types/agent.types';
-import { ToolRegistry } from '../services/tool-registry.service';
-import { DecisionTraceService } from '../services/decision-trace.service';
+import { Injectable, Logger } from "@nestjs/common";
+import { BaseAgent } from "./base.agent";
+import { AgentMessage, AgentResponse, AgentType } from "../types/agent.types";
+import { ToolRegistry } from "../services/tool-registry.service";
+import { DecisionTraceService } from "../services/decision-trace.service";
 
 /**
  * Financial Goal Interface
@@ -13,7 +13,7 @@ interface FinancialGoal {
   targetAmount: number;
   deadline: number; // years
   currentSavings: number;
-  priority: 'high' | 'medium' | 'low';
+  priority: "high" | "medium" | "low";
 }
 
 /**
@@ -115,13 +115,13 @@ export class FinancialPlanningAgent extends BaseAgent {
       // Route to appropriate handler based on task
       let result;
       switch (task) {
-        case 'create_plan':
+        case "create_plan":
           result = await this.createSavingsPlan(context, traceId);
           break;
-        case 'analyze_goal':
+        case "analyze_goal":
           result = await this.analyzeGoalFeasibility(context, traceId);
           break;
-        case 'optimize_timeline':
+        case "optimize_timeline":
           result = await this.optimizeTimeline(context, traceId);
           break;
         default:
@@ -166,14 +166,14 @@ export class FinancialPlanningAgent extends BaseAgent {
 
     const subgoals = this.decomposeGoal(goal);
     reasoning.push(
-      `Decomposed goal into ${subgoals.length} subgoals: ${subgoals.map((s) => s.name).join(', ')}`,
+      `Decomposed goal into ${subgoals.length} subgoals: ${subgoals.map((s) => s.name).join(", ")}`,
     );
 
     // Step 2: Calculate monthly savings required
-    await this.recordReasoning('Calculating required savings rate', traceId);
+    await this.recordReasoning("Calculating required savings rate", traceId);
 
     const savingsCalculation = await this.callTool(
-      'calculate_savings_rate',
+      "calculate_savings_rate",
       {
         targetAmount: goal.targetAmount,
         currentSavings: goal.currentSavings,
@@ -183,10 +183,9 @@ export class FinancialPlanningAgent extends BaseAgent {
       traceId,
     );
 
-    toolsUsed.push('calculate_savings_rate');
+    toolsUsed.push("calculate_savings_rate");
 
-    const monthlySavingsRequired =
-      savingsCalculation.monthlySavingsRequired;
+    const monthlySavingsRequired = savingsCalculation.monthlySavingsRequired;
     reasoning.push(
       `Calculated monthly savings required: ₹${monthlySavingsRequired.toLocaleString()}`,
     );
@@ -205,7 +204,7 @@ export class FinancialPlanningAgent extends BaseAgent {
     );
 
     await this.recordReasoning(
-      `Feasibility check: ${isFeasible ? 'PASS' : 'FAIL'}`,
+      `Feasibility check: ${isFeasible ? "PASS" : "FAIL"}`,
       traceId,
     );
 
@@ -222,8 +221,7 @@ export class FinancialPlanningAgent extends BaseAgent {
     // Step 5: Build savings plan
     const plan: SavingsPlan = {
       monthlySavingsRequired,
-      totalInvestmentNeeded:
-        goal.targetAmount - goal.currentSavings,
+      totalInvestmentNeeded: goal.targetAmount - goal.currentSavings,
       expectedReturns: this.DEFAULT_EXPECTED_RETURNS,
       projectedFinalAmount: savingsCalculation.projectedAmount,
       timeline,
@@ -256,7 +254,7 @@ export class FinancialPlanningAgent extends BaseAgent {
       monthlyExpenseEstimate * this.EMERGENCY_FUND_MONTHS;
 
     subgoals.push({
-      name: 'Build Emergency Fund',
+      name: "Build Emergency Fund",
       targetAmount: emergencyFundAmount,
       deadline: 1, // First year
       description: `Save ${this.EMERGENCY_FUND_MONTHS} months of expenses for financial security`,
@@ -265,10 +263,10 @@ export class FinancialPlanningAgent extends BaseAgent {
     // Subgoal 2: Initial capital accumulation (20% of target)
     const initialCapital = goal.targetAmount * 0.2;
     subgoals.push({
-      name: 'Initial Capital Accumulation',
+      name: "Initial Capital Accumulation",
       targetAmount: initialCapital,
       deadline: Math.ceil(goal.deadline * 0.3), // First 30% of timeline
-      description: 'Build initial investment corpus for compounding',
+      description: "Build initial investment corpus for compounding",
     });
 
     // Subgoal 3: Main goal achievement
@@ -276,7 +274,7 @@ export class FinancialPlanningAgent extends BaseAgent {
       name: goal.name,
       targetAmount: goal.targetAmount,
       deadline: goal.deadline,
-      description: 'Achieve primary financial goal',
+      description: "Achieve primary financial goal",
     });
 
     return subgoals;
@@ -291,7 +289,7 @@ export class FinancialPlanningAgent extends BaseAgent {
     monthlySavings: number,
     annualReturns: number,
   ): Array<{ year: number; targetAmount: number; milestone: string }> {
-    const timeline = [];
+    const timeline: Array<{ year: number; targetAmount: number; milestone: string }> = [];
 
     for (let year = 1; year <= years; year++) {
       // Calculate expected corpus at end of this year
@@ -303,15 +301,15 @@ export class FinancialPlanningAgent extends BaseAgent {
 
       const percentComplete = (futureValue / targetAmount) * 100;
 
-      let milestone = '';
+      let milestone = "";
       if (percentComplete >= 90) {
-        milestone = 'Final push - goal in sight!';
+        milestone = "Final push - goal in sight!";
       } else if (percentComplete >= 50) {
-        milestone = 'Halfway there - maintain momentum';
+        milestone = "Halfway there - maintain momentum";
       } else if (percentComplete >= 25) {
-        milestone = 'Quarter complete - compounding taking effect';
+        milestone = "Quarter complete - compounding taking effect";
       } else {
-        milestone = 'Building foundation';
+        milestone = "Building foundation";
       }
 
       timeline.push({
@@ -334,16 +332,16 @@ export class FinancialPlanningAgent extends BaseAgent {
   ): string[] {
     if (isFeasible) {
       return [
-        'Consult Investment Advisor Agent for asset allocation',
-        'Run Simulation Agent to assess downside risk',
-        'Create automated savings setup',
+        "Consult Investment Advisor Agent for asset allocation",
+        "Run Simulation Agent to assess downside risk",
+        "Create automated savings setup",
       ];
     } else {
       return [
         `Extend deadline from ${goal.deadline} to ${Math.ceil(goal.deadline * 1.5)} years`,
-        'Explore additional income sources',
-        'Reassess goal amount and prioritize essentials',
-        'Consider partial goal achievement strategy',
+        "Explore additional income sources",
+        "Reassess goal amount and prioritize essentials",
+        "Consider partial goal achievement strategy",
       ];
     }
   }
@@ -362,7 +360,8 @@ export class FinancialPlanningAgent extends BaseAgent {
 
     // Quick feasibility check
     const requiredMonthlyRate = goal.targetAmount / (goal.deadline * 12);
-    const feasible = requiredMonthlyRate / monthlyIncome <= this.MAX_INCOME_ALLOCATION;
+    const feasible =
+      requiredMonthlyRate / monthlyIncome <= this.MAX_INCOME_ALLOCATION;
 
     reasoning.push(`Goal: ${goal.name}`);
     reasoning.push(`Target: ₹${goal.targetAmount.toLocaleString()}`);
@@ -370,13 +369,15 @@ export class FinancialPlanningAgent extends BaseAgent {
     reasoning.push(
       `Simple monthly requirement: ₹${requiredMonthlyRate.toLocaleString()}`,
     );
-    reasoning.push(`Feasible: ${feasible ? 'Yes' : 'No'}`);
+    reasoning.push(`Feasible: ${feasible ? "Yes" : "No"}`);
 
     return this.createSuccessResponse(
       {
         feasible,
         requiredMonthlyRate,
-        recommendedTimeline: feasible ? goal.deadline : Math.ceil(goal.deadline * 1.5),
+        recommendedTimeline: feasible
+          ? goal.deadline
+          : Math.ceil(goal.deadline * 1.5),
       },
       reasoning,
       [],
@@ -405,7 +406,7 @@ export class FinancialPlanningAgent extends BaseAgent {
     while (minYears <= maxYears) {
       const testYears = Math.floor((minYears + maxYears) / 2);
 
-      const calculation = await this.callTool('calculate_savings_rate', {
+      const calculation = await this.callTool("calculate_savings_rate", {
         targetAmount: goal.targetAmount,
         currentSavings: goal.currentSavings,
         timelineYears: testYears,
@@ -433,7 +434,7 @@ export class FinancialPlanningAgent extends BaseAgent {
         timelineDifference: optimalYears - goal.deadline,
       },
       reasoning,
-      ['calculate_savings_rate'],
+      ["calculate_savings_rate"],
       0.88,
     );
   }
@@ -443,18 +444,16 @@ export class FinancialPlanningAgent extends BaseAgent {
    */
   private validateContext(context: any): void {
     if (!context.goal) {
-      throw new Error('Missing required context: goal');
+      throw new Error("Missing required context: goal");
     }
 
     if (!context.monthlyIncome) {
-      throw new Error('Missing required context: monthlyIncome');
+      throw new Error("Missing required context: monthlyIncome");
     }
 
     const goal = context.goal;
     if (!goal.targetAmount || !goal.deadline) {
-      throw new Error(
-        'Invalid goal: must have targetAmount and deadline',
-      );
+      throw new Error("Invalid goal: must have targetAmount and deadline");
     }
   }
 }

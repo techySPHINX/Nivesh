@@ -1,8 +1,8 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { BaseAgent } from './base.agent';
-import { AgentMessage, AgentResponse, AgentType } from '../types/agent.types';
-import { ToolRegistry } from '../services/tool-registry.service';
-import { DecisionTraceService } from '../services/decision-trace.service';
+import { Injectable, Logger } from "@nestjs/common";
+import { BaseAgent } from "./base.agent";
+import { AgentMessage, AgentResponse, AgentType } from "../types/agent.types";
+import { ToolRegistry } from "../services/tool-registry.service";
+import { DecisionTraceService } from "../services/decision-trace.service";
 
 /**
  * Simulation Scenario Interface
@@ -46,7 +46,7 @@ interface AffordabilityResult {
   emi: number;
   affordable: boolean;
   maxAffordableLoan: number;
-  riskLevel: 'low' | 'medium' | 'high';
+  riskLevel: "low" | "medium" | "high";
   stressTestResults: {
     incomeReduction20Percent: boolean;
     interestRateIncrease2Percent: boolean;
@@ -125,24 +125,21 @@ export class SimulationAgent extends BaseAgent {
     this.logger.log(`Executing SimulationAgent: ${task}`);
 
     try {
-      await this.recordReasoning(
-        `Starting simulation task: ${task}`,
-        traceId,
-      );
+      await this.recordReasoning(`Starting simulation task: ${task}`, traceId);
 
       // Route to appropriate handler
       let result;
       switch (task) {
-        case 'run_monte_carlo':
+        case "run_monte_carlo":
           result = await this.runMonteCarloSimulation(context, traceId);
           break;
-        case 'check_affordability':
+        case "check_affordability":
           result = await this.checkLoanAffordability(context, traceId);
           break;
-        case 'assess_goal_probability':
+        case "assess_goal_probability":
           result = await this.assessGoalProbability(context, traceId);
           break;
-        case 'retirement_simulation':
+        case "retirement_simulation":
           result = await this.runRetirementSimulation(context, traceId);
           break;
         default:
@@ -189,7 +186,7 @@ export class SimulationAgent extends BaseAgent {
 
     // Call simulation tool
     const simulationResults = await this.callTool(
-      'run_monte_carlo_simulation',
+      "run_monte_carlo_simulation",
       {
         monthlyInvestment: scenario.monthlyInvestment,
         years: scenario.years,
@@ -200,7 +197,7 @@ export class SimulationAgent extends BaseAgent {
       traceId,
     );
 
-    toolsUsed.push('run_monte_carlo_simulation');
+    toolsUsed.push("run_monte_carlo_simulation");
 
     // Analyze results
     const result: SimulationResult = {
@@ -227,9 +224,7 @@ export class SimulationAgent extends BaseAgent {
       ],
     };
 
-    reasoning.push(
-      `Median outcome: ₹${result.medianOutcome.toLocaleString()}`,
-    );
+    reasoning.push(`Median outcome: ₹${result.medianOutcome.toLocaleString()}`);
     reasoning.push(
       `Best case (90th percentile): ₹${result.bestCase.toLocaleString()}`,
     );
@@ -285,11 +280,11 @@ export class SimulationAgent extends BaseAgent {
     reasoning.push(`Tenure: ${tenureYears} years`);
     reasoning.push(`Monthly income: ₹${monthlyIncome.toLocaleString()}`);
 
-    await this.recordReasoning('Calculating loan affordability', traceId);
+    await this.recordReasoning("Calculating loan affordability", traceId);
 
     // Calculate EMI
     const emi = await this.callTool(
-      'calculate_emi',
+      "calculate_emi",
       {
         principal: loanAmount,
         rate: interestRate,
@@ -298,7 +293,7 @@ export class SimulationAgent extends BaseAgent {
       traceId,
     );
 
-    toolsUsed.push('calculate_emi');
+    toolsUsed.push("calculate_emi");
 
     const emiToIncomeRatio = emi.monthlyEMI / monthlyIncome;
 
@@ -309,52 +304,52 @@ export class SimulationAgent extends BaseAgent {
 
     // Determine affordability
     const affordable = emiToIncomeRatio <= this.MAX_EMI_TO_INCOME_RATIO;
-    const riskLevel: 'low' | 'medium' | 'high' =
+    const riskLevel: "low" | "medium" | "high" =
       emiToIncomeRatio <= this.SAFE_EMI_TO_INCOME_RATIO
-        ? 'low'
+        ? "low"
         : emiToIncomeRatio <= this.MAX_EMI_TO_INCOME_RATIO
-          ? 'medium'
-          : 'high';
+          ? "medium"
+          : "high";
 
     reasoning.push(
       affordable
-        ? '✓ Loan is affordable within 40% limit'
-        : '✗ Loan exceeds 40% income allocation limit',
+        ? "✓ Loan is affordable within 40% limit"
+        : "✗ Loan exceeds 40% income allocation limit",
     );
     reasoning.push(`Risk level: ${riskLevel.toUpperCase()}`);
 
-    await this.recordReasoning('Running stress tests', traceId);
+    await this.recordReasoning("Running stress tests", traceId);
 
     // Stress testing
     const stressTestResults = {
       incomeReduction20Percent:
-        emi.monthlyEMI / (monthlyIncome * 0.8) <=
-        this.MAX_EMI_TO_INCOME_RATIO,
+        emi.monthlyEMI / (monthlyIncome * 0.8) <= this.MAX_EMI_TO_INCOME_RATIO,
       interestRateIncrease2Percent:
-        (await this.callTool(
-          'calculate_emi',
-          {
-            principal: loanAmount,
-            rate: interestRate + 0.02,
-            tenure: tenureYears,
-          },
-          traceId,
-        )).monthlyEMI /
+        (
+          await this.callTool(
+            "calculate_emi",
+            {
+              principal: loanAmount,
+              rate: interestRate + 0.02,
+              tenure: tenureYears,
+            },
+            traceId,
+          )
+        ).monthlyEMI /
           monthlyIncome <=
         this.MAX_EMI_TO_INCOME_RATIO,
-      jobLoss3Months:
-        (context.emergencyFund || 0) >= emi.monthlyEMI * 3,
+      jobLoss3Months: (context.emergencyFund || 0) >= emi.monthlyEMI * 3,
     };
 
-    reasoning.push('Stress test results:');
+    reasoning.push("Stress test results:");
     reasoning.push(
-      `  20% income reduction: ${stressTestResults.incomeReduction20Percent ? '✓ Pass' : '✗ Fail'}`,
+      `  20% income reduction: ${stressTestResults.incomeReduction20Percent ? "✓ Pass" : "✗ Fail"}`,
     );
     reasoning.push(
-      `  2% interest rate increase: ${stressTestResults.interestRateIncrease2Percent ? '✓ Pass' : '✗ Fail'}`,
+      `  2% interest rate increase: ${stressTestResults.interestRateIncrease2Percent ? "✓ Pass" : "✗ Fail"}`,
     );
     reasoning.push(
-      `  3-month job loss coverage: ${stressTestResults.jobLoss3Months ? '✓ Pass' : '✗ Fail'}`,
+      `  3-month job loss coverage: ${stressTestResults.jobLoss3Months ? "✓ Pass" : "✗ Fail"}`,
     );
 
     // Calculate max affordable loan
@@ -379,7 +374,7 @@ export class SimulationAgent extends BaseAgent {
     };
 
     await this.recordReasoning(
-      `Affordability check: ${affordable ? 'PASS' : 'FAIL'}`,
+      `Affordability check: ${affordable ? "PASS" : "FAIL"}`,
       traceId,
     );
 
@@ -389,11 +384,14 @@ export class SimulationAgent extends BaseAgent {
       toolsUsed,
       0.9,
       affordable
-        ? ['Proceed with loan application', 'Build emergency fund for 6 months EMI']
+        ? [
+            "Proceed with loan application",
+            "Build emergency fund for 6 months EMI",
+          ]
         : [
             `Reduce loan to ₹${maxAffordableLoan.toLocaleString()}`,
-            'Increase down payment',
-            'Consider longer tenure',
+            "Increase down payment",
+            "Consider longer tenure",
           ],
     );
   }
@@ -410,15 +408,13 @@ export class SimulationAgent extends BaseAgent {
 
     const reasoning: string[] = [];
 
-    reasoning.push(
-      `Target amount: ₹${targetAmount.toLocaleString()}`,
-    );
+    reasoning.push(`Target amount: ₹${targetAmount.toLocaleString()}`);
     reasoning.push(
       `Investment plan: ₹${scenario.monthlyInvestment.toLocaleString()}/month for ${scenario.years} years`,
     );
 
     await this.recordReasoning(
-      'Assessing goal achievement probability',
+      "Assessing goal achievement probability",
       traceId,
     );
 
@@ -438,16 +434,15 @@ export class SimulationAgent extends BaseAgent {
     );
 
     // Provide recommendation based on probability
-    let recommendation = '';
+    let recommendation = "";
     if (probability >= 0.9) {
-      recommendation = 'Excellent - Plan is highly likely to succeed';
+      recommendation = "Excellent - Plan is highly likely to succeed";
     } else if (probability >= 0.75) {
-      recommendation = 'Good - Plan has strong chance of success';
+      recommendation = "Good - Plan has strong chance of success";
     } else if (probability >= 0.5) {
-      recommendation =
-        'Moderate - Consider increasing savings or timeline';
+      recommendation = "Moderate - Consider increasing savings or timeline";
     } else {
-      recommendation = 'Low - Plan needs significant adjustment';
+      recommendation = "Low - Plan needs significant adjustment";
     }
 
     reasoning.push(`Recommendation: ${recommendation}`);
@@ -465,10 +460,10 @@ export class SimulationAgent extends BaseAgent {
       probability < 0.75
         ? [
             `Increase monthly investment by ${Math.ceil((1 - probability) * 20)}%`,
-            'Extend timeline by 1-2 years',
-            'Adjust expected returns or risk profile',
+            "Extend timeline by 1-2 years",
+            "Adjust expected returns or risk profile",
           ]
-        : ['Maintain current plan', 'Review annually'],
+        : ["Maintain current plan", "Review annually"],
     );
   }
 
@@ -490,19 +485,21 @@ export class SimulationAgent extends BaseAgent {
 
     const reasoning: string[] = [];
 
-    reasoning.push(`Current age: ${currentAge}, Retirement age: ${retirementAge}`);
+    reasoning.push(
+      `Current age: ${currentAge}, Retirement age: ${retirementAge}`,
+    );
     reasoning.push(`Years to retirement: ${yearsToRetirement}`);
     reasoning.push(
       `Monthly investment: ₹${monthlyInvestment.toLocaleString()}`,
     );
 
-    await this.recordReasoning('Simulating retirement corpus', traceId);
+    await this.recordReasoning("Simulating retirement corpus", traceId);
 
     // Accumulation phase simulation
     const accumulationResult = await this.runMonteCarloSimulation(
       {
         scenario: {
-          name: 'Retirement Accumulation',
+          name: "Retirement Accumulation",
           monthlyInvestment,
           years: yearsToRetirement,
           expectedReturn: 0.12,
@@ -529,7 +526,8 @@ export class SimulationAgent extends BaseAgent {
     // Adjust for inflation
     const inflationRate = context.inflationRate || this.DEFAULT_INFLATION;
     const inflationAdjustedIncome =
-      monthlyIncomeInRetirement / Math.pow(1 + inflationRate, yearsToRetirement);
+      monthlyIncomeInRetirement /
+      Math.pow(1 + inflationRate, yearsToRetirement);
 
     reasoning.push(
       `Inflation-adjusted monthly income (today's value): ₹${inflationAdjustedIncome.toLocaleString()}`,
@@ -549,9 +547,9 @@ export class SimulationAgent extends BaseAgent {
       accumulationResult.toolsUsed,
       0.85,
       [
-        'Review retirement corpus annually',
-        'Adjust contributions as income increases',
-        'Consider increasing equity allocation if young',
+        "Review retirement corpus annually",
+        "Adjust contributions as income increases",
+        "Consider increasing equity allocation if young",
       ],
     );
   }
@@ -575,31 +573,31 @@ export class SimulationAgent extends BaseAgent {
     targetAmount?: number,
   ): string[] {
     if (!targetAmount) {
-      return ['Define specific target amount for goal analysis'];
+      return ["Define specific target amount for goal analysis"];
     }
 
     if (probability >= 0.9) {
       return [
-        'Current plan has excellent success rate',
-        'Consider reducing risk in final years',
+        "Current plan has excellent success rate",
+        "Consider reducing risk in final years",
       ];
     } else if (probability >= 0.75) {
       return [
-        'Plan is on track with good probability',
-        'Monitor annually and adjust if needed',
+        "Plan is on track with good probability",
+        "Monitor annually and adjust if needed",
       ];
     } else if (probability >= 0.5) {
       return [
-        'Increase monthly investment by 15-20%',
-        'Extend timeline by 1-2 years',
-        'Review asset allocation for higher returns',
+        "Increase monthly investment by 15-20%",
+        "Extend timeline by 1-2 years",
+        "Review asset allocation for higher returns",
       ];
     } else {
       return [
-        'Significant adjustment needed',
-        'Increase investment by 30%+ or extend timeline',
-        'Consult with Financial Planning Agent',
-        'Consider reducing target amount',
+        "Significant adjustment needed",
+        "Increase investment by 30%+ or extend timeline",
+        "Consult with Financial Planning Agent",
+        "Consider reducing target amount",
       ];
     }
   }
@@ -617,8 +615,7 @@ export class SimulationAgent extends BaseAgent {
 
     // Loan = EMI * [(1 - (1 + r)^-n) / r]
     const maxLoan =
-      maxEMI *
-      ((1 - Math.pow(1 + monthlyRate, -totalMonths)) / monthlyRate);
+      maxEMI * ((1 - Math.pow(1 + monthlyRate, -totalMonths)) / monthlyRate);
 
     return Math.floor(maxLoan);
   }

@@ -1,9 +1,9 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { RetrievalResult } from '../../domain/entities/retrieval-result.entity';
+import { Injectable, Logger } from "@nestjs/common";
+import { RetrievalResult } from "../../domain/entities/retrieval-result.entity";
 
 /**
  * Context Builder Service
- * 
+ *
  * Builds enriched prompts from retrieved vectors for LLM generation
  * - Formats context in structured way
  * - Adds source citations
@@ -31,7 +31,7 @@ export class ContextBuilderService {
     const grouped = this.groupByCollection(retrievedDocs);
 
     let contextSection = this.buildContextSection(grouped);
-    
+
     // Truncate if too long
     contextSection = this.truncateContext(contextSection);
 
@@ -82,18 +82,16 @@ Generate a helpful response:`;
   /**
    * Build context section from grouped results
    */
-  private buildContextSection(
-    grouped: Map<string, RetrievalResult[]>,
-  ): string {
-    let contextSection = 'Relevant Context Retrieved:\n\n';
+  private buildContextSection(grouped: Map<string, RetrievalResult[]>): string {
+    let contextSection = "Relevant Context Retrieved:\n\n";
     let sourceIndex = 1;
 
     // User's financial context (highest priority)
-    if (grouped.has('user_context')) {
-      contextSection += '📊 Your Financial Data:\n';
-      const userDocs = grouped.get('user_context')!;
-      
-      userDocs.forEach(doc => {
+    if (grouped.has("user_context")) {
+      contextSection += "📊 Your Financial Data:\n";
+      const userDocs = grouped.get("user_context")!;
+
+      userDocs.forEach((doc) => {
         contextSection += `[${sourceIndex}] ${doc.text}\n`;
         contextSection += `   (Relevance: ${(doc.score * 100).toFixed(0)}%, ${this.formatMetadata(doc.metadata)})\n\n`;
         sourceIndex++;
@@ -101,23 +99,23 @@ Generate a helpful response:`;
     }
 
     // Financial knowledge base
-    if (grouped.has('knowledge')) {
-      contextSection += '📚 Financial Knowledge:\n';
-      const knowledgeDocs = grouped.get('knowledge')!;
-      
-      knowledgeDocs.forEach(doc => {
+    if (grouped.has("knowledge")) {
+      contextSection += "📚 Financial Knowledge:\n";
+      const knowledgeDocs = grouped.get("knowledge")!;
+
+      knowledgeDocs.forEach((doc) => {
         contextSection += `[${sourceIndex}] ${doc.text}\n`;
-        contextSection += `   (Source: ${doc.metadata.source || 'Knowledge Base'}, Relevance: ${(doc.score * 100).toFixed(0)}%)\n\n`;
+        contextSection += `   (Source: ${doc.metadata.source || "Knowledge Base"}, Relevance: ${(doc.score * 100).toFixed(0)}%)\n\n`;
         sourceIndex++;
       });
     }
 
     // Conversation history (for context continuity)
-    if (grouped.has('conversation')) {
-      contextSection += '💬 Previous Conversations:\n';
-      const conversationDocs = grouped.get('conversation')!;
-      
-      conversationDocs.forEach(doc => {
+    if (grouped.has("conversation")) {
+      contextSection += "💬 Previous Conversations:\n";
+      const conversationDocs = grouped.get("conversation")!;
+
+      conversationDocs.forEach((doc) => {
         contextSection += `[${sourceIndex}] ${doc.text}\n`;
         contextSection += `   (Previous interaction, Relevance: ${(doc.score * 100).toFixed(0)}%)\n\n`;
         sourceIndex++;
@@ -135,7 +133,7 @@ Generate a helpful response:`;
   ): Map<string, RetrievalResult[]> {
     const grouped = new Map<string, RetrievalResult[]>();
 
-    results.forEach(result => {
+    results.forEach((result) => {
       if (!grouped.has(result.collection)) {
         grouped.set(result.collection, []);
       }
@@ -157,18 +155,18 @@ Generate a helpful response:`;
 
     if (metadata.date) {
       const date = new Date(metadata.date);
-      parts.push(`Date: ${date.toLocaleDateString('en-IN')}`);
+      parts.push(`Date: ${date.toLocaleDateString("en-IN")}`);
     }
 
     if (metadata.amount) {
-      parts.push(`Amount: ₹${metadata.amount.toLocaleString('en-IN')}`);
+      parts.push(`Amount: ₹${metadata.amount.toLocaleString("en-IN")}`);
     }
 
     if (metadata.category) {
       parts.push(`Category: ${metadata.category}`);
     }
 
-    return parts.join(', ');
+    return parts.join(", ");
   }
 
   /**
@@ -177,7 +175,7 @@ Generate a helpful response:`;
    */
   private truncateContext(context: string): string {
     const maxChars = this.MAX_CONTEXT_LENGTH * 4;
-    
+
     if (context.length <= maxChars) {
       return context;
     }
@@ -186,7 +184,10 @@ Generate a helpful response:`;
       `Context truncated from ${context.length} to ${maxChars} characters`,
     );
 
-    return context.substring(0, maxChars) + '\n\n[Context truncated due to length...]';
+    return (
+      context.substring(0, maxChars) +
+      "\n\n[Context truncated due to length...]"
+    );
   }
 
   /**
@@ -222,8 +223,8 @@ Quality standards:
       return currentQuery;
     }
 
-    let conversationContext = 'Previous Conversation:\n';
-    
+    let conversationContext = "Previous Conversation:\n";
+
     previousExchanges.slice(-3).forEach((exchange, index) => {
       conversationContext += `\nUser: ${exchange.query}\n`;
       conversationContext += `Assistant: ${exchange.response}\n`;
@@ -247,22 +248,24 @@ Quality standards:
     const categories: string[] = [];
 
     // Extract amounts (₹50000, Rs 1 lakh, etc.)
-    const amountRegex = /₹?(\d+(?:,\d+)*(?:\.\d+)?)\s*(lakh|crore|thousand|k)?/gi;
+    const amountRegex =
+      /₹?(\d+(?:,\d+)*(?:\.\d+)?)\s*(lakh|crore|thousand|k)?/gi;
     let match;
-    
+
     while ((match = amountRegex.exec(query)) !== null) {
-      let amount = parseFloat(match[1].replace(/,/g, ''));
+      let amount = parseFloat(match[1].replace(/,/g, ""));
       const unit = match[2]?.toLowerCase();
-      
-      if (unit === 'lakh') amount *= 100000;
-      else if (unit === 'crore') amount *= 10000000;
-      else if (unit === 'thousand' || unit === 'k') amount *= 1000;
-      
+
+      if (unit === "lakh") amount *= 100000;
+      else if (unit === "crore") amount *= 10000000;
+      else if (unit === "thousand" || unit === "k") amount *= 1000;
+
       amounts.push(amount);
     }
 
     // Extract dates (would need more sophisticated NLP in production)
-    const monthRegex = /\b(january|february|march|april|may|june|july|august|september|october|november|december)\b/gi;
+    const monthRegex =
+      /\b(january|february|march|april|may|june|july|august|september|october|november|december)\b/gi;
     const matches = query.match(monthRegex);
     if (matches) {
       dates.push(...matches);
@@ -270,11 +273,19 @@ Quality standards:
 
     // Extract common categories (simplified)
     const categoryKeywords = [
-      'food', 'transport', 'housing', 'entertainment', 'utilities',
-      'healthcare', 'education', 'shopping', 'investment', 'savings',
+      "food",
+      "transport",
+      "housing",
+      "entertainment",
+      "utilities",
+      "healthcare",
+      "education",
+      "shopping",
+      "investment",
+      "savings",
     ];
-    
-    categoryKeywords.forEach(keyword => {
+
+    categoryKeywords.forEach((keyword) => {
       if (query.toLowerCase().includes(keyword)) {
         categories.push(keyword);
       }

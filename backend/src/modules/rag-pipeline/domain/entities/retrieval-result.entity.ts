@@ -1,6 +1,6 @@
 /**
  * Retrieval Result Entity
- * 
+ *
  * Represents a single search result with relevance scoring
  */
 export class RetrievalResult {
@@ -34,7 +34,7 @@ export class RetrievalResult {
     const date = new Date(this.metadata.date || this.metadata.timestamp);
     const now = new Date();
     const daysSince = (now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24);
-    
+
     // Exponential decay: score = 0.5^(days / halfLife)
     return Math.pow(0.5, daysSince / halfLifeDays);
   }
@@ -68,7 +68,7 @@ export class AggregatedRetrievalResults {
    * Filter results by minimum relevance threshold
    */
   filterByThreshold(threshold: number): RetrievalResult[] {
-    return this.results.filter(r => r.isRelevant(threshold));
+    return this.results.filter((r) => r.isRelevant(threshold));
   }
 
   /**
@@ -95,7 +95,7 @@ export class AggregatedRetrievalResults {
    * Calculate diversity score (how many different collections represented)
    */
   calculateDiversity(): number {
-    const uniqueCollections = new Set(this.results.map(r => r.collection));
+    const uniqueCollections = new Set(this.results.map((r) => r.collection));
     return uniqueCollections.size / this.collections.length;
   }
 }

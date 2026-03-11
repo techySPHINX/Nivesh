@@ -1,6 +1,13 @@
-import { Injectable, Inject, Logger } from '@nestjs/common';
-import { CypherQuery, GraphQueryResult, IKnowledgeGraphRepository } from '../../domain';
-import { SpendingPattern, PatternType } from '../../domain/entities/spending-pattern.entity';
+import { Injectable, Inject, Logger } from "@nestjs/common";
+import {
+  CypherQuery,
+  GraphQueryResult,
+  IKnowledgeGraphRepository,
+} from "../../domain";
+import {
+  SpendingPattern,
+  PatternType,
+} from "../../domain/entities/spending-pattern.entity";
 
 /**
  * Service for detecting spending patterns from the knowledge graph
@@ -11,9 +18,9 @@ export class SpendingPatternDetector {
   private readonly logger = new Logger(SpendingPatternDetector.name);
 
   constructor(
-    @Inject('IKnowledgeGraphRepository')
+    @Inject("IKnowledgeGraphRepository")
     private readonly graphRepository: IKnowledgeGraphRepository,
-  ) { }
+  ) {}
 
   /**
    * Detect all patterns for a user
@@ -41,7 +48,9 @@ export class SpendingPatternDetector {
    * Detect recurring payment patterns
    * Identifies merchants with regular transaction intervals
    */
-  private async detectRecurringPayments(userId: string): Promise<SpendingPattern[]> {
+  private async detectRecurringPayments(
+    userId: string,
+  ): Promise<SpendingPattern[]> {
     const query = CypherQuery.create(
       `
       MATCH (u:User {id: $userId})-[:OWNS]->(a:Account)
@@ -63,7 +72,7 @@ export class SpendingPatternDetector {
     try {
       const result = await this.graphRepository.executeReadQuery<any>(query);
 
-      return result.records.map(record =>
+      return result.records.map((record) =>
         SpendingPattern.create({
           userId,
           patternType: PatternType.RECURRING_PAYMENT,
@@ -75,7 +84,7 @@ export class SpendingPatternDetector {
           timeframe: {
             startDate: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000),
             endDate: new Date(),
-            periodicity: 'monthly',
+            periodicity: "monthly",
           },
           metadata: {
             avgInterval: record.avgInterval,
@@ -86,10 +95,12 @@ export class SpendingPatternDetector {
             averageAmount: record.total / record.frequency,
             lastOccurrence: new Date(),
           } as any,
-        })
+        }),
       );
     } catch (error) {
-      this.logger.debug('Could not detect recurring payments, graph may not be populated yet');
+      this.logger.debug(
+        "Could not detect recurring payments, graph may not be populated yet",
+      );
       return [];
     }
   }
@@ -98,7 +109,9 @@ export class SpendingPatternDetector {
    * Detect category concentration patterns
    * High spending in specific categories
    */
-  private async detectCategoryConcentration(userId: string): Promise<SpendingPattern[]> {
+  private async detectCategoryConcentration(
+    userId: string,
+  ): Promise<SpendingPattern[]> {
     const query = CypherQuery.create(
       `
       MATCH (u:User {id: $userId})-[:OWNS]->(a:Account)
@@ -120,7 +133,7 @@ export class SpendingPatternDetector {
     try {
       const result = await this.graphRepository.executeReadQuery<any>(query);
 
-      return result.records.map(record =>
+      return result.records.map((record) =>
         SpendingPattern.create({
           userId,
           patternType: PatternType.CATEGORY_CONCENTRATION,
@@ -132,7 +145,7 @@ export class SpendingPatternDetector {
           timeframe: {
             startDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
             endDate: new Date(),
-            periodicity: 'monthly',
+            periodicity: "monthly",
           },
           metadata: {
             percentage: record.percentage * 100,
@@ -143,10 +156,10 @@ export class SpendingPatternDetector {
             averageAmount: record.categoryTotal / record.transactionCount,
             lastOccurrence: new Date(),
           } as any,
-        })
+        }),
       );
     } catch (error) {
-      this.logger.debug('Could not detect category concentration');
+      this.logger.debug("Could not detect category concentration");
       return [];
     }
   }
@@ -155,7 +168,9 @@ export class SpendingPatternDetector {
    * Detect merchant loyalty patterns
    * Frequent purchases at specific merchants
    */
-  private async detectMerchantLoyalty(userId: string): Promise<SpendingPattern[]> {
+  private async detectMerchantLoyalty(
+    userId: string,
+  ): Promise<SpendingPattern[]> {
     const query = CypherQuery.create(
       `
       MATCH (u:User {id: $userId})-[:OWNS]->(a:Account)
@@ -173,19 +188,19 @@ export class SpendingPatternDetector {
     try {
       const result = await this.graphRepository.executeReadQuery<any>(query);
 
-      return result.records.map(record =>
+      return result.records.map((record) =>
         SpendingPattern.create({
           userId,
           patternType: PatternType.MERCHANT_LOYALTY,
           nodes: [],
           relationships: [],
           frequency: record.visitCount,
-          confidence: 0.80,
+          confidence: 0.8,
           totalAmount: record.totalSpent,
           timeframe: {
             startDate: new Date(Date.now() - 60 * 24 * 60 * 60 * 1000),
             endDate: new Date(),
-            periodicity: 'monthly',
+            periodicity: "monthly",
           },
           metadata: {
             categories: [],
@@ -195,10 +210,10 @@ export class SpendingPatternDetector {
             averageAmount: record.totalSpent / record.visitCount,
             lastOccurrence: new Date(),
           } as any,
-        })
+        }),
       );
     } catch (error) {
-      this.logger.debug('Could not detect merchant loyalty');
+      this.logger.debug("Could not detect merchant loyalty");
       return [];
     }
   }
@@ -206,7 +221,9 @@ export class SpendingPatternDetector {
   /**
    * Detect time-of-day spending patterns
    */
-  private async detectTimeOfDayPatterns(userId: string): Promise<SpendingPattern[]> {
+  private async detectTimeOfDayPatterns(
+    userId: string,
+  ): Promise<SpendingPattern[]> {
     const query = CypherQuery.create(
       `
       MATCH (u:User {id: $userId})-[:OWNS]->(a:Account)-[:MADE_TRANSACTION]->(t:Transaction)
@@ -223,19 +240,19 @@ export class SpendingPatternDetector {
     try {
       const result = await this.graphRepository.executeReadQuery<any>(query);
 
-      return result.records.map(record =>
+      return result.records.map((record) =>
         SpendingPattern.create({
           userId,
           patternType: PatternType.TIME_OF_DAY,
           nodes: [],
           relationships: [],
           frequency: record.count,
-          confidence: 0.70,
+          confidence: 0.7,
           totalAmount: record.total,
           timeframe: {
             startDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
             endDate: new Date(),
-            periodicity: 'daily',
+            periodicity: "daily",
           },
           metadata: {
             categories: [],
@@ -245,10 +262,10 @@ export class SpendingPatternDetector {
             averageAmount: record.total / record.count,
             lastOccurrence: new Date(),
           } as any,
-        })
+        }),
       );
     } catch (error) {
-      this.logger.debug('Could not detect time-of-day patterns');
+      this.logger.debug("Could not detect time-of-day patterns");
       return [];
     }
   }
@@ -256,7 +273,9 @@ export class SpendingPatternDetector {
   /**
    * Detect unusual spending patterns (anomalies)
    */
-  private async detectUnusualSpending(userId: string): Promise<SpendingPattern[]> {
+  private async detectUnusualSpending(
+    userId: string,
+  ): Promise<SpendingPattern[]> {
     const query = CypherQuery.create(
       `
       MATCH (u:User {id: $userId})-[:OWNS]->(a:Account)-[:MADE_TRANSACTION]->(t:Transaction)
@@ -275,14 +294,14 @@ export class SpendingPatternDetector {
     try {
       const result = await this.graphRepository.executeReadQuery<any>(query);
 
-      return result.records.map(record =>
+      return result.records.map((record) =>
         SpendingPattern.create({
           userId,
           patternType: PatternType.UNUSUAL_SPENDING,
           nodes: [],
           relationships: [],
           frequency: 1,
-          confidence: 0.90,
+          confidence: 0.9,
           totalAmount: record.amount,
           timeframe: {
             startDate: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
@@ -296,10 +315,10 @@ export class SpendingPatternDetector {
             averageAmount: record.amount,
             lastOccurrence: new Date(),
           } as any,
-        })
+        }),
       );
     } catch (error) {
-      this.logger.debug('Could not detect unusual spending');
+      this.logger.debug("Could not detect unusual spending");
       return [];
     }
   }

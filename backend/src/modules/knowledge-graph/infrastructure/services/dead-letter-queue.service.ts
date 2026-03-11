@@ -1,5 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { KafkaProducerService } from '../../../../core/messaging/kafka/kafka.producer';
+import { Injectable, Logger } from "@nestjs/common";
+import { KafkaProducerService } from "../../../../core/messaging/kafka/kafka.producer";
 
 /**
  * Dead Letter Queue Service
@@ -9,10 +9,10 @@ import { KafkaProducerService } from '../../../../core/messaging/kafka/kafka.pro
 @Injectable()
 export class DeadLetterQueueService {
   private readonly logger = new Logger(DeadLetterQueueService.name);
-  private readonly DLQ_TOPIC = 'nivesh.dlq.events';
+  private readonly DLQ_TOPIC = "nivesh.dlq.events";
   private readonly MAX_RETRY_ATTEMPTS = 3;
 
-  constructor(private readonly kafkaProducer: KafkaProducerService) { }
+  constructor(private readonly kafkaProducer: KafkaProducerService) {}
 
   /**
    * Send failed event to DLQ
@@ -43,7 +43,7 @@ export class DeadLetterQueueService {
         `Event sent to DLQ after ${attemptCount} attempts. Topic: ${originalTopic}`,
       );
     } catch (dlqError) {
-      this.logger.error('Failed to send event to DLQ', dlqError);
+      this.logger.error("Failed to send event to DLQ", dlqError);
       // Log to persistent storage or alerting system
     }
   }

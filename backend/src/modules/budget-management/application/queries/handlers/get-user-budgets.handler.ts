@@ -1,8 +1,8 @@
-import { QueryHandler, IQueryHandler } from '@nestjs/cqrs';
-import { Injectable } from '@nestjs/common';
-import { GetUserBudgetsQuery } from '../get-user-budgets.query';
-import { PrismaService } from '../../../../../core/database/postgres/prisma.service';
-import { BudgetResponseDto } from '../../dto';
+import { QueryHandler, IQueryHandler } from "@nestjs/cqrs";
+import { Injectable } from "@nestjs/common";
+import { GetUserBudgetsQuery } from "../get-user-budgets.query";
+import { PrismaService } from "../../../../../core/database/postgres/prisma.service";
+import { BudgetResponseDto } from "../../dto";
 
 @QueryHandler(GetUserBudgetsQuery)
 @Injectable()
@@ -18,10 +18,10 @@ export class GetUserBudgetsHandler implements IQueryHandler<GetUserBudgetsQuery>
         ...(isActive !== undefined && { isActive }),
       },
       orderBy: {
-        createdAt: 'desc',
+        createdAt: "desc",
       },
     });
 
-    return budgets.map(budget => BudgetResponseDto.fromEntity(budget));
+    return budgets.map((budget) => BudgetResponseDto.fromEntity(budget));
   }
 }

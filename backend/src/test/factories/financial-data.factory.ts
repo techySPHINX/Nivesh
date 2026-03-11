@@ -3,31 +3,50 @@
  * Provides factory methods for creating test data
  */
 
-import { Account, AccountType, AccountStatus } from '../../modules/financial-data/domain/entities/account.entity';
+import {
+  Account,
+  AccountType,
+  AccountStatus,
+} from "../../modules/financial-data/domain/entities/account.entity";
 import {
   Transaction,
   TransactionType,
   TransactionCategory,
   TransactionStatus,
-} from '../../modules/financial-data/domain/entities/transaction.entity';
-import { Money, Currency } from '../../modules/financial-data/domain/value-objects/money.vo';
-import { AccountNumber } from '../../modules/financial-data/domain/value-objects/account-number.vo';
-import { IFSCCode } from '../../modules/financial-data/domain/value-objects/ifsc-code.vo';
-import { TestIdGenerator, TestDataGenerator, MockFactory } from '../helpers/test.helper';
-import { CreateAccountDto, UpdateAccountDto } from '../../modules/financial-data/application/dto/account.dto';
+} from "../../modules/financial-data/domain/entities/transaction.entity";
+import {
+  Money,
+  Currency,
+} from "../../modules/financial-data/domain/value-objects/money.vo";
+import { AccountNumber } from "../../modules/financial-data/domain/value-objects/account-number.vo";
+import { IFSCCode } from "../../modules/financial-data/domain/value-objects/ifsc-code.vo";
+import {
+  TestIdGenerator,
+  TestDataGenerator,
+  MockFactory,
+} from "../helpers/test.helper";
+import {
+  CreateAccountDto,
+  UpdateAccountDto,
+} from "../../modules/financial-data/application/dto/account.dto";
 import {
   CreateTransactionDto,
   UpdateTransactionDto,
-} from '../../modules/financial-data/application/dto/transaction.dto';
+} from "../../modules/financial-data/application/dto/transaction.dto";
 
 /**
  * Account Factory
  */
 export class AccountFactory extends MockFactory<Account> {
   build(overrides?: Partial<Account>): Account {
-    const accountNumber = new AccountNumber(TestDataGenerator.randomAccountNumber());
+    const accountNumber = new AccountNumber(
+      TestDataGenerator.randomAccountNumber(),
+    );
     const ifscCode = new IFSCCode(TestDataGenerator.randomIFSCCode());
-    const balance = new Money(TestDataGenerator.randomDecimal(1000, 100000), Currency.INR);
+    const balance = new Money(
+      TestDataGenerator.randomDecimal(1000, 100000),
+      Currency.INR,
+    );
 
     const defaults = {
       id: TestIdGenerator.generate(),
@@ -50,19 +69,25 @@ export class AccountFactory extends MockFactory<Account> {
 
   buildCreateDto(overrides?: Partial<CreateAccountDto>): CreateAccountDto {
     const dto = new CreateAccountDto();
-    dto.accountName = overrides?.accountName || `Test Account ${TestDataGenerator.randomString(6)}`;
+    dto.accountName =
+      overrides?.accountName ||
+      `Test Account ${TestDataGenerator.randomString(6)}`;
     dto.accountType = overrides?.accountType || AccountType.SAVINGS;
-    dto.bankName = overrides?.bankName || `${TestDataGenerator.randomString(8)} Bank`;
-    dto.accountNumber = overrides?.accountNumber || TestDataGenerator.randomAccountNumber();
+    dto.bankName =
+      overrides?.bankName || `${TestDataGenerator.randomString(8)} Bank`;
+    dto.accountNumber =
+      overrides?.accountNumber || TestDataGenerator.randomAccountNumber();
     dto.ifscCode = overrides?.ifscCode || TestDataGenerator.randomIFSCCode();
-    dto.balance = overrides?.balance ?? TestDataGenerator.randomDecimal(1000, 50000);
+    dto.balance =
+      overrides?.balance ?? TestDataGenerator.randomDecimal(1000, 50000);
     dto.currency = overrides?.currency || Currency.INR;
     return dto;
   }
 
   buildUpdateDto(overrides?: Partial<UpdateAccountDto>): UpdateAccountDto {
     const dto = new UpdateAccountDto();
-    if (overrides?.accountName !== undefined) dto.accountName = overrides.accountName;
+    if (overrides?.accountName !== undefined)
+      dto.accountName = overrides.accountName;
     if (overrides?.balance !== undefined) dto.balance = overrides.balance;
     if (overrides?.status !== undefined) dto.status = overrides.status;
     return dto;
@@ -90,7 +115,10 @@ export class AccountFactory extends MockFactory<Account> {
  */
 export class TransactionFactory extends MockFactory<Transaction> {
   build(overrides?: Partial<Transaction>): Transaction {
-    const amount = new Money(TestDataGenerator.randomDecimal(100, 10000), Currency.INR);
+    const amount = new Money(
+      TestDataGenerator.randomDecimal(100, 10000),
+      Currency.INR,
+    );
 
     const defaults = {
       id: TestIdGenerator.generate(),
@@ -99,7 +127,9 @@ export class TransactionFactory extends MockFactory<Transaction> {
       type: TestDataGenerator.randomElement(Object.values(TransactionType)),
       amount: amount.getAmount(),
       currency: Currency.INR,
-      category: TestDataGenerator.randomElement(Object.values(TransactionCategory)),
+      category: TestDataGenerator.randomElement(
+        Object.values(TransactionCategory),
+      ),
       description: `Test transaction ${TestDataGenerator.randomString(6)}`,
       transactionDate: new Date(),
       status: TransactionStatus.COMPLETED,
@@ -113,28 +143,42 @@ export class TransactionFactory extends MockFactory<Transaction> {
     return Transaction.fromPersistence(defaults);
   }
 
-  buildCreateDto(overrides?: Partial<CreateTransactionDto>): CreateTransactionDto {
+  buildCreateDto(
+    overrides?: Partial<CreateTransactionDto>,
+  ): CreateTransactionDto {
     const dto = new CreateTransactionDto();
     dto.accountId = overrides?.accountId || TestIdGenerator.generate();
     dto.type = overrides?.type || TransactionType.DEBIT;
-    dto.amount = overrides?.amount ?? TestDataGenerator.randomDecimal(100, 5000);
+    dto.amount =
+      overrides?.amount ?? TestDataGenerator.randomDecimal(100, 5000);
     dto.currency = overrides?.currency || Currency.INR;
     dto.category = overrides?.category || TransactionCategory.OTHER_EXPENSE;
-    dto.description = overrides?.description || `Test transaction ${TestDataGenerator.randomString(6)}`;
-    dto.transactionDate = overrides?.transactionDate || new Date().toISOString();
-    dto.merchantName = overrides?.merchantName || `Merchant ${TestDataGenerator.randomString(5)}`;
+    dto.description =
+      overrides?.description ||
+      `Test transaction ${TestDataGenerator.randomString(6)}`;
+    dto.transactionDate =
+      overrides?.transactionDate || new Date().toISOString();
+    dto.merchantName =
+      overrides?.merchantName ||
+      `Merchant ${TestDataGenerator.randomString(5)}`;
     return dto;
   }
 
-  buildUpdateDto(overrides?: Partial<UpdateTransactionDto>): UpdateTransactionDto {
+  buildUpdateDto(
+    overrides?: Partial<UpdateTransactionDto>,
+  ): UpdateTransactionDto {
     const dto = new UpdateTransactionDto();
     if (overrides?.category !== undefined) dto.category = overrides.category;
-    if (overrides?.description !== undefined) dto.description = overrides.description;
+    if (overrides?.description !== undefined)
+      dto.description = overrides.description;
     if (overrides?.status !== undefined) dto.status = overrides.status;
     return dto;
   }
 
-  static debit(amount: number, category: TransactionCategory = TransactionCategory.OTHER_EXPENSE): any {
+  static debit(
+    amount: number,
+    category: TransactionCategory = TransactionCategory.OTHER_EXPENSE,
+  ): any {
     return {
       type: TransactionType.DEBIT,
       amount,
@@ -143,7 +187,10 @@ export class TransactionFactory extends MockFactory<Transaction> {
     };
   }
 
-  static credit(amount: number, category: TransactionCategory = TransactionCategory.SALARY): any {
+  static credit(
+    amount: number,
+    category: TransactionCategory = TransactionCategory.SALARY,
+  ): any {
     return {
       type: TransactionType.CREDIT,
       amount,
@@ -181,7 +228,11 @@ export class MoneyFactory {
     return new Money(0, currency);
   }
 
-  static random(min: number = 100, max: number = 10000, currency: Currency = Currency.INR): Money {
+  static random(
+    min: number = 100,
+    max: number = 10000,
+    currency: Currency = Currency.INR,
+  ): Money {
     return new Money(TestDataGenerator.randomDecimal(min, max), currency);
   }
 }
@@ -243,14 +294,10 @@ export class FinancialDataScenarioBuilder {
     );
 
     // Current account transactions
-    this.transactions.push(
-      transactionFactory.build(),
-    );
+    this.transactions.push(transactionFactory.build());
 
     // Credit card transactions
-    this.transactions.push(
-      transactionFactory.build(),
-    );
+    this.transactions.push(transactionFactory.build());
 
     return this;
   }

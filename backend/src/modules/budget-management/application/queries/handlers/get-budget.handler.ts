@@ -1,8 +1,12 @@
-import { QueryHandler, IQueryHandler } from '@nestjs/cqrs';
-import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
-import { GetBudgetQuery } from '../get-budget.query';
-import { PrismaService } from '../../../../../core/database/postgres/prisma.service';
-import { BudgetResponseDto } from '../../dto';
+import { QueryHandler, IQueryHandler } from "@nestjs/cqrs";
+import {
+  Injectable,
+  NotFoundException,
+  ForbiddenException,
+} from "@nestjs/common";
+import { GetBudgetQuery } from "../get-budget.query";
+import { PrismaService } from "../../../../../core/database/postgres/prisma.service";
+import { BudgetResponseDto } from "../../dto";
 
 @QueryHandler(GetBudgetQuery)
 @Injectable()
@@ -21,7 +25,9 @@ export class GetBudgetHandler implements IQueryHandler<GetBudgetQuery> {
     }
 
     if (budget.userId !== userId) {
-      throw new ForbiddenException('You do not have permission to view this budget');
+      throw new ForbiddenException(
+        "You do not have permission to view this budget",
+      );
     }
 
     return BudgetResponseDto.fromEntity(budget);

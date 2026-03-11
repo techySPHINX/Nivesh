@@ -1,23 +1,32 @@
-import { Controller, Post, Body, UseGuards, Req, HttpStatus, HttpCode, Logger } from '@nestjs/common';
-import { CommandBus } from '@nestjs/cqrs';
-import { JwtAuthGuard } from '../../../core/security/auth/guards/jwt-auth.guard';
-import { ProcessQueryCommand } from '../application/commands/process-query.command';
-import { SimulateScenarioCommand } from '../application/commands/simulate-scenario.command';
+import {
+  Controller,
+  Post,
+  Body,
+  UseGuards,
+  Req,
+  HttpStatus,
+  HttpCode,
+  Logger,
+} from "@nestjs/common";
+import { CommandBus } from "@nestjs/cqrs";
+import { JwtAuthGuard } from "../../../core/security/auth/guards/jwt-auth.guard";
+import { ProcessQueryCommand } from "../application/commands/process-query.command";
+import { SimulateScenarioCommand } from "../application/commands/simulate-scenario.command";
 
 /**
  * AI Reasoning Controller
  * RESTful API for AI-powered financial decision-making
- * 
+ *
  * Endpoints:
  * - POST /api/v1/reasoning/ask - Ask financial questions
  * - POST /api/v1/reasoning/simulate - Run what-if scenarios
  */
-@Controller('reasoning')
+@Controller("reasoning")
 @UseGuards(JwtAuthGuard)
 export class ReasoningController {
   private readonly logger = new Logger(ReasoningController.name);
 
-  constructor(private readonly commandBus: CommandBus) { }
+  constructor(private readonly commandBus: CommandBus) {}
 
   /**
    * Ask a financial question
@@ -33,11 +42,12 @@ export class ReasoningController {
    *   }
    * }
    */
-  @Post('ask')
+  @Post("ask")
   @HttpCode(HttpStatus.OK)
   async ask(
     @Req() req: any,
-    @Body() body: { query: string; queryType: string; context?: Record<string, any> },
+    @Body()
+    body: { query: string; queryType: string; context?: Record<string, any> },
   ) {
     const userId = req.user.id;
 
@@ -70,7 +80,7 @@ export class ReasoningController {
    *   }
    * }
    */
-  @Post('simulate')
+  @Post("simulate")
   @HttpCode(HttpStatus.OK)
   async simulate(
     @Req() req: any,
@@ -97,13 +107,13 @@ export class ReasoningController {
   /**
    * Health check for AI services
    */
-  @Post('health')
+  @Post("health")
   @HttpCode(HttpStatus.OK)
   async health() {
     return {
       success: true,
-      service: 'ai-reasoning',
-      status: 'operational',
+      service: "ai-reasoning",
+      status: "operational",
       timestamp: new Date().toISOString(),
     };
   }

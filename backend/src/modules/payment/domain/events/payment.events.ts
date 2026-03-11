@@ -1,5 +1,8 @@
-import { BaseEvent, EventType } from '../../../../core/messaging/events/base.event';
-import { PaymentMethod, PaymentStatus } from '../entities/payment.entity';
+import {
+  BaseEvent,
+  EventType,
+} from "../../../../core/messaging/events/base.event";
+import { PaymentMethod, PaymentStatus } from "../entities/payment.entity";
 
 export class PaymentCreatedEvent extends BaseEvent {
   constructor(
@@ -11,9 +14,9 @@ export class PaymentCreatedEvent extends BaseEvent {
     public readonly description: string,
   ) {
     super({
-      eventType: 'payment.created',
+      eventType: "payment.created",
       aggregateId: paymentId,
-      aggregateType: 'Payment',
+      aggregateType: "Payment",
     });
   }
 }
@@ -26,9 +29,9 @@ export class PaymentAuthorizedEvent extends BaseEvent {
     public readonly method: PaymentMethod,
   ) {
     super({
-      eventType: 'payment.authorized',
+      eventType: "payment.authorized",
       aggregateId: paymentId,
-      aggregateType: 'Payment',
+      aggregateType: "Payment",
     });
   }
 }
@@ -42,9 +45,9 @@ export class PaymentCapturedEvent extends BaseEvent {
     public readonly capturedAt: Date,
   ) {
     super({
-      eventType: 'payment.captured',
+      eventType: "payment.captured",
       aggregateId: paymentId,
-      aggregateType: 'Payment',
+      aggregateType: "Payment",
     });
   }
 }
@@ -57,9 +60,9 @@ export class PaymentFailedEvent extends BaseEvent {
     public readonly errorDescription: string,
   ) {
     super({
-      eventType: 'payment.failed',
+      eventType: "payment.failed",
       aggregateId: paymentId,
-      aggregateType: 'Payment',
+      aggregateType: "Payment",
     });
   }
 }
@@ -73,9 +76,9 @@ export class PaymentRefundedEvent extends BaseEvent {
     public readonly refundedAt: Date,
   ) {
     super({
-      eventType: 'payment.refunded',
+      eventType: "payment.refunded",
       aggregateId: paymentId,
-      aggregateType: 'Payment',
+      aggregateType: "Payment",
     });
   }
 }
@@ -87,9 +90,9 @@ export class PaymentCancelledEvent extends BaseEvent {
     public readonly cancelledAt: Date,
   ) {
     super({
-      eventType: 'payment.cancelled',
+      eventType: "payment.cancelled",
       aggregateId: paymentId,
-      aggregateType: 'Payment',
+      aggregateType: "Payment",
     });
   }
 }

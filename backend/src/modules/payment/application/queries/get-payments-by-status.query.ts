@@ -1,4 +1,4 @@
-import { PaymentStatus } from '../../domain/entities/payment.entity';
+import { PaymentStatus } from "../../domain/entities/payment.entity";
 
 export class GetPaymentsByStatusQuery {
   constructor(

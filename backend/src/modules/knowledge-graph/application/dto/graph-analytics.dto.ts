@@ -31,7 +31,7 @@ export class CategoryInsightDto {
   transactionCount: number;
   averageTransaction: number;
   percentageOfTotal: number;
-  trend: 'increasing' | 'decreasing' | 'stable';
+  trend: "increasing" | "decreasing" | "stable";
   topMerchants: MerchantDto[];
 }
 
@@ -63,10 +63,10 @@ export class SimilarUserDto {
  * Recommendation DTO
  */
 export class RecommendationDto {
-  type: 'AUTOMATION' | 'ALERT' | 'BUDGET' | 'GOAL' | 'OPTIMIZATION';
+  type: "AUTOMATION" | "ALERT" | "BUDGET" | "GOAL" | "OPTIMIZATION";
   title: string;
   description: string;
-  priority: 'low' | 'medium' | 'high';
+  priority: "low" | "medium" | "high";
   actionable: boolean;
   confidence: number;
 }

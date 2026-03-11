@@ -1,11 +1,11 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { PrismaService } from '../../../../core/database/postgres/prisma.service';
-import { IPaymentRepository } from '../../domain/repositories/payment.repository.interface';
+import { Injectable, Logger } from "@nestjs/common";
+import { PrismaService } from "../../../../core/database/postgres/prisma.service";
+import { IPaymentRepository } from "../../domain/repositories/payment.repository.interface";
 import {
   Payment,
   PaymentStatus,
   PaymentMethod,
-} from '../../domain/entities/payment.entity';
+} from "../../domain/entities/payment.entity";
 
 @Injectable()
 export class PaymentRepository implements IPaymentRepository {
@@ -55,7 +55,7 @@ export class PaymentRepository implements IPaymentRepository {
   async findByUserId(userId: string): Promise<Payment[]> {
     const results = await this.prisma.payment.findMany({
       where: { userId },
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: "desc" },
     });
     return results.map(Payment.fromPersistence);
   }
@@ -68,7 +68,7 @@ export class PaymentRepository implements IPaymentRepository {
     const [results, total] = await Promise.all([
       this.prisma.payment.findMany({
         where: { userId },
-        orderBy: { createdAt: 'desc' },
+        orderBy: { createdAt: "desc" },
         skip,
         take,
       }),
@@ -81,18 +81,24 @@ export class PaymentRepository implements IPaymentRepository {
     };
   }
 
-  async findByStatus(userId: string, status: PaymentStatus): Promise<Payment[]> {
+  async findByStatus(
+    userId: string,
+    status: PaymentStatus,
+  ): Promise<Payment[]> {
     const results = await this.prisma.payment.findMany({
       where: { userId, status },
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: "desc" },
     });
     return results.map(Payment.fromPersistence);
   }
 
-  async findByMethod(userId: string, method: PaymentMethod): Promise<Payment[]> {
+  async findByMethod(
+    userId: string,
+    method: PaymentMethod,
+  ): Promise<Payment[]> {
     const results = await this.prisma.payment.findMany({
       where: { userId, method },
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: "desc" },
     });
     return results.map(Payment.fromPersistence);
   }
@@ -107,7 +113,7 @@ export class PaymentRepository implements IPaymentRepository {
         userId,
         createdAt: { gte: startDate, lte: endDate },
       },
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: "desc" },
     });
     return results.map(Payment.fromPersistence);
   }

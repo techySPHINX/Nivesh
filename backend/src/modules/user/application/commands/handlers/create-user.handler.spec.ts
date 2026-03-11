@@ -1,12 +1,12 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { EventBus } from '@nestjs/cqrs';
-import { CreateUserHandler } from './create-user.handler';
-import { CreateUserCommand } from '../create-user.command';
-import { USER_REPOSITORY } from '../../../domain/repositories/user.repository.interface';
-import { KafkaProducerService } from '../../../../../core/messaging/kafka/kafka.producer';
-import { ConflictException } from '../../../../../core/exceptions/base.exception';
+import { Test, TestingModule } from "@nestjs/testing";
+import { EventBus } from "@nestjs/cqrs";
+import { CreateUserHandler } from "./create-user.handler";
+import { CreateUserCommand } from "../create-user.command";
+import { USER_REPOSITORY } from "../../../domain/repositories/user.repository.interface";
+import { KafkaProducerService } from "../../../../../core/messaging/kafka/kafka.producer";
+import { ConflictException } from "../../../../../core/exceptions/base.exception";
 
-describe('CreateUserHandler', () => {
+describe("CreateUserHandler", () => {
   let handler: CreateUserHandler;
   let userRepository: Record<string, jest.Mock>;
   let eventBus: { publish: jest.Mock };
@@ -36,50 +36,54 @@ describe('CreateUserHandler', () => {
     jest.clearAllMocks();
   });
 
-  it('should be defined', () => {
+  it("should be defined", () => {
     expect(handler).toBeDefined();
   });
 
-  describe('execute', () => {
+  describe("execute", () => {
     const command = new CreateUserCommand(
-      'test@example.com',
-      'John',
-      'Doe',
-      '+919876543210',
-      new Date('1990-01-01'),
-      'firebase-uid-123',
+      "test@example.com",
+      "John",
+      "Doe",
+      "+919876543210",
+      new Date("1990-01-01"),
+      "firebase-uid-123",
     );
 
-    it('should create a user successfully', async () => {
+    it("should create a user successfully", async () => {
       userRepository.findByEmail.mockResolvedValue(null);
       userRepository.existsByPhoneNumber.mockResolvedValue(false);
 
       const savedUser = {
-        id: 'user-uuid',
-        email: { getValue: () => 'test@example.com' },
-        name: { getFirstName: () => 'John', getLastName: () => 'Doe' },
+        id: "user-uuid",
+        email: { getValue: () => "test@example.com" },
+        name: { getFirstName: () => "John", getLastName: () => "Doe" },
       };
       userRepository.save.mockResolvedValue(savedUser);
 
       const result = await handler.execute(command);
 
       expect(result).toEqual(savedUser);
-      expect(userRepository.findByEmail).toHaveBeenCalledWith('test@example.com');
-      expect(userRepository.existsByPhoneNumber).toHaveBeenCalledWith('+919876543210');
+      expect(userRepository.findByEmail).toHaveBeenCalledWith(
+        "test@example.com",
+      );
+      expect(userRepository.existsByPhoneNumber).toHaveBeenCalledWith(
+        "+919876543210",
+      );
       expect(userRepository.save).toHaveBeenCalledTimes(1);
       expect(eventBus.publish).toHaveBeenCalledTimes(1);
       expect(kafkaProducer.publish).toHaveBeenCalledTimes(1);
     });
 
-    it('should throw ConflictException when email already exists', async () => {
-      userRepository.findByEmail.mockResolvedValue({ id: 'existing-user' });
+    it("should throw ConflictException when email already exists", async () => {
+      userRepository.findByEmail.mockResolvedValue({ id: "existing-user" });
 
       await expect(handler.execute(command)).rejects.toThrow(ConflictException);
       expect(userRepository.save).not.toHaveBeenCalled();
       expect(eventBus.publish).not.toHaveBeenCalled();
     });
 
-    it('should throw ConflictException when phone number already exists', async () => {
+    it("should throw ConflictException when phone number already exists", async () => {
       userRepository.findByEmail.mockResolvedValue(null);
       userRepository.existsByPhoneNumber.mockResolvedValue(true);
 
@@ -87,22 +91,22 @@ describe('CreateUserHandler', () => {
       expect(userRepository.save).not.toHaveBeenCalled();
     });
 
-    it('should create user without phone number when not provided', async () => {
+    it("should create user without phone number when not provided", async () => {
       const commandNoPhone = new CreateUserCommand(
-        'test@example.com',
-        'John',
-        'Doe',
+        "test@example.com",
+        "John",
+        "Doe",
         undefined,
         undefined,
-        'firebase-uid-123',
+        "firebase-uid-123",
       );
 
       userRepository.findByEmail.mockResolvedValue(null);
 
       const savedUser = {
-        id: 'user-uuid',
-        email: { getValue: () => 'test@example.com' },
-        name: { getFirstName: () => 'John', getLastName: () => 'Doe' },
+        id: "user-uuid",
+        email: { getValue: () => "test@example.com" },
+        name: { getFirstName: () => "John", getLastName: () => "Doe" },
       };
       userRepository.save.mockResolvedValue(savedUser);
 
@@ -112,12 +116,14 @@ describe('CreateUserHandler', () => {
       expect(userRepository.existsByPhoneNumber).not.toHaveBeenCalled();
     });
 
-    it('should propagate repository errors', async () => {
+    it("should propagate repository errors", async () => {
       userRepository.findByEmail.mockResolvedValue(null);
       userRepository.existsByPhoneNumber.mockResolvedValue(false);
-      userRepository.save.mockRejectedValue(new Error('DB connection lost'));
+      userRepository.save.mockRejectedValue(new Error("DB connection lost"));
 
-      await expect(handler.execute(command)).rejects.toThrow('DB connection lost');
+      await expect(handler.execute(command)).rejects.toThrow(
+        "DB connection lost",
+      );
       expect(eventBus.publish).not.toHaveBeenCalled();
       expect(kafkaProducer.publish).not.toHaveBeenCalled();
     });

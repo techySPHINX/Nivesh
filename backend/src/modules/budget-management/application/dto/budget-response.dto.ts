@@ -1,66 +1,70 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { BudgetPeriod } from '../../domain/entities/budget.entity';
+import { ApiProperty } from "@nestjs/swagger";
+import { BudgetPeriod } from "../../domain/entities/budget.entity";
 
 export class BudgetResponseDto {
-  @ApiProperty({ description: 'Budget ID' })
+  @ApiProperty({ description: "Budget ID" })
   id: string;
 
-  @ApiProperty({ description: 'User ID' })
+  @ApiProperty({ description: "User ID" })
   userId: string;
 
-  @ApiProperty({ description: 'Budget category' })
+  @ApiProperty({ description: "Budget category" })
   category: string;
 
-  @ApiProperty({ description: 'Budget amount limit' })
+  @ApiProperty({ description: "Budget amount limit" })
   amount: number;
 
-  @ApiProperty({ description: 'Currency code' })
+  @ApiProperty({ description: "Currency code" })
   currency: string;
 
-  @ApiProperty({ description: 'Budget period', enum: BudgetPeriod })
+  @ApiProperty({ description: "Budget period", enum: BudgetPeriod })
   period: BudgetPeriod;
 
-  @ApiProperty({ description: 'Budget start date' })
+  @ApiProperty({ description: "Budget start date" })
   startDate: Date;
 
-  @ApiProperty({ description: 'Budget end date' })
+  @ApiProperty({ description: "Budget end date" })
   endDate: Date;
 
-  @ApiProperty({ description: 'Whether the budget is active' })
+  @ApiProperty({ description: "Whether the budget is active" })
   isActive: boolean;
 
-  @ApiProperty({ description: 'Whether this is a recurring budget' })
+  @ApiProperty({ description: "Whether this is a recurring budget" })
   isRecurring: boolean;
 
-  @ApiProperty({ description: 'Alert threshold percentage' })
+  @ApiProperty({ description: "Alert threshold percentage" })
   alertThreshold: number;
 
-  @ApiProperty({ description: 'Current spending amount' })
+  @ApiProperty({ description: "Current spending amount" })
   currentSpending: number;
 
-  @ApiProperty({ description: 'Remaining budget amount' })
+  @ApiProperty({ description: "Remaining budget amount" })
   remainingAmount: number;
 
-  @ApiProperty({ description: 'Spending percentage' })
+  @ApiProperty({ description: "Spending percentage" })
   spendingPercentage: number;
 
-  @ApiProperty({ description: 'Whether budget is exceeded' })
+  @ApiProperty({ description: "Whether budget is exceeded" })
   isExceeded: boolean;
 
-  @ApiProperty({ description: 'Last calculated timestamp' })
+  @ApiProperty({ description: "Last calculated timestamp" })
   lastCalculatedAt: Date | null;
 
-  @ApiProperty({ description: 'Created timestamp' })
+  @ApiProperty({ description: "Created timestamp" })
   createdAt: Date;
 
-  @ApiProperty({ description: 'Updated timestamp' })
+  @ApiProperty({ description: "Updated timestamp" })
   updatedAt: Date;
 
   static fromEntity(budget: any): BudgetResponseDto {
-    const remaining = Math.max(Number(budget.amount) - Number(budget.currentSpending), 0);
-    const percentage = Number(budget.amount) > 0 
-      ? (Number(budget.currentSpending) / Number(budget.amount)) * 100 
-      : 0;
+    const remaining = Math.max(
+      Number(budget.amount) - Number(budget.currentSpending),
+      0,
+    );
+    const percentage =
+      Number(budget.amount) > 0
+        ? (Number(budget.currentSpending) / Number(budget.amount)) * 100
+        : 0;
 
     return {
       id: budget.id,

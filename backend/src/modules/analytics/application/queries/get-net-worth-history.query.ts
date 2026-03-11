@@ -1,4 +1,4 @@
-import { TimeGranularity } from '../../domain/entities/analytics.entity';
+import { TimeGranularity } from "../../domain/entities/analytics.entity";
 
 export class GetNetWorthHistoryQuery {
   constructor(

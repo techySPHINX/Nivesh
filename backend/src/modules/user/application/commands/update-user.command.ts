@@ -1,4 +1,4 @@
-import { ICommand } from '@nestjs/cqrs';
+import { ICommand } from "@nestjs/cqrs";
 
 export class UpdateUserCommand implements ICommand {
   constructor(
@@ -11,5 +11,5 @@ export class UpdateUserCommand implements ICommand {
       profilePicture?: string;
       riskProfile?: string;
     },
-  ) { }
+  ) {}
 }

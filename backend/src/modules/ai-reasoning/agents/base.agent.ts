@@ -1,12 +1,12 @@
-import { Logger } from '@nestjs/common';
+import { Logger } from "@nestjs/common";
 import {
   AgentMessage,
   AgentResponse,
   AgentType,
   AgentExecutionError,
-} from '../types/agent.types';
-import { ToolRegistry } from '../services/tool-registry.service';
-import { DecisionTraceService } from '../services/decision-trace.service';
+} from "../types/agent.types";
+import { ToolRegistry } from "../services/tool-registry.service";
+import { DecisionTraceService } from "../services/decision-trace.service";
 
 /**
  * BaseAgent Abstract Class
@@ -183,7 +183,7 @@ export abstract class BaseAgent {
       reasoning: [
         `Agent ${this.agentType} encountered an error during execution`,
         `Error type: ${errorCode}`,
-        `Recoverable: ${isRecoverable ? 'Yes' : 'No'}`,
+        `Recoverable: ${isRecoverable ? "Yes" : "No"}`,
         `Context: ${JSON.stringify(context)}`,
       ],
       confidence: 0,
@@ -200,7 +200,7 @@ export abstract class BaseAgent {
       },
       nextActions: isRecoverable
         ? this.suggestRecoveryActions(error, context)
-        : ['Contact system administrator', 'Review error logs'],
+        : ["Contact system administrator", "Review error logs"],
     };
   }
 
@@ -213,11 +213,11 @@ export abstract class BaseAgent {
   private isRecoverableError(error: Error): boolean {
     // Network errors, timeouts, and temporary failures are recoverable
     const recoverableErrors = [
-      'ECONNREFUSED',
-      'ETIMEDOUT',
-      'ENOTFOUND',
-      'ToolTimeoutError',
-      'ValidationError',
+      "ECONNREFUSED",
+      "ETIMEDOUT",
+      "ENOTFOUND",
+      "ToolTimeoutError",
+      "ValidationError",
     ];
 
     return recoverableErrors.some((type) => error.message.includes(type));
@@ -230,13 +230,13 @@ export abstract class BaseAgent {
    * @private
    */
   private getErrorCode(error: Error): string {
-    if (error.name === 'ToolExecutionError') return 'TOOL_EXECUTION_FAILED';
-    if (error.name === 'ToolNotFoundError') return 'TOOL_NOT_FOUND';
-    if (error.name === 'ToolTimeoutError') return 'TOOL_TIMEOUT';
-    if (error.name === 'ToolValidationError') return 'INVALID_ARGUMENTS';
-    if (error.name === 'AgentExecutionError') return 'AGENT_EXECUTION_FAILED';
+    if (error.name === "ToolExecutionError") return "TOOL_EXECUTION_FAILED";
+    if (error.name === "ToolNotFoundError") return "TOOL_NOT_FOUND";
+    if (error.name === "ToolTimeoutError") return "TOOL_TIMEOUT";
+    if (error.name === "ToolValidationError") return "INVALID_ARGUMENTS";
+    if (error.name === "AgentExecutionError") return "AGENT_EXECUTION_FAILED";
 
-    return 'UNKNOWN_ERROR';
+    return "UNKNOWN_ERROR";
   }
 
   /**
@@ -252,24 +252,24 @@ export abstract class BaseAgent {
   ): string[] {
     const actions: string[] = [];
 
-    if (error.name === 'ToolTimeoutError') {
-      actions.push('Retry with increased timeout');
-      actions.push('Check external service availability');
+    if (error.name === "ToolTimeoutError") {
+      actions.push("Retry with increased timeout");
+      actions.push("Check external service availability");
     }
 
-    if (error.name === 'ToolValidationError') {
-      actions.push('Verify input arguments match tool schema');
-      actions.push('Check for missing required fields');
+    if (error.name === "ToolValidationError") {
+      actions.push("Verify input arguments match tool schema");
+      actions.push("Check for missing required fields");
     }
 
-    if (error.message.includes('ECONNREFUSED')) {
-      actions.push('Verify service is running');
-      actions.push('Check network connectivity');
+    if (error.message.includes("ECONNREFUSED")) {
+      actions.push("Verify service is running");
+      actions.push("Check network connectivity");
     }
 
     if (actions.length === 0) {
-      actions.push('Retry operation');
-      actions.push('Review agent configuration');
+      actions.push("Retry operation");
+      actions.push("Review agent configuration");
     }
 
     return actions;

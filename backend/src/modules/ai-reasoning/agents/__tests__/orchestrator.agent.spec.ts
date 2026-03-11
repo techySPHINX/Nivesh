@@ -1,12 +1,12 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { OrchestratorAgent } from '../orchestrator.agent';
-import { AgentRegistry } from '../../services/agent-registry.service';
-import { ExecutionPlanBuilder } from '../../services/execution-plan-builder.service';
-import { DecisionTraceService } from '../../services/decision-trace.service';
-import { ToolRegistry } from '../../services/tool-registry.service';
-import { AgentType } from '../../types/agent.types';
+import { Test, TestingModule } from "@nestjs/testing";
+import { OrchestratorAgent } from "../orchestrator.agent";
+import { AgentRegistry } from "../../services/agent-registry.service";
+import { ExecutionPlanBuilder } from "../../services/execution-plan-builder.service";
+import { DecisionTraceService } from "../../services/decision-trace.service";
+import { ToolRegistry } from "../../services/tool-registry.service";
+import { AgentType } from "../../types/agent.types";
 
-describe('OrchestratorAgent', () => {
+describe("OrchestratorAgent", () => {
   let orchestrator: OrchestratorAgent;
   let agentRegistry: AgentRegistry;
   let executionPlanBuilder: ExecutionPlanBuilder;
@@ -22,7 +22,7 @@ describe('OrchestratorAgent', () => {
   };
 
   const mockDecisionTrace = {
-    startTrace: jest.fn().mockReturnValue('test-trace-id'),
+    startTrace: jest.fn().mockReturnValue("test-trace-id"),
     recordExecution: jest.fn(),
     completeTrace: jest.fn(),
     failTrace: jest.fn(),
@@ -46,33 +46,32 @@ describe('OrchestratorAgent', () => {
 
     orchestrator = module.get<OrchestratorAgent>(OrchestratorAgent);
     agentRegistry = module.get<AgentRegistry>(AgentRegistry);
-    executionPlanBuilder = module.get<ExecutionPlanBuilder>(
-      ExecutionPlanBuilder,
-    );
+    executionPlanBuilder =
+      module.get<ExecutionPlanBuilder>(ExecutionPlanBuilder);
     decisionTrace = module.get<DecisionTraceService>(DecisionTraceService);
 
     jest.clearAllMocks();
   });
 
-  describe('execute', () => {
-    it('should orchestrate goal planning workflow', async () => {
+  describe("execute", () => {
+    it("should orchestrate goal planning workflow", async () => {
       const input = {
-        query: 'I want to save ₹50 lakhs for my child education in 10 years',
+        query: "I want to save ₹50 lakhs for my child education in 10 years",
         userContext: {
-          userId: 'user123',
-          riskTolerance: 'moderate',
+          userId: "user123",
+          riskTolerance: "moderate",
         },
       };
 
       const mockPlan = [
         {
           agentType: AgentType.FINANCIAL_PLANNING,
-          task: 'Calculate savings rate',
+          task: "Calculate savings rate",
           dependencies: [],
         },
         {
           agentType: AgentType.INVESTMENT_ADVISOR,
-          task: 'Recommend investment strategy',
+          task: "Recommend investment strategy",
           dependencies: [AgentType.FINANCIAL_PLANNING],
         },
       ];
@@ -86,18 +85,18 @@ describe('OrchestratorAgent', () => {
             goalAchievable: true,
           },
           confidence: 0.85,
-          reasoning: ['Calculated based on 12% expected returns'],
+          reasoning: ["Calculated based on 12% expected returns"],
         }),
       };
 
       const mockInvestmentAdvisor = {
         execute: jest.fn().mockResolvedValue({
           result: {
-            strategy: 'Balanced equity + debt',
+            strategy: "Balanced equity + debt",
             allocation: { equity: 60, debt: 40 },
           },
           confidence: 0.8,
-          reasoning: ['Moderate risk tolerance considered'],
+          reasoning: ["Moderate risk tolerance considered"],
         }),
       };
 
@@ -115,16 +114,16 @@ describe('OrchestratorAgent', () => {
       expect(mockDecisionTrace.completeTrace).toHaveBeenCalled();
     });
 
-    it('should handle agent execution failure gracefully', async () => {
+    it("should handle agent execution failure gracefully", async () => {
       const input = {
-        query: 'Test query',
-        userContext: { userId: 'user123' },
+        query: "Test query",
+        userContext: { userId: "user123" },
       };
 
       const mockPlan = [
         {
           agentType: AgentType.RISK_ASSESSMENT,
-          task: 'Assess risk',
+          task: "Assess risk",
           dependencies: [],
         },
       ];
@@ -134,32 +133,32 @@ describe('OrchestratorAgent', () => {
       const mockAgent = {
         execute: jest
           .fn()
-          .mockRejectedValue(new Error('Agent execution failed')),
+          .mockRejectedValue(new Error("Agent execution failed")),
       };
 
       mockAgentRegistry.getAgent.mockReturnValue(mockAgent);
 
       await expect(orchestrator.execute(input)).rejects.toThrow(
-        'Agent execution failed',
+        "Agent execution failed",
       );
       expect(mockDecisionTrace.failTrace).toHaveBeenCalled();
     });
 
-    it('should pass context between dependent agents', async () => {
+    it("should pass context between dependent agents", async () => {
       const input = {
-        query: 'Portfolio risk analysis',
-        userContext: { userId: 'user123' },
+        query: "Portfolio risk analysis",
+        userContext: { userId: "user123" },
       };
 
       const mockPlan = [
         {
           agentType: AgentType.RISK_ASSESSMENT,
-          task: 'Calculate risk',
+          task: "Calculate risk",
           dependencies: [],
         },
         {
           agentType: AgentType.SIMULATION,
-          task: 'Simulate outcomes',
+          task: "Simulate outcomes",
           dependencies: [AgentType.RISK_ASSESSMENT],
         },
       ];
@@ -188,17 +187,16 @@ describe('OrchestratorAgent', () => {
       await orchestrator.execute(input);
 
       // Verify simulation agent received risk assessment results
-      const simulationInput =
-        mockSimulationAgent.execute.mock.calls[0][0];
+      const simulationInput = mockSimulationAgent.execute.mock.calls[0][0];
       expect(simulationInput.additionalContext).toBeDefined();
     });
   });
 
-  describe('canHandle', () => {
-    it('should return true for any query (orchestrator handles all)', () => {
+  describe("canHandle", () => {
+    it("should return true for any query (orchestrator handles all)", () => {
       const result = orchestrator.canHandle({
-        query: 'Any financial query',
-        userContext: { userId: 'test' },
+        query: "Any financial query",
+        userContext: { userId: "test" },
       });
 
       expect(result).toBe(true);

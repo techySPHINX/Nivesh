@@ -1,4 +1,4 @@
-import { GoalStatus, GoalCategory } from '../../domain/entities/goal.entity';
+import { GoalStatus, GoalCategory } from "../../domain/entities/goal.entity";
 
 export class GetUserGoalsQuery {
   constructor(
@@ -6,5 +6,5 @@ export class GetUserGoalsQuery {
     public readonly status?: GoalStatus,
     public readonly category?: GoalCategory,
     public readonly includeCompleted?: boolean,
-  ) { }
+  ) {}
 }

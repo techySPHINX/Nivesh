@@ -1,5 +1,5 @@
-import { v4 as uuidv4 } from 'uuid';
-import { GraphNode, NodeType } from './graph-node.entity';
+import { v4 as uuidv4 } from "uuid";
+import { GraphNode, NodeType } from "./graph-node.entity";
 
 /**
  * Enum for relationship types in the knowledge graph
@@ -7,34 +7,34 @@ import { GraphNode, NodeType } from './graph-node.entity';
  */
 export enum RelationshipType {
   // Account ownership
-  OWNS = 'OWNS',
+  OWNS = "OWNS",
 
   // Transaction relationships
-  MADE_TRANSACTION = 'MADE_TRANSACTION',
-  BELONGS_TO_CATEGORY = 'BELONGS_TO_CATEGORY',
-  AT_MERCHANT = 'AT_MERCHANT',
-  AT_LOCATION = 'AT_LOCATION',
-  HAS_TAG = 'HAS_TAG',
-  AFFECTS_BUDGET = 'AFFECTS_BUDGET',
+  MADE_TRANSACTION = "MADE_TRANSACTION",
+  BELONGS_TO_CATEGORY = "BELONGS_TO_CATEGORY",
+  AT_MERCHANT = "AT_MERCHANT",
+  AT_LOCATION = "AT_LOCATION",
+  HAS_TAG = "HAS_TAG",
+  AFFECTS_BUDGET = "AFFECTS_BUDGET",
 
   // Budget & Goal relationships
-  HAS_BUDGET = 'HAS_BUDGET',
-  HAS_GOAL = 'HAS_GOAL',
-  CONTRIBUTES_TO_GOAL = 'CONTRIBUTES_TO_GOAL',
+  HAS_BUDGET = "HAS_BUDGET",
+  HAS_GOAL = "HAS_GOAL",
+  CONTRIBUTES_TO_GOAL = "CONTRIBUTES_TO_GOAL",
 
   // Category hierarchies
-  SUBCATEGORY_OF = 'SUBCATEGORY_OF',
+  SUBCATEGORY_OF = "SUBCATEGORY_OF",
 
   // Merchant networks
-  SIMILAR_MERCHANT = 'SIMILAR_MERCHANT',
-  MERCHANT_CHAIN = 'MERCHANT_CHAIN',
+  SIMILAR_MERCHANT = "SIMILAR_MERCHANT",
+  MERCHANT_CHAIN = "MERCHANT_CHAIN",
 
   // User behavior patterns
-  SIMILAR_SPENDING = 'SIMILAR_SPENDING',
-  SIMILAR_GOALS = 'SIMILAR_GOALS',
+  SIMILAR_SPENDING = "SIMILAR_SPENDING",
+  SIMILAR_GOALS = "SIMILAR_GOALS",
 
   // Recommendations
-  RECOMMENDS = 'RECOMMENDS',
+  RECOMMENDS = "RECOMMENDS",
 }
 
 /**
@@ -54,7 +54,7 @@ export interface RelationshipProperties {
 /**
  * Domain entity representing a relationship between two nodes
  * Relationships are directed (from -> to) and can have properties
- * 
+ *
  * Business Rules:
  * - Relationships must connect valid node types
  * - Relationship type determines allowed node type combinations
@@ -90,7 +90,9 @@ export class GraphRelationship {
     type: RelationshipType,
     fromNode: GraphNode,
     toNode: GraphNode,
-    properties?: Partial<Omit<RelationshipProperties, 'createdAt' | 'updatedAt'>>,
+    properties?: Partial<
+      Omit<RelationshipProperties, "createdAt" | "updatedAt">
+    >,
   ): GraphRelationship {
     // Validate relationship is allowed
     if (!this.isValidRelationship(type, fromNode.type, toNode.type)) {
@@ -191,7 +193,7 @@ export class GraphRelationship {
    * Common for updating weights, frequencies, or confidence scores
    */
   updateProperties(
-    updates: Partial<Omit<RelationshipProperties, 'createdAt' | 'updatedAt'>>,
+    updates: Partial<Omit<RelationshipProperties, "createdAt" | "updatedAt">>,
   ): void {
     this._properties = {
       ...this._properties,
@@ -215,7 +217,7 @@ export class GraphRelationship {
    */
   updateWeight(weight: number): void {
     if (weight < 0 || weight > 1) {
-      throw new Error('Weight must be between 0 and 1');
+      throw new Error("Weight must be between 0 and 1");
     }
     this._properties.weight = weight;
     this._properties.updatedAt = new Date();

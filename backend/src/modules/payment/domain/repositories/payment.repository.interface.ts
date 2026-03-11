@@ -1,4 +1,8 @@
-import { Payment, PaymentStatus, PaymentMethod } from '../entities/payment.entity';
+import {
+  Payment,
+  PaymentStatus,
+  PaymentMethod,
+} from "../entities/payment.entity";
 
 export interface IPaymentRepository {
   save(payment: Payment): Promise<Payment>;
@@ -20,4 +24,4 @@ export interface IPaymentRepository {
   delete(id: string): Promise<void>;
 }
 
-export const PAYMENT_REPOSITORY = Symbol('PAYMENT_REPOSITORY');
+export const PAYMENT_REPOSITORY = Symbol("PAYMENT_REPOSITORY");

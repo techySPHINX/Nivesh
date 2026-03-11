@@ -1,6 +1,11 @@
-import { Injectable, OnModuleInit, OnModuleDestroy, Logger } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import { MongoClient, Db, Collection, Document } from 'mongodb';
+import {
+  Injectable,
+  OnModuleInit,
+  OnModuleDestroy,
+  Logger,
+} from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
+import { MongoClient, Db, Collection, Document } from "mongodb";
 
 @Injectable()
 export class MongodbService implements OnModuleInit, OnModuleDestroy {
@@ -13,8 +18,10 @@ export class MongodbService implements OnModuleInit, OnModuleDestroy {
   async onModuleInit() {
     try {
       const uri =
-        this.configService.get<string>('database.mongodb.uri') || 'mongodb://localhost:27017';
-      const database = this.configService.get<string>('database.mongodb.database') || 'nivesh';
+        this.configService.get<string>("database.mongodb.uri") ||
+        "mongodb://localhost:27017";
+      const database =
+        this.configService.get<string>("database.mongodb.database") || "nivesh";
 
       this.client = new MongoClient(uri, {
         maxPoolSize: 10,
@@ -25,9 +32,9 @@ export class MongodbService implements OnModuleInit, OnModuleDestroy {
 
       await this.client.connect();
       this.db = this.client.db(database);
-      this.logger.log('✅ MongoDB connected successfully');
+      this.logger.log("✅ MongoDB connected successfully");
     } catch (error) {
-      this.logger.error('❌ Failed to connect to MongoDB', error);
+      this.logger.error("❌ Failed to connect to MongoDB", error);
       throw error;
     }
   }
@@ -35,7 +42,7 @@ export class MongodbService implements OnModuleInit, OnModuleDestroy {
   async onModuleDestroy() {
     if (this.client) {
       await this.client.close();
-      this.logger.log('MongoDB disconnected');
+      this.logger.log("MongoDB disconnected");
     }
   }
 
@@ -52,7 +59,7 @@ export class MongodbService implements OnModuleInit, OnModuleDestroy {
       await this.db.admin().ping();
       return true;
     } catch (error) {
-      this.logger.error('MongoDB health check failed', error);
+      this.logger.error("MongoDB health check failed", error);
       return false;
     }
   }

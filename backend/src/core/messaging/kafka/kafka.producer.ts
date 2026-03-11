@@ -1,7 +1,12 @@
-import { Injectable, OnModuleInit, OnModuleDestroy, Logger } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import { Kafka, Producer, ProducerRecord } from 'kafkajs';
-import { KafkaTopic } from './topics.enum';
+import {
+  Injectable,
+  OnModuleInit,
+  OnModuleDestroy,
+  Logger,
+} from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
+import { Kafka, Producer, ProducerRecord } from "kafkajs";
+import { KafkaTopic } from "./topics.enum";
 
 @Injectable()
 export class KafkaProducerService implements OnModuleInit, OnModuleDestroy {
@@ -14,16 +19,19 @@ export class KafkaProducerService implements OnModuleInit, OnModuleDestroy {
   async onModuleInit() {
     try {
       this.kafka = new Kafka({
-        clientId: this.configService.get<string>('kafka.clientId') || 'nivesh-backend',
-        brokers: this.configService.get<string[]>('kafka.brokers') || ['localhost:29092'],
-        sasl: this.configService.get('kafka.sasl'),
+        clientId:
+          this.configService.get<string>("kafka.clientId") || "nivesh-backend",
+        brokers: this.configService.get<string[]>("kafka.brokers") || [
+          "localhost:29092",
+        ],
+        sasl: this.configService.get("kafka.sasl"),
       });
 
       this.producer = this.kafka.producer();
       await this.producer.connect();
-      this.logger.log('✅ Kafka Producer connected successfully');
+      this.logger.log("✅ Kafka Producer connected successfully");
     } catch (error) {
-      this.logger.error('❌ Failed to connect Kafka Producer', error);
+      this.logger.error("❌ Failed to connect Kafka Producer", error);
       throw error;
     }
   }
@@ -31,11 +39,15 @@ export class KafkaProducerService implements OnModuleInit, OnModuleDestroy {
   async onModuleDestroy() {
     if (this.producer) {
       await this.producer.disconnect();
-      this.logger.log('Kafka Producer disconnected');
+      this.logger.log("Kafka Producer disconnected");
     }
   }
 
-  async publish(topic: KafkaTopic | string, message: any, key?: string): Promise<void> {
+  async publish(
+    topic: KafkaTopic | string,
+    message: any,
+    key?: string,
+  ): Promise<void> {
     try {
       await this.producer.send({
         topic,
@@ -55,7 +67,10 @@ export class KafkaProducerService implements OnModuleInit, OnModuleDestroy {
     }
   }
 
-  async publishBatch(topic: KafkaTopic | string, messages: any[]): Promise<void> {
+  async publishBatch(
+    topic: KafkaTopic | string,
+    messages: any[],
+  ): Promise<void> {
     try {
       const kafkaMessages = messages.map((msg) => ({
         value: JSON.stringify(msg),
@@ -67,7 +82,9 @@ export class KafkaProducerService implements OnModuleInit, OnModuleDestroy {
         messages: kafkaMessages,
       });
 
-      this.logger.debug(`Published ${messages.length} messages to topic: ${topic}`);
+      this.logger.debug(
+        `Published ${messages.length} messages to topic: ${topic}`,
+      );
     } catch (error) {
       this.logger.error(`Failed to publish batch to topic: ${topic}`, error);
       throw error;

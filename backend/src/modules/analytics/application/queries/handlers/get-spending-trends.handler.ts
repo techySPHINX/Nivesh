@@ -1,10 +1,13 @@
-import { IQueryHandler, QueryHandler } from '@nestjs/cqrs';
-import { Logger } from '@nestjs/common';
-import { GetSpendingTrendsQuery } from '../get-spending-trends.query';
-import { SpendingTrendsResponseDto } from '../../dto/analytics-response.dto';
-import { ClickhouseService } from '../../../../core/database/clickhouse/clickhouse.service';
-import { PrismaService } from '../../../../core/database/postgres/prisma.service';
-import { TimeGranularity, SpendingTrendPoint } from '../../../domain/entities/analytics.entity';
+import { IQueryHandler, QueryHandler } from "@nestjs/cqrs";
+import { Logger } from "@nestjs/common";
+import { GetSpendingTrendsQuery } from "../get-spending-trends.query";
+import { SpendingTrendsResponseDto } from "../../dto/analytics-response.dto";
+import { ClickhouseService } from "../../../../../core/database/clickhouse/clickhouse.service";
+import { PrismaService } from "../../../../../core/database/postgres/prisma.service";
+import {
+  TimeGranularity,
+  SpendingTrendPoint,
+} from "../../../domain/entities/analytics.entity";
 
 @QueryHandler(GetSpendingTrendsQuery)
 export class GetSpendingTrendsHandler implements IQueryHandler<GetSpendingTrendsQuery> {
@@ -15,10 +18,14 @@ export class GetSpendingTrendsHandler implements IQueryHandler<GetSpendingTrends
     private readonly prisma: PrismaService,
   ) {}
 
-  async execute(query: GetSpendingTrendsQuery): Promise<SpendingTrendsResponseDto> {
+  async execute(
+    query: GetSpendingTrendsQuery,
+  ): Promise<SpendingTrendsResponseDto> {
     const { userId, granularity } = query;
     const now = new Date();
-    const from = query.from || new Date(now.getFullYear(), now.getMonth() - 6, 1).toISOString();
+    const from =
+      query.from ||
+      new Date(now.getFullYear(), now.getMonth() - 6, 1).toISOString();
     const to = query.to || now.toISOString();
 
     let data: SpendingTrendPoint[];
@@ -26,7 +33,8 @@ export class GetSpendingTrendsHandler implements IQueryHandler<GetSpendingTrends
     try {
       // Attempt ClickHouse for time-series analytics
       const dateFormat = this.getClickHouseDateFormat(granularity);
-      const rows = await this.clickhouse.query<any>(`
+      const rows = await this.clickhouse.query<any>(
+        `
         SELECT
           ${dateFormat} as period,
           sum(CASE WHEN type = 'DEBIT' THEN amount ELSE 0 END) as totalSpent,
@@ -38,7 +46,9 @@ export class GetSpendingTrendsHandler implements IQueryHandler<GetSpendingTrends
           AND created_at <= {to:DateTime}
         GROUP BY period
         ORDER BY period ASC
-      `, { userId, from, to });
+      `,
+        { userId, from, to },
+      );
 
       data = rows.map((row) => ({
         period: row.period,
@@ -48,13 +58,21 @@ export class GetSpendingTrendsHandler implements IQueryHandler<GetSpendingTrends
         transactionCount: Number(row.transactionCount),
       }));
     } catch (error) {
-      this.logger.warn('ClickHouse unavailable, falling back to Prisma for spending trends');
+      this.logger.warn(
+        "ClickHouse unavailable, falling back to Prisma for spending trends",
+      );
       data = await this.fallbackSpendingTrends(userId, from, to, granularity);
     }
 
     const totalSpent = data.reduce((sum, d) => sum + d.totalSpent, 0);
     const totalIncome = data.reduce((sum, d) => sum + d.totalIncome, 0);
-    const daysDiff = Math.max(1, Math.ceil((new Date(to).getTime() - new Date(from).getTime()) / (1000 * 60 * 60 * 24)));
+    const daysDiff = Math.max(
+      1,
+      Math.ceil(
+        (new Date(to).getTime() - new Date(from).getTime()) /
+          (1000 * 60 * 60 * 24),
+      ),
+    );
 
     return {
       userId,
@@ -101,7 +119,7 @@ export class GetSpendingTrendsHandler implements IQueryHandler<GetSpendingTrends
           lte: new Date(to),
         },
       },
-      orderBy: { createdAt: 'asc' },
+      orderBy: { createdAt: "asc" },
     });
 
     const grouped = new Map<string, SpendingTrendPoint>();
@@ -116,7 +134,7 @@ export class GetSpendingTrendsHandler implements IQueryHandler<GetSpendingTrends
       };
 
       const amount = Number(tx.amount);
-      if (tx.type === 'DEBIT') {
+      if (tx.type === "DEBIT") {
         existing.totalSpent += amount;
       } else {
         existing.totalIncome += amount;
@@ -131,8 +149,8 @@ export class GetSpendingTrendsHandler implements IQueryHandler<GetSpendingTrends
 
   private getPeriodKey(date: Date, granularity: TimeGranularity): string {
     const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
 
     switch (granularity) {
       case TimeGranularity.DAILY:
@@ -140,7 +158,7 @@ export class GetSpendingTrendsHandler implements IQueryHandler<GetSpendingTrends
       case TimeGranularity.WEEKLY: {
         const monday = new Date(date);
         monday.setDate(date.getDate() - ((date.getDay() + 6) % 7));
-        return `${monday.getFullYear()}-${String(monday.getMonth() + 1).padStart(2, '0')}-${String(monday.getDate()).padStart(2, '0')}`;
+        return `${monday.getFullYear()}-${String(monday.getMonth() + 1).padStart(2, "0")}-${String(monday.getDate()).padStart(2, "0")}`;
       }
       case TimeGranularity.MONTHLY:
         return `${year}-${month}`;

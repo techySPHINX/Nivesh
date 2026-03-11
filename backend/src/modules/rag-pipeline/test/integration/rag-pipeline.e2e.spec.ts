@@ -1,25 +1,25 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { INestApplication } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
-import { EventEmitterModule } from '@nestjs/event-emitter';
-import { RAGPipelineModule } from '../../rag-pipeline.module';
-import { SemanticRetrieverService } from '../../application/services/semantic-retriever.service';
-import { VectorIndexerService } from '../../application/services/vector-indexer.service';
-import { QdrantService } from '../../infrastructure/qdrant/qdrant.service';
-import { LocalEmbeddingService } from '../../application/services/local-embedding.service';
+import { Test, TestingModule } from "@nestjs/testing";
+import { INestApplication } from "@nestjs/common";
+import { ConfigModule } from "@nestjs/config";
+import { EventEmitterModule } from "@nestjs/event-emitter";
+import { RAGPipelineModule } from "../../rag-pipeline.module";
+import { SemanticRetrieverService } from "../../application/services/semantic-retriever.service";
+import { VectorIndexerService } from "../../application/services/vector-indexer.service";
+import { QdrantService } from "../../infrastructure/qdrant/qdrant.service";
+import { LocalEmbeddingService } from "../../application/services/local-embedding.service";
 
 /**
  * RAG Pipeline E2E Integration Test
- * 
+ *
  * Tests complete workflow:
  * 1. Index transaction
  * 2. Search for similar transactions
  * 3. Verify retrieval accuracy
- * 
+ *
  * Note: Requires Qdrant and Redis to be running
  * Run with: docker-compose up -d qdrant redis
  */
-describe('RAG Pipeline E2E (Integration)', () => {
+describe("RAG Pipeline E2E (Integration)", () => {
   let app: INestApplication;
   let semanticRetriever: SemanticRetrieverService;
   let vectorIndexer: VectorIndexerService;
@@ -31,7 +31,7 @@ describe('RAG Pipeline E2E (Integration)', () => {
       imports: [
         ConfigModule.forRoot({
           isGlobal: true,
-          envFilePath: '.env.test',
+          envFilePath: ".env.test",
         }),
         EventEmitterModule.forRoot(),
         RAGPipelineModule,
@@ -41,7 +41,9 @@ describe('RAG Pipeline E2E (Integration)', () => {
     app = moduleFixture.createNestApplication();
     await app.init();
 
-    semanticRetriever = app.get<SemanticRetrieverService>(SemanticRetrieverService);
+    semanticRetriever = app.get<SemanticRetrieverService>(
+      SemanticRetrieverService,
+    );
     vectorIndexer = app.get<VectorIndexerService>(VectorIndexerService);
     vectorStore = app.get<QdrantService>(QdrantService);
     embeddingService = app.get<LocalEmbeddingService>(LocalEmbeddingService);
@@ -51,20 +53,20 @@ describe('RAG Pipeline E2E (Integration)', () => {
     await app.close();
   });
 
-  describe('Complete RAG Workflow', () => {
-    const testUserId = 'test-user-' + Date.now();
-    const testTransactionId = 'test-txn-' + Date.now();
+  describe("Complete RAG Workflow", () => {
+    const testUserId = "test-user-" + Date.now();
+    const testTransactionId = "test-txn-" + Date.now();
 
-    it('should index a transaction and retrieve it via semantic search', async () => {
+    it("should index a transaction and retrieve it via semantic search", async () => {
       // Step 1: Index a transaction
       const transactionData = {
         id: testTransactionId,
         userId: testUserId,
         amount: 50000,
-        category: 'Electronics',
-        merchant: 'Apple Store',
+        category: "Electronics",
+        merchant: "Apple Store",
         date: new Date(),
-        description: 'MacBook Pro 16-inch purchase',
+        description: "MacBook Pro 16-inch purchase",
       };
 
       const vectorId = await vectorIndexer.indexTransaction(transactionData);
@@ -74,7 +76,7 @@ describe('RAG Pipeline E2E (Integration)', () => {
       await new Promise((resolve) => setTimeout(resolve, 1000));
 
       // Step 2: Search for similar transactions
-      const searchQuery = 'laptop purchase from Apple';
+      const searchQuery = "laptop purchase from Apple";
       const results = await semanticRetriever.retrieveContext(
         searchQuery,
         testUserId,
@@ -86,44 +88,44 @@ describe('RAG Pipeline E2E (Integration)', () => {
 
       // Step 3: Verify results
       expect(results.length).toBeGreaterThan(0);
-      
-      const relevantResult = results.find((r) => 
-        r.metadata.entityId === testTransactionId,
+
+      const relevantResult = results.find(
+        (r) => r.metadata.entityId === testTransactionId,
       );
-      
+
       expect(relevantResult).toBeDefined();
       expect(relevantResult!.score).toBeGreaterThan(0.7); // High relevance
     }, 10000); // 10s timeout
 
-    it('should retrieve top-k results with proper ranking', async () => {
+    it("should retrieve top-k results with proper ranking", async () => {
       // Index multiple transactions
       const transactions = [
         {
-          id: 'txn-1',
+          id: "txn-1",
           userId: testUserId,
           amount: 5000,
-          category: 'Food',
-          merchant: 'Restaurant',
+          category: "Food",
+          merchant: "Restaurant",
           date: new Date(),
-          description: 'Dinner at Italian restaurant',
+          description: "Dinner at Italian restaurant",
         },
         {
-          id: 'txn-2',
+          id: "txn-2",
           userId: testUserId,
           amount: 10000,
-          category: 'Food',
-          merchant: 'Grocery Store',
+          category: "Food",
+          merchant: "Grocery Store",
           date: new Date(),
-          description: 'Monthly groceries',
+          description: "Monthly groceries",
         },
         {
-          id: 'txn-3',
+          id: "txn-3",
           userId: testUserId,
           amount: 100000,
-          category: 'Travel',
-          merchant: 'Airline',
+          category: "Travel",
+          merchant: "Airline",
           date: new Date(),
-          description: 'Flight tickets to Europe',
+          description: "Flight tickets to Europe",
         },
       ];
 
@@ -135,24 +137,25 @@ describe('RAG Pipeline E2E (Integration)', () => {
 
       // Search for food-related transactions
       const results = await semanticRetriever.retrieveContext(
-        'food and dining expenses',
+        "food and dining expenses",
         testUserId,
         { topK: 3 },
       );
 
       // Should prioritize food transactions
       expect(results.length).toBeGreaterThan(0);
-      const foodResults = results.filter((r) => 
-        r.text.toLowerCase().includes('food') ||
-        r.text.toLowerCase().includes('restaurant') ||
-        r.text.toLowerCase().includes('groceries'),
+      const foodResults = results.filter(
+        (r) =>
+          r.text.toLowerCase().includes("food") ||
+          r.text.toLowerCase().includes("restaurant") ||
+          r.text.toLowerCase().includes("groceries"),
       );
-      
+
       expect(foodResults.length).toBeGreaterThan(0);
     }, 15000);
 
-    it('should cache embeddings for performance', async () => {
-      const testText = 'Sample transaction for caching test';
+    it("should cache embeddings for performance", async () => {
+      const testText = "Sample transaction for caching test";
 
       // Clear cache first
       await embeddingService.clearCache();
@@ -171,12 +174,12 @@ describe('RAG Pipeline E2E (Integration)', () => {
       expect(duration2).toBeLessThan(duration1 * 0.5);
     });
 
-    it('should handle concurrent indexing requests', async () => {
+    it("should handle concurrent indexing requests", async () => {
       const concurrentTransactions = Array.from({ length: 10 }, (_, i) => ({
         id: `concurrent-txn-${i}`,
         userId: testUserId,
         amount: 1000 * (i + 1),
-        category: 'Test',
+        category: "Test",
         merchant: `Merchant ${i}`,
         date: new Date(),
         description: `Concurrent transaction ${i}`,
@@ -193,25 +196,25 @@ describe('RAG Pipeline E2E (Integration)', () => {
       vectorIds.forEach((id) => expect(id).toBeDefined());
     }, 20000);
 
-    it('should filter results by user ID', async () => {
-      const otherUserId = 'other-user-' + Date.now();
+    it("should filter results by user ID", async () => {
+      const otherUserId = "other-user-" + Date.now();
 
       // Index transaction for different user
       await vectorIndexer.indexTransaction({
-        id: 'other-user-txn',
+        id: "other-user-txn",
         userId: otherUserId,
         amount: 5000,
-        category: 'Test',
-        merchant: 'Test Merchant',
+        category: "Test",
+        merchant: "Test Merchant",
         date: new Date(),
-        description: 'Transaction from other user',
+        description: "Transaction from other user",
       });
 
       await new Promise((resolve) => setTimeout(resolve, 1000));
 
       // Search with original user ID
       const results = await semanticRetriever.retrieveContext(
-        'test transaction',
+        "test transaction",
         testUserId,
       );
 
@@ -228,20 +231,22 @@ describe('RAG Pipeline E2E (Integration)', () => {
       try {
         await vectorIndexer.deleteUserVectors(testUserId);
       } catch (error) {
-        console.warn('Cleanup failed:', error);
+        console.warn("Cleanup failed:", error);
       }
     });
   });
 
-  describe('Knowledge Base Integration', () => {
-    it('should index and retrieve knowledge articles', async () => {
+  describe("Knowledge Base Integration", () => {
+    it("should index and retrieve knowledge articles", async () => {
       const knowledgeArticle = {
-        question: 'What is the maximum limit for ELSS investment under Section 80C?',
-        answer: 'The maximum deduction under Section 80C is ₹1.5 lakh per financial year. ELSS (Equity Linked Savings Scheme) qualifies for this deduction and has a 3-year lock-in period.',
-        knowledgeType: 'faq' as const,
-        tags: ['tax', 'ELSS', '80C', 'investment'],
-        source: 'Income Tax Act',
-        authority: 'Income Tax Department',
+        question:
+          "What is the maximum limit for ELSS investment under Section 80C?",
+        answer:
+          "The maximum deduction under Section 80C is ₹1.5 lakh per financial year. ELSS (Equity Linked Savings Scheme) qualifies for this deduction and has a 3-year lock-in period.",
+        knowledgeType: "faq" as const,
+        tags: ["tax", "ELSS", "80C", "investment"],
+        source: "Income Tax Act",
+        authority: "Income Tax Department",
       };
 
       const vectorId = await vectorIndexer.indexKnowledge(knowledgeArticle);
@@ -251,13 +256,13 @@ describe('RAG Pipeline E2E (Integration)', () => {
 
       // Search for tax-related information
       const results = await semanticRetriever.searchCollection(
-        'financial_knowledge',
-        '80C tax deduction limit',
+        "financial_knowledge",
+        "80C tax deduction limit",
       );
 
       expect(results.length).toBeGreaterThan(0);
-      const relevantResult = results.find((r) =>
-        r.text.includes('80C') || r.text.includes('ELSS'),
+      const relevantResult = results.find(
+        (r) => r.text.includes("80C") || r.text.includes("ELSS"),
       );
 
       expect(relevantResult).toBeDefined();
@@ -265,23 +270,23 @@ describe('RAG Pipeline E2E (Integration)', () => {
     }, 10000);
   });
 
-  describe('Performance Benchmarks', () => {
-    it('should retrieve results in < 100ms', async () => {
+  describe("Performance Benchmarks", () => {
+    it("should retrieve results in < 100ms", async () => {
       const start = Date.now();
-      
+
       await semanticRetriever.retrieveContext(
-        'quick performance test',
+        "quick performance test",
         testUserId,
         { topK: 10 },
       );
 
       const duration = Date.now() - start;
-      
+
       // Should be fast (allowing some tolerance for CI/CD)
       expect(duration).toBeLessThan(500); // 500ms threshold
     });
 
-    it('should batch process embeddings efficiently', async () => {
+    it("should batch process embeddings efficiently", async () => {
       const texts = Array.from({ length: 100 }, (_, i) => `Test text ${i}`);
 
       const start = Date.now();
@@ -290,23 +295,23 @@ describe('RAG Pipeline E2E (Integration)', () => {
 
       // Should process 100 texts in reasonable time
       expect(duration).toBeLessThan(5000); // 5s for 100 texts
-      
+
       const avgTimePerText = duration / texts.length;
       expect(avgTimePerText).toBeLessThan(50); // < 50ms per text on average
     }, 10000);
   });
 
-  describe('Health Checks', () => {
-    it('should confirm Qdrant is healthy', async () => {
+  describe("Health Checks", () => {
+    it("should confirm Qdrant is healthy", async () => {
       const isHealthy = await vectorStore.healthCheck();
       expect(isHealthy).toBe(true);
     });
 
-    it('should confirm collections exist', async () => {
+    it("should confirm collections exist", async () => {
       const collections = [
-        'user_financial_context',
-        'financial_knowledge',
-        'conversation_history',
+        "user_financial_context",
+        "financial_knowledge",
+        "conversation_history",
       ];
 
       for (const collection of collections) {

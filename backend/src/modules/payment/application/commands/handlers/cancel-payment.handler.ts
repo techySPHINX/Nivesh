@@ -1,11 +1,16 @@
-import { CommandHandler, ICommandHandler, EventBus } from '@nestjs/cqrs';
-import { Inject, Logger, NotFoundException, ForbiddenException } from '@nestjs/common';
-import { CancelPaymentCommand } from '../cancel-payment.command';
+import { CommandHandler, ICommandHandler, EventBus } from "@nestjs/cqrs";
+import {
+  Inject,
+  Logger,
+  NotFoundException,
+  ForbiddenException,
+} from "@nestjs/common";
+import { CancelPaymentCommand } from "../cancel-payment.command";
 import {
   IPaymentRepository,
   PAYMENT_REPOSITORY,
-} from '../../../domain/repositories/payment.repository.interface';
-import { PaymentCancelledEvent } from '../../../domain/events/payment.events';
+} from "../../../domain/repositories/payment.repository.interface";
+import { PaymentCancelledEvent } from "../../../domain/events/payment.events";
 
 @CommandHandler(CancelPaymentCommand)
 export class CancelPaymentHandler implements ICommandHandler<CancelPaymentCommand> {
@@ -25,7 +30,7 @@ export class CancelPaymentHandler implements ICommandHandler<CancelPaymentComman
       throw new NotFoundException(`Payment ${paymentId} not found`);
     }
     if (payment.userId !== userId) {
-      throw new ForbiddenException('Access denied to this payment');
+      throw new ForbiddenException("Access denied to this payment");
     }
 
     payment.cancel();

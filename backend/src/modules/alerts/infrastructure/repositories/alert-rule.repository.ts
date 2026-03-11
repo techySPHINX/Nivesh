@@ -1,7 +1,10 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { PrismaService } from '../../../../core/database/postgres/prisma.service';
-import { IAlertRuleRepository } from '../../domain/repositories/alert-rule.repository.interface';
-import { AlertRule, AlertRuleType } from '../../domain/entities/alert-rule.entity';
+import { Injectable, Logger } from "@nestjs/common";
+import { PrismaService } from "../../../../core/database/postgres/prisma.service";
+import { IAlertRuleRepository } from "../../domain/repositories/alert-rule.repository.interface";
+import {
+  AlertRule,
+  AlertRuleType,
+} from "../../domain/entities/alert-rule.entity";
 
 @Injectable()
 export class PrismaAlertRuleRepository implements IAlertRuleRepository {
@@ -17,7 +20,7 @@ export class PrismaAlertRuleRepository implements IAlertRuleRepository {
   async findByUserId(userId: string): Promise<AlertRule[]> {
     const records = await this.prisma.alertRule.findMany({
       where: { userId },
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: "desc" },
     });
     return records.map((r) => this.toDomain(r));
   }
@@ -25,12 +28,15 @@ export class PrismaAlertRuleRepository implements IAlertRuleRepository {
   async findActiveByUserId(userId: string): Promise<AlertRule[]> {
     const records = await this.prisma.alertRule.findMany({
       where: { userId, isActive: true },
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: "desc" },
     });
     return records.map((r) => this.toDomain(r));
   }
 
-  async findByType(userId: string, ruleType: AlertRuleType): Promise<AlertRule[]> {
+  async findByType(
+    userId: string,
+    ruleType: AlertRuleType,
+  ): Promise<AlertRule[]> {
     const records = await this.prisma.alertRule.findMany({
       where: { userId, ruleType: ruleType as string, isActive: true },
     });
@@ -54,20 +60,7 @@ export class PrismaAlertRuleRepository implements IAlertRuleRepository {
   }
 
   private toDomain(record: any): AlertRule {
-    return AlertRule.create({
-      id: record.id,
-      userId: record.userId,
-      name: record.name,
-      ruleType: record.ruleType as AlertRuleType,
-      conditions: record.conditions as any,
-      actions: record.actions as any,
-      isActive: record.isActive,
-      lastTriggeredAt: record.lastTriggeredAt,
-      triggerCount: record.triggerCount,
-      metadata: record.metadata,
-      createdAt: record.createdAt,
-      updatedAt: record.updatedAt,
-    });
+    return AlertRule.fromPersistence(record);
   }
 
   private toPersistence(rule: AlertRule): any {

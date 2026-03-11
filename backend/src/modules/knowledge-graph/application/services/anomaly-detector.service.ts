@@ -1,5 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { CypherQuery, IKnowledgeGraphRepository } from '../../domain';
+import { Injectable, Logger } from "@nestjs/common";
+import { CypherQuery, IKnowledgeGraphRepository } from "../../domain";
 
 /**
  * Interface for detected anomaly
@@ -10,7 +10,11 @@ export interface SpendingAnomaly {
   amount: number;
   date: Date;
   deviationScore: number; // How many standard deviations from mean
-  anomalyType: 'high_amount' | 'unusual_merchant' | 'unusual_time' | 'unusual_category';
+  anomalyType:
+    | "high_amount"
+    | "unusual_merchant"
+    | "unusual_time"
+    | "unusual_category";
   confidence: number;
   description: string;
 }
@@ -23,9 +27,9 @@ export interface SpendingAnomaly {
 export class AnomalyDetector {
   private readonly logger = new Logger(AnomalyDetector.name);
 
-  constructor(
+  constructor() {
     // private readonly graphRepository: IKnowledgeGraphRepository,
-  ) { }
+  }
 
   /**
    * Detect all types of anomalies for a user
@@ -46,7 +50,9 @@ export class AnomalyDetector {
    * Detect transactions with unusually high amounts
    * Uses Z-score approach (>2 standard deviations)
    */
-  private async detectAmountAnomalies(userId: string): Promise<SpendingAnomaly[]> {
+  private async detectAmountAnomalies(
+    userId: string,
+  ): Promise<SpendingAnomaly[]> {
     const query = CypherQuery.create(
       `
       MATCH (u:User {id: $userId})-[:OWNS]->(a:Account)-[:MADE_TRANSACTION]->(t:Transaction)
@@ -68,7 +74,9 @@ export class AnomalyDetector {
   /**
    * Detect transactions at unusual merchants
    */
-  private async detectMerchantAnomalies(userId: string): Promise<SpendingAnomaly[]> {
+  private async detectMerchantAnomalies(
+    userId: string,
+  ): Promise<SpendingAnomaly[]> {
     const query = CypherQuery.create(
       `
       MATCH (u:User {id: $userId})-[:OWNS]->(a:Account)
@@ -92,7 +100,9 @@ export class AnomalyDetector {
   /**
    * Detect transactions at unusual times
    */
-  private async detectTimeAnomalies(userId: string): Promise<SpendingAnomaly[]> {
+  private async detectTimeAnomalies(
+    userId: string,
+  ): Promise<SpendingAnomaly[]> {
     const query = CypherQuery.create(
       `
       MATCH (u:User {id: $userId})-[:OWNS]->(a:Account)-[:MADE_TRANSACTION]->(t:Transaction)

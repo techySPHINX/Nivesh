@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger } from "@nestjs/common";
 
 export interface SafetyCheckResult {
   safe: boolean;
@@ -12,7 +12,7 @@ export interface SafetyCheckResult {
 
 /**
  * Safety & Guardrails Service
- * 
+ *
  * Multi-layer safety system:
  * - Pre-LLM: PII detection, harmful intent, consent verification
  * - Post-LLM: Fact verification, hallucination detection, disclaimer injection
@@ -23,15 +23,15 @@ export class SafetyGuardrailsService {
 
   // Harmful financial terms that should trigger blocking
   private readonly harmfulTerms = [
-    'guaranteed returns',
-    'risk-free investment',
-    'get rich quick',
-    'insider trading',
-    'pump and dump',
-    'ponzi',
-    'pyramid scheme',
-    'tax evasion',
-    'money laundering',
+    "guaranteed returns",
+    "risk-free investment",
+    "get rich quick",
+    "insider trading",
+    "pump and dump",
+    "ponzi",
+    "pyramid scheme",
+    "tax evasion",
+    "money laundering",
   ];
 
   // PII patterns to detect
@@ -63,7 +63,9 @@ export class SafetyGuardrailsService {
     // 2. Check for harmful intent
     const harmfulCheck = this.detectHarmfulIntent(userQuery);
     if (!harmfulCheck.safe) {
-      this.logger.warn(`Harmful intent detected for user ${userId}: ${harmfulCheck.reason}`);
+      this.logger.warn(
+        `Harmful intent detected for user ${userId}: ${harmfulCheck.reason}`,
+      );
       return harmfulCheck;
     }
 
@@ -94,22 +96,25 @@ export class SafetyGuardrailsService {
     if (ragContext && ragContext.length > 0) {
       const factCheck = this.verifyFacts(llmResponse, ragContext);
       if (!factCheck.safe) {
-        this.logger.warn('Fact verification failed');
+        this.logger.warn("Fact verification failed");
         return factCheck;
       }
     }
 
     // 2. Check for hallucinations (unsupported claims)
-    const hallucinationCheck = this.detectHallucination(llmResponse, ragContext);
+    const hallucinationCheck = this.detectHallucination(
+      llmResponse,
+      ragContext,
+    );
     if (!hallucinationCheck.safe) {
-      this.logger.warn('Potential hallucination detected');
+      this.logger.warn("Potential hallucination detected");
       return hallucinationCheck;
     }
 
     // 3. Check for harmful financial advice
     const harmfulAdviceCheck = this.detectHarmfulAdvice(llmResponse);
     if (!harmfulAdviceCheck.safe) {
-      this.logger.warn('Harmful financial advice detected');
+      this.logger.warn("Harmful financial advice detected");
       return harmfulAdviceCheck;
     }
 
@@ -142,9 +147,9 @@ export class SafetyGuardrailsService {
     if (detectedPII.length > 0) {
       return {
         safe: false,
-        reason: 'PII_DETECTED',
+        reason: "PII_DETECTED",
         blockedTerms: detectedPII,
-        category: 'privacy_violation',
+        category: "privacy_violation",
       };
     }
 
@@ -167,21 +172,21 @@ export class SafetyGuardrailsService {
     if (detected.length > 0) {
       return {
         safe: false,
-        reason: 'HARMFUL_INTENT',
+        reason: "HARMFUL_INTENT",
         blockedTerms: detected,
-        category: 'financial_fraud',
+        category: "financial_fraud",
       };
     }
 
     // Check for scam-related patterns
     if (
-      lowerText.includes('guaranteed') &&
-      (lowerText.includes('profit') || lowerText.includes('return'))
+      lowerText.includes("guaranteed") &&
+      (lowerText.includes("profit") || lowerText.includes("return"))
     ) {
       return {
         safe: false,
-        reason: 'HARMFUL_INTENT',
-        category: 'unrealistic_promises',
+        reason: "HARMFUL_INTENT",
+        category: "unrealistic_promises",
       };
     }
 
@@ -198,8 +203,8 @@ export class SafetyGuardrailsService {
     if (text.length > maxLength) {
       return {
         safe: false,
-        reason: 'INPUT_TOO_LONG',
-        category: 'validation_error',
+        reason: "INPUT_TOO_LONG",
+        category: "validation_error",
       };
     }
 
@@ -214,12 +219,18 @@ export class SafetyGuardrailsService {
     userId?: string,
   ): Promise<SafetyCheckResult> {
     const lowerQuery = query.toLowerCase();
-    
+
     // Operations requiring consent
     const sensitiveOperations = [
-      { keywords: ['delete', 'remove', 'close account'], action: 'account_deletion' },
-      { keywords: ['transfer', 'send money', 'payment'], action: 'financial_transaction' },
-      { keywords: ['share', 'export', 'download data'], action: 'data_export' },
+      {
+        keywords: ["delete", "remove", "close account"],
+        action: "account_deletion",
+      },
+      {
+        keywords: ["transfer", "send money", "payment"],
+        action: "financial_transaction",
+      },
+      { keywords: ["share", "export", "download data"], action: "data_export" },
     ];
 
     for (const op of sensitiveOperations) {
@@ -228,9 +239,9 @@ export class SafetyGuardrailsService {
         // For now, just flag it
         return {
           safe: false,
-          reason: 'CONSENT_REQUIRED',
+          reason: "CONSENT_REQUIRED",
           action: op.action,
-          category: 'consent_verification',
+          category: "consent_verification",
         };
       }
     }
@@ -247,8 +258,8 @@ export class SafetyGuardrailsService {
   ): SafetyCheckResult {
     // Simple fact verification - check if key claims are supported by context
     // In production, use semantic similarity or entailment model
-    
-    const contextText = ragContext.join(' ').toLowerCase();
+
+    const contextText = ragContext.join(" ").toLowerCase();
     const responseText = llmResponse.toLowerCase();
 
     // Extract numerical claims (e.g., "25%", "₹50,000")
@@ -264,7 +275,7 @@ export class SafetyGuardrailsService {
 
       if (supportRatio < 0.3) {
         this.logger.warn(
-          `Low fact support ratio: ${supportRatio}. Claims: ${numericalClaims.join(', ')}`,
+          `Low fact support ratio: ${supportRatio}. Claims: ${numericalClaims.join(", ")}`,
         );
         // Don't block, but flag for review
       }
@@ -292,8 +303,8 @@ export class SafetyGuardrailsService {
       if (pattern.test(llmResponse)) {
         return {
           safe: false,
-          reason: 'HALLUCINATION_DETECTED',
-          category: 'unsupported_claim',
+          reason: "HALLUCINATION_DETECTED",
+          category: "unsupported_claim",
           confidence: 0.7,
         };
       }
@@ -310,18 +321,30 @@ export class SafetyGuardrailsService {
 
     // Check for harmful patterns
     const harmfulPatterns = [
-      { pattern: /put all (your|the) money/i, reason: 'Advising to put all money in one investment' },
-      { pattern: /borrow (money|funds) to invest/i, reason: 'Advising to borrow for investment' },
-      { pattern: /skip (emergency fund|insurance)/i, reason: 'Advising to skip safety net' },
-      { pattern: /invest in (penny stocks|crypto only)/i, reason: 'Risky single asset class advice' },
+      {
+        pattern: /put all (your|the) money/i,
+        reason: "Advising to put all money in one investment",
+      },
+      {
+        pattern: /borrow (money|funds) to invest/i,
+        reason: "Advising to borrow for investment",
+      },
+      {
+        pattern: /skip (emergency fund|insurance)/i,
+        reason: "Advising to skip safety net",
+      },
+      {
+        pattern: /invest in (penny stocks|crypto only)/i,
+        reason: "Risky single asset class advice",
+      },
     ];
 
     for (const { pattern, reason } of harmfulPatterns) {
       if (pattern.test(llmResponse)) {
         return {
           safe: false,
-          reason: 'HARMFUL_ADVICE',
-          category: 'risky_recommendation',
+          reason: "HARMFUL_ADVICE",
+          category: "risky_recommendation",
           blockedTerms: [reason],
         };
       }
@@ -335,14 +358,14 @@ export class SafetyGuardrailsService {
    */
   private checkDisclaimer(llmResponse: string): SafetyCheckResult {
     const hasDisclaimer =
-      llmResponse.includes('disclaimer') ||
-      llmResponse.includes('not financial advice') ||
-      llmResponse.includes('consult');
+      llmResponse.includes("disclaimer") ||
+      llmResponse.includes("not financial advice") ||
+      llmResponse.includes("consult");
 
     if (!hasDisclaimer) {
       return {
         safe: false,
-        reason: 'MISSING_DISCLAIMER',
+        reason: "MISSING_DISCLAIMER",
       };
     }
 
@@ -363,7 +386,7 @@ export class SafetyGuardrailsService {
     let sanitized = text;
 
     for (const pattern of Object.values(this.piiPatterns)) {
-      sanitized = sanitized.replace(pattern, '[REDACTED]');
+      sanitized = sanitized.replace(pattern, "[REDACTED]");
     }
 
     return sanitized;

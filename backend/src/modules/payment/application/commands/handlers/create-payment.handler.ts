@@ -1,13 +1,13 @@
-import { CommandHandler, ICommandHandler, EventBus } from '@nestjs/cqrs';
-import { Inject, Logger, BadRequestException } from '@nestjs/common';
-import { CreatePaymentCommand } from '../create-payment.command';
-import { PaymentResponseDto } from '../../dto/payment-response.dto';
+import { CommandHandler, ICommandHandler, EventBus } from "@nestjs/cqrs";
+import { Inject, Logger, BadRequestException } from "@nestjs/common";
+import { CreatePaymentCommand } from "../create-payment.command";
+import { PaymentResponseDto } from "../../dto/payment-response.dto";
 import {
   IPaymentRepository,
   PAYMENT_REPOSITORY,
-} from '../../../domain/repositories/payment.repository.interface';
-import { Payment } from '../../../domain/entities/payment.entity';
-import { PaymentCreatedEvent } from '../../../domain/events/payment.events';
+} from "../../../domain/repositories/payment.repository.interface";
+import { Payment } from "../../../domain/entities/payment.entity";
+import { PaymentCreatedEvent } from "../../../domain/events/payment.events";
 
 @CommandHandler(CreatePaymentCommand)
 export class CreatePaymentHandler implements ICommandHandler<CreatePaymentCommand> {
@@ -29,7 +29,7 @@ export class CreatePaymentHandler implements ICommandHandler<CreatePaymentComman
       userId,
       orderId,
       amount: createPaymentDto.amount,
-      currency: createPaymentDto.currency || 'INR',
+      currency: createPaymentDto.currency || "INR",
       description: createPaymentDto.description,
       customerEmail: createPaymentDto.customerEmail,
       customerPhone: createPaymentDto.customerPhone,

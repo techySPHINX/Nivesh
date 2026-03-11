@@ -1,6 +1,6 @@
 /**
  * Vector Document Entity
- * 
+ *
  * Represents a document stored in the vector database
  * Used across all three collections (userContext, knowledgeBase, conversations)
  */
@@ -27,12 +27,15 @@ export class VectorDocument {
    * Sanitize metadata for storage (remove nulls, undefined)
    */
   sanitizeMetadata(): Record<string, any> {
-    return Object.entries(this.metadata).reduce((acc, [key, value]) => {
-      if (value !== null && value !== undefined) {
-        acc[key] = value;
-      }
-      return acc;
-    }, {} as Record<string, any>);
+    return Object.entries(this.metadata).reduce(
+      (acc, [key, value]) => {
+        if (value !== null && value !== undefined) {
+          acc[key] = value;
+        }
+        return acc;
+      },
+      {} as Record<string, any>,
+    );
   }
 }
 
@@ -43,7 +46,7 @@ export class VectorDocument {
 export interface UserFinancialContextVector {
   id: string;
   userId: string;
-  contextType: 'transaction' | 'goal' | 'budget' | 'insight';
+  contextType: "transaction" | "goal" | "budget" | "insight";
   text: string;
   metadata: {
     entityId: string; // Original transaction/goal/budget ID
@@ -63,7 +66,7 @@ export interface UserFinancialContextVector {
  */
 export interface FinancialKnowledgeVector {
   id: string;
-  knowledgeType: 'faq' | 'regulation' | 'product' | 'strategy' | 'guideline';
+  knowledgeType: "faq" | "regulation" | "product" | "strategy" | "guideline";
   question: string;
   answer: string;
   tags: string[];

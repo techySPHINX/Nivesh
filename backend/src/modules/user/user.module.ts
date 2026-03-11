@@ -1,12 +1,12 @@
-import { Module } from '@nestjs/common';
-import { CqrsModule } from '@nestjs/cqrs';
+import { Module } from "@nestjs/common";
+import { CqrsModule } from "@nestjs/cqrs";
 
 // Controllers
-import { UserController } from './presentation/user.controller';
+import { UserController } from "./presentation/user.controller";
 
 // Command Handlers
-import { CreateUserHandler } from './application/commands/handlers/create-user.handler';
-import { UpdateUserHandler } from './application/commands/handlers/update-user.handler';
+import { CreateUserHandler } from "./application/commands/handlers/create-user.handler";
+import { UpdateUserHandler } from "./application/commands/handlers/update-user.handler";
 
 // Query Handlers
 import {
@@ -14,15 +14,15 @@ import {
   GetUserByEmailHandler,
   GetUserByFirebaseUidHandler,
   GetAllUsersHandler,
-} from './application/queries/handlers/user.query-handlers';
+} from "./application/queries/handlers/user.query-handlers";
 
 // Repository
-import { UserRepository } from './infrastructure/persistence/user.repository';
-import { USER_REPOSITORY } from './domain/repositories/user.repository.interface';
+import { UserRepository } from "./infrastructure/persistence/user.repository";
+import { USER_REPOSITORY } from "./domain/repositories/user.repository.interface";
 
 // Core modules
-import { DatabaseModule } from '../../core/database/database.module';
-import { MessagingModule } from '../../core/messaging/messaging.module';
+import { DatabaseModule } from "../../core/database/database.module";
+import { MessagingModule } from "../../core/messaging/messaging.module";
 
 const CommandHandlers = [CreateUserHandler, UpdateUserHandler];
 
@@ -48,4 +48,4 @@ const QueryHandlers = [
   ],
   exports: [USER_REPOSITORY],
 })
-export class UserModule { }
+export class UserModule {}

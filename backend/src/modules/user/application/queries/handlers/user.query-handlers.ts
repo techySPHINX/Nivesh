@@ -1,12 +1,17 @@
-import { IQueryHandler, QueryHandler } from '@nestjs/cqrs';
-import { Inject, Logger } from '@nestjs/common';
-import { GetUserQuery, GetUserByEmailQuery, GetUserByFirebaseUidQuery, GetAllUsersQuery } from '../user.queries';
-import { User } from '../../../domain/entities/user.entity';
+import { IQueryHandler, QueryHandler } from "@nestjs/cqrs";
+import { Inject, Logger } from "@nestjs/common";
+import {
+  GetUserQuery,
+  GetUserByEmailQuery,
+  GetUserByFirebaseUidQuery,
+  GetAllUsersQuery,
+} from "../user.queries";
+import { User } from "../../../domain/entities/user.entity";
 import {
   IUserRepository,
   USER_REPOSITORY,
-} from '../../../domain/repositories/user.repository.interface';
-import { EntityNotFoundException } from '../../../../../core/exceptions/base.exception';
+} from "../../../domain/repositories/user.repository.interface";
+import { EntityNotFoundException } from "../../../../../core/exceptions/base.exception";
 
 @QueryHandler(GetUserQuery)
 export class GetUserHandler implements IQueryHandler<GetUserQuery> {
@@ -15,7 +20,7 @@ export class GetUserHandler implements IQueryHandler<GetUserQuery> {
   constructor(
     @Inject(USER_REPOSITORY)
     private readonly userRepository: IUserRepository,
-  ) { }
+  ) {}
 
   async execute(query: GetUserQuery): Promise<User> {
     this.logger.debug(`Fetching user: ${query.userId}`);
@@ -23,7 +28,7 @@ export class GetUserHandler implements IQueryHandler<GetUserQuery> {
     const user = await this.userRepository.findById(query.userId);
 
     if (!user) {
-      throw new EntityNotFoundException('User', query.userId);
+      throw new EntityNotFoundException("User", query.userId);
     }
 
     return user;
@@ -37,7 +42,7 @@ export class GetUserByEmailHandler implements IQueryHandler<GetUserByEmailQuery>
   constructor(
     @Inject(USER_REPOSITORY)
     private readonly userRepository: IUserRepository,
-  ) { }
+  ) {}
 
   async execute(query: GetUserByEmailQuery): Promise<User> {
     this.logger.debug(`Fetching user by email: ${query.email}`);
@@ -45,7 +50,7 @@ export class GetUserByEmailHandler implements IQueryHandler<GetUserByEmailQuery>
     const user = await this.userRepository.findByEmail(query.email);
 
     if (!user) {
-      throw new EntityNotFoundException('User', query.email);
+      throw new EntityNotFoundException("User", query.email);
     }
 
     return user;
@@ -53,14 +58,13 @@ export class GetUserByEmailHandler implements IQueryHandler<GetUserByEmailQuery>
 }
 
 @QueryHandler(GetUserByFirebaseUidQuery)
-export class GetUserByFirebaseUidHandler
-  implements IQueryHandler<GetUserByFirebaseUidQuery> {
+export class GetUserByFirebaseUidHandler implements IQueryHandler<GetUserByFirebaseUidQuery> {
   private readonly logger = new Logger(GetUserByFirebaseUidHandler.name);
 
   constructor(
     @Inject(USER_REPOSITORY)
     private readonly userRepository: IUserRepository,
-  ) { }
+  ) {}
 
   async execute(query: GetUserByFirebaseUidQuery): Promise<User> {
     this.logger.debug(`Fetching user by Firebase UID: ${query.firebaseUid}`);
@@ -68,7 +72,7 @@ export class GetUserByFirebaseUidHandler
     const user = await this.userRepository.findByFirebaseUid(query.firebaseUid);
 
     if (!user) {
-      throw new EntityNotFoundException('User', query.firebaseUid);
+      throw new EntityNotFoundException("User", query.firebaseUid);
     }
 
     return user;
@@ -82,10 +86,12 @@ export class GetAllUsersHandler implements IQueryHandler<GetAllUsersQuery> {
   constructor(
     @Inject(USER_REPOSITORY)
     private readonly userRepository: IUserRepository,
-  ) { }
+  ) {}
 
-  async execute(query: GetAllUsersQuery): Promise<{ users: User[]; total: number }> {
-    this.logger.debug('Fetching all users');
+  async execute(
+    query: GetAllUsersQuery,
+  ): Promise<{ users: User[]; total: number }> {
+    this.logger.debug("Fetching all users");
 
     return await this.userRepository.findAll({
       skip: query.skip,

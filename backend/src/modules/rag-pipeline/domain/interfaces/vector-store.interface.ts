@@ -1,4 +1,4 @@
-import { VectorDocument } from '../entities/vector-document.entity';
+import { VectorDocument } from "../entities/vector-document.entity";
 
 /**
  * Filter options for vector search
@@ -40,7 +40,7 @@ export interface VectorSearchResult {
 
 /**
  * Vector Store Interface
- * 
+ *
  * Abstraction for vector database operations
  * Implementation: Qdrant, but designed to be swappable
  */
@@ -51,16 +51,13 @@ export interface IVectorStore {
   ensureCollection(
     name: string,
     vectorSize: number,
-    distance: 'Cosine' | 'Euclid' | 'Dot',
+    distance: "Cosine" | "Euclid" | "Dot",
   ): Promise<void>;
 
   /**
    * Index a single document
    */
-  indexDocument(
-    collection: string,
-    document: VectorDocument,
-  ): Promise<string>;
+  indexDocument(collection: string, document: VectorDocument): Promise<string>;
 
   /**
    * Index multiple documents in batch

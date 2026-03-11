@@ -1,7 +1,12 @@
-import { Injectable, OnModuleInit, OnModuleDestroy, Logger } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import { Kafka, Consumer, Producer, EachMessagePayload } from 'kafkajs';
-import { getDLQTopic } from './topics.enum';
+import {
+  Injectable,
+  OnModuleInit,
+  OnModuleDestroy,
+  Logger,
+} from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
+import { Kafka, Consumer, Producer, EachMessagePayload } from "kafkajs";
+import { getDLQTopic } from "./topics.enum";
 
 const MAX_RETRIES = 3;
 
@@ -11,7 +16,10 @@ export class KafkaConsumerService implements OnModuleInit, OnModuleDestroy {
   private kafka: Kafka;
   private consumer: Consumer;
   private dlqProducer: Producer;
-  private readonly handlers = new Map<string, (message: any) => Promise<void>>();
+  private readonly handlers = new Map<
+    string,
+    (message: any) => Promise<void>
+  >();
   private isRunning = false;
 
   constructor(private configService: ConfigService) {}
@@ -19,9 +27,12 @@ export class KafkaConsumerService implements OnModuleInit, OnModuleDestroy {
   async onModuleInit() {
     try {
       this.kafka = new Kafka({
-        clientId: this.configService.get<string>('kafka.clientId') || 'nivesh-backend',
-        brokers: this.configService.get<string[]>('kafka.brokers') || ['localhost:29092'],
-        sasl: this.configService.get('kafka.sasl'),
+        clientId:
+          this.configService.get<string>("kafka.clientId") || "nivesh-backend",
+        brokers: this.configService.get<string[]>("kafka.brokers") || [
+          "localhost:29092",
+        ],
+        sasl: this.configService.get("kafka.sasl"),
         retry: {
           initialRetryTime: 300,
           retries: 10,
@@ -29,20 +40,19 @@ export class KafkaConsumerService implements OnModuleInit, OnModuleDestroy {
       });
 
       this.consumer = this.kafka.consumer({
-        groupId: this.configService.get<string>('kafka.groupId') || 'nivesh-consumer-group',
+        groupId:
+          this.configService.get<string>("kafka.groupId") ||
+          "nivesh-consumer-group",
         sessionTimeout: 30000,
         heartbeatInterval: 3000,
       });
 
       this.dlqProducer = this.kafka.producer();
 
-      await Promise.all([
-        this.consumer.connect(),
-        this.dlqProducer.connect(),
-      ]);
-      this.logger.log('✅ Kafka Consumer connected successfully');
+      await Promise.all([this.consumer.connect(), this.dlqProducer.connect()]);
+      this.logger.log("✅ Kafka Consumer connected successfully");
     } catch (error) {
-      this.logger.error('❌ Failed to connect Kafka Consumer', error);
+      this.logger.error("❌ Failed to connect Kafka Consumer", error);
       throw error;
     }
   }
@@ -52,10 +62,13 @@ export class KafkaConsumerService implements OnModuleInit, OnModuleDestroy {
       this.consumer?.disconnect(),
       this.dlqProducer?.disconnect(),
     ]);
-    this.logger.log('Kafka Consumer disconnected');
+    this.logger.log("Kafka Consumer disconnected");
   }
 
-  async subscribe(topic: string, handler: (message: any) => Promise<void>): Promise<void> {
+  async subscribe(
+    topic: string,
+    handler: (message: any) => Promise<void>,
+  ): Promise<void> {
     this.handlers.set(topic, handler);
     await this.consumer.subscribe({ topic, fromBeginning: false });
 
@@ -93,7 +106,7 @@ export class KafkaConsumerService implements OnModuleInit, OnModuleDestroy {
         this.isRunning = true;
       } catch (error) {
         this.isRunning = false;
-        this.logger.error('Failed to start Kafka consumer run loop', error);
+        this.logger.error("Failed to start Kafka consumer run loop", error);
         throw error;
       }
     }
@@ -123,10 +136,10 @@ export class KafkaConsumerService implements OnModuleInit, OnModuleDestroy {
             value: message.value,
             headers: {
               ...message.headers,
-              'x-original-topic': originalTopic,
-              'x-error-message': String(error?.message ?? error),
-              'x-failed-at': new Date().toISOString(),
-              'x-retry-count': String(MAX_RETRIES),
+              "x-original-topic": originalTopic,
+              "x-error-message": String(error?.message ?? error),
+              "x-failed-at": new Date().toISOString(),
+              "x-retry-count": String(MAX_RETRIES),
             },
           },
         ],
@@ -135,10 +148,7 @@ export class KafkaConsumerService implements OnModuleInit, OnModuleDestroy {
         `Message from ${originalTopic} sent to DLQ: ${dlqTopic}`,
       );
     } catch (dlqError) {
-      this.logger.error(
-        `Failed to send message to DLQ ${dlqTopic}`,
-        dlqError,
-      );
+      this.logger.error(`Failed to send message to DLQ ${dlqTopic}`, dlqError);
     }
   }
 }

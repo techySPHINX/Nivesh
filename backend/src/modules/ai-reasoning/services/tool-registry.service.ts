@@ -1,5 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
-import Ajv, { ValidateFunction } from 'ajv';
+import { Injectable, Logger } from "@nestjs/common";
+import Ajv, { ValidateFunction } from "ajv";
 import {
   Tool,
   ToolMetadata,
@@ -7,7 +7,7 @@ import {
   ToolExecutionError,
   ToolTimeoutError,
   ToolValidationError,
-} from '../types/agent.types';
+} from "../types/agent.types";
 
 /**
  * ToolRegistry Service
@@ -50,7 +50,7 @@ export class ToolRegistry {
       coerceTypes: true, // Automatically coerce types when possible
     });
 
-    this.logger.log('ToolRegistry initialized');
+    this.logger.log("ToolRegistry initialized");
   }
 
   /**
@@ -183,7 +183,7 @@ export class ToolRegistry {
    * @private
    */
   private async executeWithRetry(tool: Tool, args: any): Promise<any> {
-    let lastError: Error | null = null;
+    let lastError: Error | undefined = undefined;
 
     for (let attempt = 1; attempt <= this.MAX_RETRY_ATTEMPTS; attempt++) {
       try {
@@ -341,6 +341,6 @@ export class ToolRegistry {
   clearAll(): void {
     this.tools.clear();
     this.validators.clear();
-    this.logger.warn('All tools cleared from registry');
+    this.logger.warn("All tools cleared from registry");
   }
 }

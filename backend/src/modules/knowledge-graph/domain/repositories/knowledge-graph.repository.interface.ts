@@ -1,11 +1,11 @@
-import { GraphNode, NodeType } from '../entities/graph-node.entity';
+import { GraphNode, NodeType } from "../entities/graph-node.entity";
 import {
   GraphRelationship,
   RelationshipType,
-} from '../entities/graph-relationship.entity';
-import { SpendingPattern } from '../entities/spending-pattern.entity';
-import { CypherQuery } from '../value-objects/cypher-query.vo';
-import { GraphQueryResult } from '../value-objects/graph-query-result.vo';
+} from "../entities/graph-relationship.entity";
+import { SpendingPattern } from "../entities/spending-pattern.entity";
+import { CypherQuery } from "../value-objects/cypher-query.vo";
+import { GraphQueryResult } from "../value-objects/graph-query-result.vo";
 
 /**
  * Repository interface for graph database operations
@@ -28,14 +28,20 @@ export interface IKnowledgeGraphRepository {
   /**
    * Relationship Operations
    */
-  createRelationship(relationship: GraphRelationship): Promise<GraphRelationship>;
-  updateRelationship(relationship: GraphRelationship): Promise<GraphRelationship>;
+  createRelationship(
+    relationship: GraphRelationship,
+  ): Promise<GraphRelationship>;
+  updateRelationship(
+    relationship: GraphRelationship,
+  ): Promise<GraphRelationship>;
   deleteRelationship(relationshipId: string): Promise<void>;
-  findRelationshipById(relationshipId: string): Promise<GraphRelationship | null>;
+  findRelationshipById(
+    relationshipId: string,
+  ): Promise<GraphRelationship | null>;
   findRelationshipsByType(type: RelationshipType): Promise<GraphRelationship[]>;
   findRelationshipsForNode(
     nodeId: string,
-    direction?: 'incoming' | 'outgoing' | 'both',
+    direction?: "incoming" | "outgoing" | "both",
   ): Promise<GraphRelationship[]>;
 
   /**
@@ -56,7 +62,10 @@ export interface IKnowledgeGraphRepository {
     toNodeId: string,
     maxDepth?: number,
   ): Promise<GraphPath[]>;
-  findShortestPath(fromNodeId: string, toNodeId: string): Promise<GraphPath | null>;
+  findShortestPath(
+    fromNodeId: string,
+    toNodeId: string,
+  ): Promise<GraphPath | null>;
   findNeighbors(
     nodeId: string,
     depth: number,
